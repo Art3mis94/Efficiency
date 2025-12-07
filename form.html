@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Player Manager — Add/Edit Stats</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;--success:#10b981;--success-light:#ecfdf5;--danger:#ef4444;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s;}
+    header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08);}
+    header h1{margin:0;font-size:1.25rem;font-weight:600;}
+    .toggle-btn{background:none;border:2px solid var(--accent);color:var(--accent);padding:.45rem .7rem;border-radius:8px;cursor:pointer;font-weight:600;}
+    nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
+    nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
+    nav a:hover{opacity:.95;transform:translateY(-1px);}
+    .main-wrap{max-width:1000px;margin:1.25rem auto;padding:0 1rem;display:grid;gap:1rem;grid-template-columns:1fr 1fr;align-items:start;}
+    .section{background:var(--card);padding:1rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04);}
+    .section h2{margin:0 0 .75rem;font-size:1.05rem;}
+    .form-row{display:flex;gap:.5rem;flex-wrap:wrap;}
+    .input,select{width:100%;padding:.5rem;border-radius:8px;border:1px solid #e2e8f0;font-size:0.95rem;}
+    .button-row{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.75rem;}
+    .btn{padding:.55rem .9rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;}
+    .btn.save{background:var(--success)}.btn.save:hover{background:#059669}
+    .btn.save.success-flash{background:#6ee7b7;color:#065f46;transform:scale(1.02);}
+    .btn.cancel{background:#6b7280}.btn.cancel:hover{background:#4b5563}
+    .btn.delete{background:var(--danger)}.btn.delete:hover{background:#dc2626}
+    .small-btn{padding:.35rem .6rem;font-size:.85rem;border-radius:6px;}
+    .week-options{display:flex;gap:0.5rem;margin-top:0.25rem;}
+    .week-options button{flex:1;padding:0.5rem;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:8px;font-weight:600;cursor:pointer;}
+    .week-options button.selected{background:var(--accent);color:var(--card);}
+    .players-list{margin:0;padding:0;list-style:none;max-height:42vh;overflow:auto;}
+    .players-list li{display:flex;align-items:center;justify-content:space-between;padding:.5rem;border-radius:8px;margin-bottom:.45rem;background:linear-gradient(180deg,rgba(0,0,0,0.01),transparent);box-shadow:0 1px 0 rgba(2,6,23,0.03);cursor:pointer;}
+    .players-list li:hover{background:rgba(59,130,246,0.05);}
+    .players-list .name{font-weight:600;flex:1;}
+    .players-list .actions button{margin-left:8px;}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+    .checkbox-group{display:flex;gap:1rem;align-items:center;margin-top:.25rem;}
+    .checkbox-group label{display:flex;align-items:center;gap:.35rem;cursor:pointer;font-size:.9rem;}
+    .picks-group{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;}
+    .picks-group label{display:flex;align-items:center;gap:.3rem;font-size:.85rem;justify-content:center;}
+    #metricPreview{margin-top:1rem;padding:1rem;background:var(--success-light);border:1px solid var(--success);border-radius:8px;font-size:0.95rem;}
+    #metricPreview .metric-row{display:flex;justify-content:space-between;padding:0.2rem 0;}
+    #metricPreview .metric-label{font-weight:600;color:var(--success);}
+    #metricPreview .metric-value{font-weight:700;display:flex;gap:0.5rem;align-items:center;}
+    #metricPreview .rank{font-weight:500;font-size:0.8em;color:var(--muted);background:#e2e8f0;padding:0 .3em;border-radius:4px;}
+    @media (max-width:900px){.main-wrap{grid-template-columns:1fr;}}
+    body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;--success-light:#166534;}
+    body.dark-mode header,body.dark-mode nav{background:#111827;}
+    body.dark-mode nav a{background:var(--accent);color:#0f172a;}
+    body.dark-mode .section{background:#0b1320;color:var(--text);}
+    body.dark-mode .input,body.dark-mode select{background:#1f2937;color:var(--text);border:1px solid #334155;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Player Manager</h1>
+    <button class="toggle-btn" id="darkToggle">Dark Mode</button>
+  </header>
+
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="trends.html">Trends</a>
+    <a href="#">Add/Edit Stats</a>
+    <a href="config.html">Config</a>
+  </nav>
+
+  <main class="main-wrap">
+    <section class="section" id="playersSection">
+      <h2>Players — Add / Edit / Delete</h2>
+      <form id="playerForm" autocomplete="off">
+        <div class="form-row">
+          <input id="playerNameInput" placeholder="Enter player name" class="input" />
+        </div>
+        <div class="button-row">
+          <button type="submit" class="btn save" id="playerSaveBtn">Add Player</button>
+          <button type="button" class="btn cancel" id="playerCancelBtn">Clear</button>
+        </div>
+      </form>
+
+      <p style="font-size:.85rem;color:var(--muted);margin-top:.5rem;">Creates entries for all 3 weeks automatically.</p>
+      <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7"/>
+      <h3 style="margin:.25rem 0 .6rem 0">Players (Click name to edit)</h3>
+      <ul class="players-list" id="playersList"></ul>
+    </section>
+
+    <section class="section" id="statsSection">
+      <h2>Edit Stats</h2>
+      <div>
+        <label class="muted">Player</label>
+        <div id="selectedPlayerDisplay" style="padding:.5rem;background:#f1f5f9;border-radius:8px;font-weight:600;">—</div>
+      </div>
+
+      <div style="margin-top:.5rem">
+        <label class="muted">Week</label>
+        <div id="weekOptions" class="week-options" role="tablist">
+          <button type="button" data-week="week 1" class="week-btn selected">Week 1</button>
+          <button type="button" data-week="week 2" class="week-btn">Week 2</button>
+          <button type="button" data-week="week 3" class="week-btn">Week 3</button>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:.6rem">
+        <div><label class="muted">Power</label><input id="f_power" type="number" value="0" class="input"></div>
+        <div><label class="muted">Throne</label><input id="f_throne" type="number" value="0" class="input"></div>
+        <div><label class="muted">Points</label><input id="f_points" type="number" value="0" class="input"></div>
+        <div><label class="muted">Quest Score</label><input id="f_quest" type="number" value="0" class="input"></div>
+        <div><label class="muted">Ultimate Hunting Score</label><input id="f_hunt" type="number" value="0" class="input"></div>
+        <div><label class="muted">Frosts</label><input id="f_frosts" type="number" value="0" class="input"></div>
+
+        <div style="grid-column:span 2;">
+          <label class="muted">Activity (max 2.5%)</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="chk_lava"> Lava</label>
+            <label><input type="checkbox" id="chk_challenge"> Challenge</label>
+            <label><input type="checkbox" id="chk_donations"> Donations</label>
+          </div>
+        </div>
+
+        <div style="grid-column:span 2;">
+          <label class="muted">Participation</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="chk_dv"> Dragon Valley</label>
+            <label><input type="checkbox" id="chk_esb"> ESB</label>
+          </div>
+          <div class="checkbox-group" style="margin-top:.25rem;">
+            <label><input type="checkbox" id="esi_tue"> ESI Tuesday</label>
+            <label><input type="checkbox" id="esi_thu"> ESI Thursday</label>
+          </div>
+        </div>
+
+        <div style="grid-column:span 2;">
+          <label class="muted">Picks (not in total)</label>
+          <div class="picks-group">
+            <label><input type="checkbox" id="pick_100" data-value="100"> 100</label>
+            <label><input type="checkbox" id="pick_40" data-value="40"> 40</label>
+            <label><input type="checkbox" id="pick_20" data-value="20"> 20</label>
+            <label><input type="checkbox" id="pick_5" data-value="5"> 5</label>
+          </div>
+        </div>
+      </div>
+
+      <div id="metricPreview">
+        <div class="metric-row"><span class="metric-label">Total Score:</span><span id="preview_total_value">0.00</span><span class="rank" id="rank_total">—</span></div>
+        <div class="metric-row"><span class="metric-label">Raw Eff:</span><span id="preview_rawEff_value">0.00</span><span class="rank" id="rank_rawEff">—</span></div>
+        <div class="metric-row"><span class="metric-label">Throne Eff x3:</span><span id="preview_throneEff_value">0.00</span><span class="rank" id="rank_throneEff">—</span></div>
+        <div class="metric-row"><span class="metric-label">Activity %:</span><span id="preview_activityPct_value">0.00%</span><span class="rank" id="rank_activityPct">—</span></div>
+        <div class="metric-row"><span class="metric-label">Part %:</span><span id="preview_partPct_value">0.00%</span><span class="rank" id="rank_partPct">—</span></div>
+        <div class="metric-row"><span class="metric-label">Quest:</span><span id="preview_quest_value">0.00</span></div>
+        <div class="metric-row"><span class="metric-label">Hunt:</span><span id="preview_hunt_value">0.00</span></div>
+        <div class="metric-row"><span class="metric-label">Frosts:</span><span id="preview_frosts_value">0.00</span></div>
+        <div class="metric-row"><span class="metric-label">Picks:</span><span id="preview_picks">0</span></div>
+      </div>
+
+      <div class="button-row" style="margin-top:.8rem">
+        <button class="btn save" id="statsSaveBtn">Save Stats</button>
+        <button class="btn delete" id="statsDeleteBtn">Delete Entry</button>
+      </div>
+      <div class="button-row">
+        <button class="btn cancel" id="clearPlayerDataBtn">Reset Player Stats</button>
+        <button class="btn delete" id="deleteAllBtn">Delete All Data</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      // === Constants & initial state ===
+      const WEEKS = ['week 1','week 2','week 3'];
+      let currentPlayer = null;
+      let currentWeek = 'week 1';
+
+      // === Elements map ===
+      const E = {
+        playerForm: document.getElementById('playerForm'),
+        playerNameInput: document.getElementById('playerNameInput'),
+        playerCancelBtn: document.getElementById('playerCancelBtn'),
+        playersList: document.getElementById('playersList'),
+        selectedPlayerDisplay: document.getElementById('selectedPlayerDisplay'),
+        weekOptions: document.getElementById('weekOptions'),
+        weekBtns: document.querySelectorAll('.week-btn'),
+        // inputs
+        power: document.getElementById('f_power'),
+        throne: document.getElementById('f_throne'),
+        points: document.getElementById('f_points'),
+        quest: document.getElementById('f_quest'),
+        hunt: document.getElementById('f_hunt'),
+        frosts: document.getElementById('f_frosts'),
+        lava: document.getElementById('chk_lava'),
+        challenge: document.getElementById('chk_challenge'),
+        donations: document.getElementById('chk_donations'),
+        dv: document.getElementById('chk_dv'),
+        esb: document.getElementById('chk_esb'),
+        esi_tue: document.getElementById('esi_tue'),
+        esi_thu: document.getElementById('esi_thu'),
+        p100: document.getElementById('pick_100'),
+        p40: document.getElementById('pick_40'),
+        p20: document.getElementById('pick_20'),
+        p5: document.getElementById('pick_5'),
+        // preview
+        preview_total: document.getElementById('preview_total_value'),
+        preview_raw: document.getElementById('preview_rawEff_value'),
+        preview_throne: document.getElementById('preview_throneEff_value'),
+        preview_act: document.getElementById('preview_activityPct_value'),
+        preview_part: document.getElementById('preview_partPct_value'),
+        preview_qc: document.getElementById('preview_quest_value'),
+        preview_hc: document.getElementById('preview_hunt_value'),
+        preview_fc: document.getElementById('preview_frosts_value'),
+        preview_picks: document.getElementById('preview_picks'),
+        rank_total: document.getElementById('rank_total'),
+        rank_raw: document.getElementById('rank_rawEff'),
+        rank_throne: document.getElementById('rank_throneEff'),
+        rank_act: document.getElementById('rank_activityPct'),
+        rank_part: document.getElementById('rank_partPct'),
+        statsSaveBtn: document.getElementById('statsSaveBtn'),
+        statsDeleteBtn: document.getElementById('statsDeleteBtn'),
+        clearPlayerDataBtn: document.getElementById('clearPlayerDataBtn'),
+        deleteAllBtn: document.getElementById('deleteAllBtn'),
+        darkToggle: document.getElementById('darkToggle'),
+      };
+
+      // === LocalStorage helpers ===
+      const loadData = () => {
+        try { return JSON.parse(localStorage.getItem('formData') || '[]'); }
+        catch(e) { console.error('corrupt storage', e); return []; }
+      };
+      const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
+
+      // === Metrics computation (kept logic same as your provided) ===
+      function computeMetrics(o = {}) {
+        const p = Number(o.power) || 0;
+        const t = Number(o.throne) || 0;
+        const pts = Number(o.points) || 0;
+        const q = Number(o.quest) || 0;
+        const h = Number(o.hunt) || 0;
+        const f = Number(o.frosts) || 0;
+        // activity: lava + challenge + donations each 0/1; scaled to 2.5 max.
+        const activityCount = (Number(o.lava) || 0) + (Number(o.challenge) || 0) + (Number(o.donations) || 0);
+        const act = Math.min(activityCount * (2.5/3), 2.5);
+        // participation: dv/esb/esi logic, capped at 2.5
+        const dv = Number(o.dv) || 0;
+        const esb = Number(o.esb) || 0;
+        const esi = Number(o.esi) || 0; // 0,1,2 (both days => 2)
+        const part = Math.min((dv*(2.5/3)) + (esb*(2.5/3)) + (esi*(2.5/6)), 2.5);
+
+        const rawEff = p > 0 ? pts / p : 0;
+        const throneEfficiency = p > 0 ? (t / p) * 3 : 0;
+        const questContribution = q * 0.0000025;
+        const huntContribution = h / 200000;
+        const frostsContribution = f / 100000;
+
+        const total = rawEff + throneEfficiency + act + part + questContribution + huntContribution + frostsContribution;
+
+        return {
+          ...o,
+          power: Number(o.power)||0, throne: Number(o.throne)||0, points: Number(o.points)||0,
+          quest: Number(o.quest)||0, hunt: Number(o.hunt)||0, frosts: Number(o.frosts)||0,
+          activityPct: act, partPct: part, rawEff, throneEfficiency, questContribution, huntContribution, frostsContribution,
+          total, picks: Number(o.picks)||0
+        };
+      }
+
+      // === UI Rendering ===
+      function renderPlayersList() {
+        const data = loadData();
+        const names = Array.from(new Set(data.map(d => d.name).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
+        if (!names.length) {
+          E.playersList.innerHTML = '<li style="color:var(--muted);padding:.6rem">No players</li>';
+          return;
+        }
+        E.playersList.innerHTML = names.map(name => {
+          return `<li data-player="${escapeHtml(name)}">
+                    <span class="name" data-action="select" data-player="${escapeHtml(name)}">${escapeHtml(name)}</span>
+                    <span class="actions">
+                      <button class="btn delete small-btn" data-action="delete-player" data-player="${escapeHtml(name)}">Delete</button>
+                    </span>
+                  </li>`;
+        }).join('');
+      }
+
+      // small escape guard to avoid injection inside attributes
+      function escapeHtml(s='') {
+        return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/</g,'&gt;');
+      }
+
+      // === Selection & form population ===
+      function selectPlayer(name) {
+        currentPlayer = name;
+        E.selectedPlayerDisplay.textContent = name || '—';
+        // load the currentWeek entry if it exists, otherwise clear form
+        if (name) {
+          loadCurrentWeekEntry();
+          enableStatsArea(true);
+        } else {
+          clearForm();
+          enableStatsArea(false);
+        }
+        updatePreview(); // compute + show preview (or placeholders)
+      }
+
+      function enableStatsArea(enabled) {
+        // enable/disable inputs and buttons in the stats area
+        const statsControls = [
+          E.power,E.throne,E.points,E.quest,E.hunt,E.frosts,
+          E.lava,E.challenge,E.donations,E.dv,E.esb,E.esi_tue,E.esi_thu,
+          E.p100,E.p40,E.p20,E.p5,
+          E.statsSaveBtn,E.statsDeleteBtn,E.clearPlayerDataBtn
+        ];
+        statsControls.forEach(el => { if (el) el.disabled = !enabled; });
+      }
+
+      function loadCurrentWeekEntry() {
+        const data = loadData();
+        const entry = data.find(d => d.name === currentPlayer && d.week === currentWeek) || {};
+        // populate inputs
+        E.power.value = entry.power || 0;
+        E.throne.value = entry.throne || 0;
+        E.points.value = entry.points || 0;
+        E.quest.value = entry.quest || 0;
+        E.hunt.value = entry.hunt || 0;
+        E.frosts.value = entry.frosts || 0;
+        E.lava.checked = !!entry.lava;
+        E.challenge.checked = !!entry.challenge;
+        E.donations.checked = !!entry.donations;
+        E.dv.checked = !!entry.dv;
+        E.esb.checked = !!entry.esb;
+        const esi = entry.esi || 0;
+        E.esi_tue.checked = esi >= 1;
+        E.esi_thu.checked = esi === 2;
+        const picks = Number(entry.picks) || 0;
+        E.p100.checked = picks >= 100;
+        E.p40.checked = ((picks % 100) >= 40) || (picks >= 40 && picks < 100);
+        E.p20.checked = ((picks % 40) >= 20) || (picks >= 20 && picks < 40);
+        E.p5.checked = ((picks % 20) >= 5) || picks >= 5;
+      }
+
+      function clearForm() {
+        document.querySelectorAll('input[type=number]').forEach(i => i.value = 0);
+        document.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false);
+      }
+
+      // === Form state extraction ===
+      function getFormStateObject() {
+        const esi = (E.esi_tue.checked && E.esi_thu.checked) ? 2 : (E.esi_tue.checked || E.esi_thu.checked) ? 1 : 0;
+        const picks = [E.p100,E.p40,E.p20,E.p5].filter(c => c.checked).reduce((s,c) => s + Number(c.dataset.value), 0);
+        return {
+          name: currentPlayer,
+          week: currentWeek,
+          power: Number(E.power.value) || 0,
+          throne: Number(E.throne.value) || 0,
+          points: Number(E.points.value) || 0,
+          quest: Number(E.quest.value) || 0,
+          hunt: Number(E.hunt.value) || 0,
+          frosts: Number(E.frosts.value) || 0,
+          lava: E.lava.checked ? 1 : 0,
+          challenge: E.challenge.checked ? 1 : 0,
+          donations: E.donations.checked ? 1 : 0,
+          dv: E.dv.checked ? 1 : 0,
+          esb: E.esb.checked ? 1 : 0,
+          esi,
+          picks
+        };
+      }
+
+      // === Preview and ranking ===
+      function updatePreview() {
+        // when no player selected, show defaults
+        if (!currentPlayer) {
+          setPreviewValues(null);
+          return;
+        }
+        const state = getFormStateObject();
+        const m = computeMetrics(state);
+
+        // get all entries for the selected week (computed)
+        const weekEntries = loadData().filter(d => d.week === currentWeek).map(computeMetrics);
+
+        // ensure current player's computed item considered
+        const existsForPlayer = weekEntries.some(e => e.name === currentPlayer);
+        const all = existsForPlayer ? weekEntries : weekEntries.concat([m]);
+
+        setPreviewValues(m);
+        // compute ranks for several metrics
+        const rankFor = (key) => {
+          const sorted = [...all].sort((a,b) => (b[key] || 0) - (a[key] || 0));
+          const idx = sorted.findIndex(x => x.name === currentPlayer);
+          return idx >= 0 ? `${idx+1}/${sorted.length}` : '—';
+        };
+
+        E.rank_total.textContent = rankFor('total');
+        E.rank_raw.textContent = rankFor('rawEff');
+        E.rank_throne.textContent = rankFor('throneEfficiency');
+        E.rank_act.textContent = rankFor('activityPct');
+        E.rank_part.textContent = rankFor('partPct');
+      }
+
+      function setPreviewValues(m) {
+        if (!m) {
+          E.preview_total.textContent = '0.00';
+          E.preview_raw.textContent = '0.00';
+          E.preview_throne.textContent = '0.00';
+          E.preview_act.textContent = '0.00%';
+          E.preview_part.textContent = '0.00%';
+          E.preview_qc.textContent = '0.00';
+          E.preview_hc.textContent = '0.00';
+          E.preview_fc.textContent = '0.00';
+          E.preview_picks.textContent = '0';
+          E.rank_total.textContent = '—';
+          E.rank_raw.textContent = '—';
+          E.rank_throne.textContent = '—';
+          E.rank_act.textContent = '—';
+          E.rank_part.textContent = '—';
+          return;
+        }
+        E.preview_total.textContent = (m.total || 0).toFixed(2);
+        E.preview_raw.textContent = (m.rawEff || 0).toFixed(2);
+        E.preview_throne.textContent = (m.throneEfficiency || 0).toFixed(2);
+        E.preview_act.textContent = (m.activityPct || 0).toFixed(2) + '%';
+        E.preview_part.textContent = (m.partPct || 0).toFixed(2) + '%';
+        E.preview_qc.textContent = (m.questContribution || 0).toFixed(2);
+        E.preview_hc.textContent = (m.huntContribution || 0).toFixed(2);
+        E.preview_fc.textContent = (m.frostsContribution || 0).toFixed(2);
+        E.preview_picks.textContent = (m.picks || 0);
+      }
+
+      // === CRUD actions ===
+      // Add player (creates entries for all weeks)
+      function addPlayer(name) {
+        const normalized = String(name).trim();
+        if (!normalized) { alert('Enter a name'); return; }
+
+        const data = loadData();
+        if (data.some(d => d.name.toLowerCase() === normalized.toLowerCase())) {
+          alert('Player exists');
+          return;
+        }
+        const now = Date.now();
+        WEEKS.forEach((wk, i) => {
+          const row = {
+            id: `id_${now}_${i}_${normalized}`,
+            name: normalized,
+            week: wk,
+            power: 0, throne: 0, points: 0, quest: 0, hunt: 0, frosts: 0,
+            lava: 0, challenge: 0, donations: 0, dv: 0, esi: 0, esb: 0, picks: 0
+          };
+          data.push(row);
+        });
+        saveData(data);
+        renderPlayersList();
+        // auto-select the new player
+        selectPlayer(normalized);
+        E.playerNameInput.value = '';
+      }
+
+      function deletePlayer(name) {
+        if (!confirm(`Are you sure you want to delete the player "${name}" and ALL their weekly stats? This cannot be undone.`)) return;
+        const data = loadData().filter(e => e.name !== name);
+        saveData(data);
+        renderPlayersList();
+        if (currentPlayer === name) selectPlayer(null);
+      }
+
+      function saveStatsForWeek() {
+        if (!currentPlayer) { alert('Select player'); return; }
+        const data = loadData();
+        const state = getFormStateObject();
+        const computed = computeMetrics(state);
+        // ensure id if existing
+        const idx = data.findIndex(d => d.name === currentPlayer && d.week === currentWeek);
+        computed.id = idx >= 0 ? data[idx].id : `id_${Date.now()}_${currentPlayer}_${currentWeek}`;
+        if (idx >= 0) data[idx] = computed;
+        else data.push(computed);
+        saveData(data);
+        flashButton(E.statsSaveBtn);
+        renderPlayersList();
+        updatePreview();
+      }
+
+      function deleteWeekEntry() {
+        if (!currentPlayer) return alert('Select a player first');
+        if (!confirm('Delete this week entry?')) return;
+        const data = loadData().filter(d => !(d.name === currentPlayer && d.week === currentWeek));
+        saveData(data);
+        // After deletion, either load a blank state or clear inputs
+        clearForm();
+        updatePreview();
+        renderPlayersList();
+      }
+
+      function resetPlayerStats() {
+        if (!currentPlayer) return alert('Select a player first');
+        if (!confirm('Reset all stats for this player (all weeks)?')) return;
+        const data = loadData().map(e => {
+          if (e.name === currentPlayer) {
+            return {
+              ...e,
+              power: 0, throne: 0, points: 0, quest: 0, hunt: 0, frosts: 0,
+              lava: 0, challenge: 0, donations: 0, dv: 0, esi: 0, esb: 0, picks: 0
+            };
+          }
+          return e;
+        });
+        saveData(data);
+        loadCurrentWeekEntry();
+        updatePreview();
+      }
+
+      function deleteAllData() {
+        if (!confirm('Delete ALL data?')) return;
+        localStorage.removeItem('formData');
+        renderPlayersList();
+        selectPlayer(null);
+      }
+
+      // small UI helpers
+      function flashButton(btn) {
+        if (!btn) return;
+        btn.classList.add('success-flash');
+        setTimeout(() => btn.classList.remove('success-flash'), 900);
+      }
+
+      // === Event wiring ===
+      function wireEvents() {
+        // Player form submit
+        E.playerForm.addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          addPlayer(E.playerNameInput.value.trim());
+        });
+        E.playerCancelBtn.addEventListener('click', (e) => { E.playerNameInput.value = ''; });
+
+        // Players list delegation (select / delete)
+        E.playersList.addEventListener('click', (ev) => {
+          const action = ev.target.dataset.action;
+          const playerName = ev.target.dataset.player;
+          if (!action) return;
+          if (action === 'select') {
+            selectPlayer(playerName);
+            // ensure selected week button remains correct (loadCurrentWeekEntry already called)
+          } else if (action === 'delete-player') {
+            deletePlayer(playerName);
+          }
+        });
+
+        // Week buttons
+        E.weekOptions.addEventListener('click', (ev) => {
+          const btn = ev.target.closest('button[data-week]');
+          if (!btn) return;
+          E.weekBtns.forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          currentWeek = btn.dataset.week;
+          if (currentPlayer) loadCurrentWeekEntry();
+          updatePreview();
+        });
+
+        // Inputs -> update preview (delegated)
+        document.querySelectorAll('#statsSection input').forEach(inp => {
+          inp.addEventListener('input', () => updatePreview());
+          inp.addEventListener('change', () => updatePreview());
+        });
+
+        // stat buttons
+        E.statsSaveBtn.addEventListener('click', saveStatsForWeek);
+        E.statsDeleteBtn.addEventListener('click', deleteWeekEntry);
+        E.clearPlayerDataBtn.addEventListener('click', resetPlayerStats);
+        E.deleteAllBtn.addEventListener('click', deleteAllData);
+
+        // keyboard: pressing Enter while name input focused triggers add
+        E.playerNameInput.addEventListener('keypress', (ev) => {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            addPlayer(E.playerNameInput.value.trim());
+          }
+        });
+
+        // dark mode toggle + persistence
+        E.darkToggle.addEventListener('click', () => {
+          document.body.classList.toggle('dark-mode');
+          localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        });
+      }
+
+      // === Initialization ===
+      function init() {
+        // Render list immediately from storage
+        renderPlayersList();
+
+        // Default: no player selected; disable stats area until user selects a player
+        enableStatsArea(false);
+
+        // restore theme
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
+        // wire up events
+        wireEvents();
+
+        // If there's exactly one player in storage, auto-select them (nice UX)
+        const data = loadData();
+        const uniqueNames = Array.from(new Set(data.map(d=>d.name).filter(Boolean)));
+        if (uniqueNames.length === 1) {
+          selectPlayer(uniqueNames[0]);
+        }
+      }
+
+      // run init on DOM ready
+      document.addEventListener('DOMContentLoaded', init);
+
+      // Expose some functions to window for console debugging if needed
+      window._pm = {
+        loadData, saveData, computeMetrics, selectPlayer, renderPlayersList
+      };
+    })();
+  </script>
+</body>
+</html>
