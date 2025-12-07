@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Player Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s;}
+header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08);}
+header h1{margin:0;font-size:1.25rem;font-weight:600;}
+.toggle-btn{background:none;border:2px solid var(--accent);color:var(--accent);padding:.45rem .7rem;border-radius:8px;cursor:pointer;font-weight:600;}
+nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
+nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
+nav a:hover{opacity:.95;transform:translateY(-1px);}
+main{max-width:1200px;margin:1.5rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 300px;gap:1.5rem;}
+.dashboard-section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
+h2{margin-bottom:1rem;font-size:1.3rem;}
+.controls,.button-controls{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;align-items:center;}
+.filter-group{display:flex;align-items:center;gap:0.5rem;}
+.filter-group label{font-weight:500;color:var(--muted);}
+.filter-group select,.filter-group input{padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;}
+.filter-group button{border:none;color:#fff;cursor:pointer;padding:0.35rem 0.75rem;border-radius:6px;font-size:0.8rem;font-weight:500;}
+
+/* --- FIX FOR BUTTON VISIBILITY --- */
+.export-import-btn{
+  background:var(--accent);
+  color: var(--text); /* Use dark text color for contrast against the blue/yellow accent background */
+  font-weight: 600;
+}
+.export-import-btn:hover{opacity:.9;}
+/* ---------------------------------- */
+
+.clear-btn{background:#ef4444;}
+.clear-btn:hover{background:#dc2626;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:0.75rem;text-align:left;border-bottom:1px solid #e2e8f0;}
+th{background:#f1f5f9;font-weight:600;}
+tr:hover{background:#f8fafc;}
+.action-buttons{display:flex;gap:0.5rem;}
+.edit-btn{background:#10b981;color:#fff;padding:0.5rem 1rem;text-decoration:none;border-radius:6px;}
+.edit-btn:hover{background:#059669;}
+.delete-btn{background:#ef4444;color:#fff;padding:0.5rem 1rem;border:none;border-radius:6px;cursor:pointer;}
+.delete-btn:hover{background:#dc2626;}
+.top-performers{background:var(--card);padding:1rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);position:sticky;top:1rem;}
+.top-performers h3{margin:0 0 .75rem;font-size:1.1rem;}
+.top-performers ol{margin:0;padding-left:1.4rem;}
+.top-performers li{font-weight:600;margin-bottom:.4rem;}
+.top-performers .score{font-weight:400;color:var(--muted);font-size:.9rem;}
+@media (max-width:992px){main{grid-template-columns:1fr;}}
+
+/* Dark Mode Styles */
+body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;}
+body.dark-mode header,body.dark-mode nav{background:#111827;}
+body.dark-mode nav a{background:var(--accent);color:#0f172a;}
+body.dark-mode .dashboard-section,body.dark-mode .top-performers{background:#0b1320;color:var(--text);}
+body.dark-mode .export-import-btn{
+  color: #111827; /* Ensures the text is dark against the bright yellow accent in dark mode */
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Player Dashboard</h1>
+  <button class="toggle-btn" id="darkToggle">Dark Mode</button>
+</header>
+<nav>
+  <a href="index.html">Dashboard</a>
+  <a href="trends.html">Trends</a>
+  <a href="form.html">Add Data</a>
+  <a href="config.html">Config</a>
+</nav>
+<main>
+  <div class="dashboard-section">
+    <h2>Weekly Data</h2>
+    <div class="controls">
+      <div class="filter-group">
+        <label for="weekSelect">View:</label>
+        <select id="weekSelect"></select>
+      </div>
+      <div class="filter-group">
+        <label for="rankSortSelect">Sort by:</label>
+        <select id="rankSortSelect">
+          <option value="total">Total Score</option>
+          <option value="rawEff">Raw Efficiency</option>
+          <option value="throneEfficiency">Throne Efficiency</option>
+          <option value="activityPct">Activity %</option>
+          <option value="partPct">Participation %</option>
+          <option value="points">Points</option>
+          <option value="power">Power</option>
+          <option value="picks">Picks</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="searchInput">Search:</label>
+        <input type="text" id="searchInput" placeholder="Enter name...">
+      </div>
+    </div>
+    <div class="button-controls">
+      <button id="exportBtn" class="export-import-btn">Export CSV</button>
+      <button id="importBtn" class="export-import-btn">Import CSV</button>
+      <input type="file" id="importFile" accept=".csv" style="display:none;">
+      <button id="deleteAllBtn" class="clear-btn">Delete All</button>
+    </div>
+    <table id="dataTable"><thead><tr></tr></thead><tbody id="dataTableBody"></tbody></table>
+  </div>
+  <div class="top-performers">
+    <h3>Top 3 Overall</h3>
+    <ol id="top3List"><li>Loading...</li></ol>
+  </div>
+</main>
+
+<script>
+const WEEKS = ['week 1', 'week 2', 'week 3'];
+const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
+const saveData = d => localStorage.setItem('formData', JSON.stringify(d));
+const MULTIPLIER_KEY = 'scoringMultipliers';
+
+// Default values (must match the defaults in config.html)
+const DEFAULTS = {
+    M_WEEK1: 0.1, // 10%
+    M_QUEST: 0.0000025,
+    M_HUNT: 0.000005, // Equivalent to 1/200000
+    M_FROST: 0.00001, // Equivalent to 1/100000
+    M_LANE: 1 / 200
+};
+
+// Function to load the current multipliers (from localStorage or defaults)
+function loadMultipliers() {
+    const saved = localStorage.getItem(MULTIPLIER_KEY);
+    // Combine defaults and saved values, ensuring all keys are present
+    const loaded = saved ? JSON.parse(saved) : {};
+    return { ...DEFAULTS, ...loaded };
+}
+
+function ensureAllWeeks() {
+  let data = loadData();
+  const players = Array.from(new Set(data.map(d => d.name))).filter(Boolean);
+  const existing = new Set(data.map(d => `${d.name}|${d.week}`));
+  let changed = false;
+  players.forEach(name => {
+    WEEKS.forEach(week => {
+      if (!existing.has(`${name}|${week}`)) {
+        data.push({
+          id: `id_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+          name, week,
+          power:0, throne:0, points:0, quest:0, lane:0, hunt:0, frosts:0,
+          lava:0, challenge:0, donations:0, dv:0, esi:0, esb:0, picks:0
+        });
+        changed = true;
+      }
+    });
+  });
+  if (changed) saveData(data);
+}
+ensureAllWeeks();
+
+// Helper to calculate single-week metrics (Uses the loaded multipliers)
+function calculateMetrics(e) {
+  const multipliers = loadMultipliers(); // Load multipliers here
+
+  const power = Number(e.power) || 0;
+  const points = Number(e.points) || 0;
+  const throne = Number(e.throne) || 0;
+  const quest = Number(e.quest) || 0;
+  const lane = Number(e.lane) || 0;
+  const hunt = Number(e.hunt) || 0;
+  const frosts = Number(e.frosts) || 0;
+
+  const act = Math.min((e.lava||0 + e.challenge||0 + e.donations||0) * (2.5/3), 2.5);
+  const part = Math.min((e.dv||0)*(2.5/3) + (e.esb||0)*(2.5/3) + (e.esi||0)*(2.5/6), 2.5);
+  const rawEff = power > 0 ? points / power : 0;
+  const throneEff = power > 0 ? (throne / power) * 3 : 0;
+  
+  // Single-week contributions using loaded multipliers
+  const questC = quest * multipliers.M_QUEST;
+  const laneC = lane * multipliers.M_LANE;
+  const huntC = hunt * multipliers.M_HUNT;
+  const frostsC = frosts * multipliers.M_FROST;
+
+  const total = rawEff + throneEff + act + part + questC + laneC + huntC + frostsC; 
+
+  return { ...e, activityPct: act, partPct: part, rawEff, throneEfficiency: throneEff,
+           questContribution: questC, laneContribution: laneC, huntContribution: huntC, frostsContribution: frostsC, 
+           total, picks: Number(e.picks)||0 };
+}
+
+/**
+ * Calculates the special Overall Total Score based on multi-week data.
+ */
+function calculateOverallMetrics(playerEntries) {
+    const multipliers = loadMultipliers(); // Load multipliers here
+
+    const metrics = playerEntries.map(calculateMetrics);
+    
+    // 1. Aggregate Total Values
+    const totalPower = metrics.reduce((sum, m) => sum + (Number(m.power) || 0), 0);
+    const totalPoints = metrics.reduce((sum, m) => sum + (Number(m.points) || 0), 0);
+    const totalThrone = metrics.reduce((sum, m) => sum + (Number(m.throne) || 0), 0);
+    const totalQuest = metrics.reduce((sum, m) => sum + (Number(m.quest) || 0), 0);
+    const totalHunt = metrics.reduce((sum, m) => sum + (Number(m.hunt) || 0), 0);
+    const totalPicks = metrics.reduce((sum, m) => sum + (Number(m.picks) || 0), 0);
+
+    const week1Metrics = metrics.find(m => m.week === 'week 1') || {};
+    const week2Frosts = Number(metrics.find(m => m.week === 'week 2')?.frosts) || 0;
+    const week3Frosts = Number(metrics.find(m => m.week === 'week 3')?.frosts) || 0;
+
+    // 2. Calculate Efficiency Base (Raw Eff: Total Points - Wk1 Points)
+    const week1Points = Number(week1Metrics.points) || 0;
+    const pointsForEff = totalPoints - week1Points; // Points - Wk1 Points
+
+    const overallRawEff = totalPower > 0 ? pointsForEff / totalPower : 0;
+    const overallThroneEff = totalPower > 0 ? (totalThrone / totalPower) * 3 : 0; // Throne 3x
+    const efficiencyBase = overallRawEff + overallThroneEff;
+
+    // 3. Calculate Activity & Participation Sum (Capped at 2.5% per week = 7.5% total)
+    const totalActivity = metrics.reduce((sum, m) => sum + m.activityPct, 0);
+    const totalPart = metrics.reduce((sum, m) => sum + m.partPct, 0);
+    const cappedActivity = Math.min(totalActivity, 7.5);
+    const cappedPart = Math.min(totalPart, 7.5);
+    const activityPartSum = cappedActivity + cappedPart;
+
+    // 4. Calculate Weighted Contributions
+    
+    // A. Week 1 Bonus: percentage of the week 1 score to the total
+    // CHANGED: Using raw points for Week 1 Bonus
+    const week1BaseValue = week1Points; 
+    const c_week1 = week1BaseValue * multipliers.M_WEEK1;
+
+    // B. Total Quest: percentage of quests
+    const c_quest = totalQuest * multipliers.M_QUEST;
+
+    // C. Total Ultimate Hunting: percentage of ultimate hunting
+    const c_hunt = totalHunt * multipliers.M_HUNT;
+
+    // D. Frosts: compares Wk2 to Wk3, whichever is higher weighs more (max is used)
+    const maxFrosts = Math.max(week2Frosts, week3Frosts);
+    const c_frosts = maxFrosts * multipliers.M_FROST;
+    
+    // 5. Final Overall Score
+    const overallTotal = efficiencyBase + activityPartSum + c_week1 + c_quest + c_hunt + c_frosts;
+
+    // NOTE: totalEfficiency is the sum (Raw Eff + Throne Eff)
+    const totalEfficiency = overallRawEff + overallThroneEff;
+
+    return {
+        name: playerEntries[0].name,
+        power: totalPower,
+        points: totalPoints,
+        throne: totalThrone,
+        picks: totalPicks,
+        rawEff: overallRawEff, 
+        throneEfficiency: overallThroneEff, // Keep this separate for display
+        totalEfficiency: totalEfficiency, 
+        activityPct: cappedActivity,
+        partPct: cappedPart,
+        // Contribution breakdowns for display
+        c_week1: c_week1,
+        c_quest: c_quest,
+        c_hunt: c_hunt,
+        c_frosts: c_frosts,
+        total: overallTotal
+    };
+}
+
+function formatPower(v) {
+  const n = Number(v);
+  if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  return n.toLocaleString();
+}
+function formatNum(n) { return Number(n).toLocaleString(); }
+function formatDec(n,d=2) { return Number(n).toFixed(d); }
+
+const sortOptions = {
+  total:(a,b)=>b.total-a.total,
+  rawEff:(a,b)=>b.rawEff-a.rawEff,
+  throneEfficiency:(a,b)=>b.throneEfficiency-a.throneEfficiency,
+  activityPct:(a,b)=>b.activityPct-a.activityPct,
+  partPct:(a,b)=>b.partPct-a.partPct,
+  points:(a,b)=>b.points-a.points,
+  power:(a,b)=>b.power-a.power,
+  picks:(a,b)=>b.picks-a.picks
+};
+
+function deleteEntry(id) {
+  if (confirm("Delete this entry?")) {
+    saveData(loadData().filter(e => e.id !== id));
+    ensureAllWeeks();
+    updateDisplay(); updateTop3();
+  }
+}
+
+function handleExport() {
+  const data = loadData();
+  if (!data.length) return alert("No data");
+  // Use single-week metrics for standard export format
+  const computedData = data.map(calculateMetrics);
+  const headers = Object.keys(computedData[0]);
+  const csv = [headers.join(','), ...computedData.map(r => headers.map(h => r[h]).join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'}));
+  a.download = 'player_stats.csv';
+  a.click();
+}
+
+document.getElementById('exportBtn').onclick = handleExport;
+document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const lines = ev.target.result.split('\n').filter(l => l.trim());
+    const headers = lines[0].split(',');
+    const imported = lines.slice(1).map(line => {
+      const vals = line.split(',');
+      const obj = {};
+      headers.forEach((h,i) => obj[h.trim()] = isNaN(vals[i]) ? vals[i] : Number(vals[i]));
+      obj.id = obj.id || 'id_' + Math.random().toString(36).slice(2);
+      return obj;
+    });
+    saveData(imported);
+    ensureAllWeeks();
+    populateWeekFilter(); updateDisplay(); updateTop3();
+    alert("Imported!");
+  };
+  reader.readAsText(file);
+};
+
+document.getElementById('deleteAllBtn').onclick = () => {
+  if (confirm("Delete ALL data?")) {
+    localStorage.removeItem('formData');
+    ensureAllWeeks();
+    populateWeekFilter(); updateDisplay(); updateTop3();
+  }
+};
+
+function computeTop3Overall() {
+  const data = loadData();
+  const playerGroups = data.reduce((acc, curr) => {
+    acc[curr.name] = acc[curr.name] || [];
+    acc[curr.name].push(curr);
+    return acc;
+  }, {});
+
+  const allOverallMetrics = Object.values(playerGroups).map(calculateOverallMetrics);
+
+  return allOverallMetrics.sort((a,b) => b.total - a.total).slice(0,3);
+}
+
+function updateTop3() {
+  const top3 = computeTop3Overall();
+  const list = document.getElementById('top3List');
+  list.innerHTML = top3.length ? top3.map((p,i) => `<li>${i+1}. ${p.name} <span class="score"><strong>${formatDec(p.total)}</strong></span></li>`).join('') : '<li>No data</li>';
+}
+
+/**
+ * FIXED: The sorting now occurs BEFORE the table rows are rendered.
+ */
+function updateDisplay() {
+  const view = document.getElementById('weekSelect').value;
+  localStorage.setItem('lastSelectedWeek', view);
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let data = loadData();
+  let display = [];
+  const header = document.querySelector('#dataTable thead tr');
+  const tbody = document.getElementById('dataTableBody');
+  tbody.innerHTML = '';
+
+
+  if (view === '__total') {
+    const playerGroups = data.reduce((acc, curr) => {
+      acc[curr.name] = acc[curr.name] || [];
+      acc[curr.name].push(curr);
+      return acc;
+    }, {});
+    
+    // 1. Compute overall metrics
+    display = Object.values(playerGroups).map(calculateOverallMetrics);
+    
+    // 2. Filter, then Sort the data array before rendering
+    display = display.filter(d => d.name.toLowerCase().includes(search));
+    display.sort(sortOptions[document.getElementById('rankSortSelect').value]);
+    
+    // 3. Render the table using the now-sorted 'display' array
+    header.innerHTML = `<th>Rank</th><th>Name</th><th>Power</th><th>Points</th>
+                        <th>Raw Eff.</th><th>Throne Eff.</th><th>Act %</th><th>Part %</th>
+                        <th>Quest Cont.</th><th>Hunt Cont.</th><th>Frost Cont.</th><th>Wk 1 Cont.</th>
+                        <th><strong>TOTAL Score</strong></th><th>Picks</th>`;
+
+    display.forEach((d,i) => {
+      const row = document.createElement('tr');
+      // Use the index (i) of the sorted array for the Rank
+      row.innerHTML = `<td>${i+1}</td><td>${d.name}</td><td>${formatPower(d.power)}</td>
+        <td>${formatNum(d.points)}</td><td>${formatDec(d.rawEff)}</td>
+        <td>${formatDec(d.throneEfficiency)}</td>
+        <td>${formatDec(d.activityPct)}%</td><td>${formatDec(d.partPct)}%</td>
+        <td>${formatDec(d.c_quest)}</td><td>${formatDec(d.c_hunt)}</td>
+        <td>${formatDec(d.c_frosts)}</td><td>${formatDec(d.c_week1)}</td>
+        <td><strong>${formatDec(d.total)}</strong></td><td>${formatNum(d.picks)}</td>`;
+      tbody.appendChild(row);
+    });
+
+  } else {
+    // Single week view uses the simple single-entry calculation
+    display = data.filter(e => e.week === view).map(calculateMetrics);
+    
+    // 2. Filter, then Sort the data array before rendering
+    display = display.filter(d => d.name.toLowerCase().includes(search));
+    display.sort(sortOptions[document.getElementById('rankSortSelect').value]);
+    
+    // 3. Render the table using the now-sorted 'display' array
+    // Header for the Single Week view (including all raw inputs)
+    header.innerHTML = `<th>Name</th><th>Week</th><th>Power</th><th>Points</th><th>Raw Eff.</th><th>Act %</th><th>Part %</th><th>Throne Eff.</th><th>Quest</th><th>Lane</th><th>Hunt</th><th>Frosts</th><th>Picks</th><th>Actions</th>`;
+
+    display.forEach((d) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${d.name}</td><td>${d.week}</td><td>${formatPower(d.power)}</td>
+        <td>${formatNum(d.points)}</td><td>${formatDec(d.rawEff)}</td>
+        <td>${formatDec(d.activityPct)}%</td><td>${formatDec(d.partPct)}%</td>
+        <td>${formatDec(d.throneEfficiency)}</td><td>${formatDec(d.quest)}</td>
+        <td>${formatDec(d.lane)}</td><td>${formatDec(d.hunt)}</td><td>${formatDec(d.frosts)}</td><td>${formatNum(d.picks)}</td>
+        <td class="action-buttons">
+          <a href="form.html" class="edit-btn" onclick="editPlayer('${d.name}','${d.week}');return false;">Edit</a>
+          <button class="delete-btn" onclick="deleteEntry('${d.id}')">Delete</button>
+        </td>`;
+      tbody.appendChild(row);
+    });
+  }
+}
+
+function populateWeekFilter() {
+  const weeks = ['__total', ...WEEKS];
+  const sel = document.getElementById('weekSelect');
+  sel.innerHTML = weeks.map(w => `<option value="${w}">${w==='__total'?'Overall Score':w}</option>`).join('');
+  const last = localStorage.getItem('lastSelectedWeek') || '__total';
+  if (weeks.includes(last)) sel.value = last;
+  updateDisplay(); updateTop3();
+}
+
+function editPlayer(name, week) {
+  localStorage.setItem('editTargetName', name);
+  localStorage.setItem('editTargetWeek', week);
+  window.location.href = 'form.html';
+}
+
+document.getElementById('weekSelect').onchange = () => { updateDisplay(); updateTop3(); };
+document.getElementById('rankSortSelect').onchange = updateDisplay;
+document.getElementById('searchInput').oninput = updateDisplay;
+
+document.getElementById('darkToggle').onclick = () => {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+};
+if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
+populateWeekFilter();
+</script>
+</body>
+</html>
