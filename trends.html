@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Player Trends</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+:root{
+  --bg:#f8fafc;
+  --text:#1e293b;
+  --card:#ffffff;
+  --accent:#3b82f6;
+  --muted:#475569;
+}
+*{box-sizing:border-box}
+body{ margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial; background:var(--bg); color:var(--text); transition:background .25s,color .25s; }
+
+header{ background:#1e40af; color:#fff; padding:1rem 1.5rem; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,.08); display:flex; justify-content:space-between; align-items:center; }
+header h1{ margin:0; font-size:1.5rem; font-weight:600; }
+
+.toggle-btn{ background:none; border:2px solid var(--accent); color:var(--accent); padding:.45rem .7rem; border-radius:8px; cursor:pointer; font-weight:600; }
+
+nav{ display:flex; justify-content:center; gap:10px; padding:0.75rem; background:#e2e8f0; }
+nav a{ color:#fff; text-decoration:none; padding:.6rem 1rem; background:var(--accent); border-radius:6px; font-weight:600; }
+nav a:hover{ opacity:.95; transform:translateY(-1px); }
+
+main{ max-width:1200px; margin:1.5rem auto; padding:0 1rem; }
+.section{ background:var(--card); padding:1rem; border-radius:12px; box-shadow:0 6px 20px rgba(2,6,23,0.04); }
+.section h2{ font-size:1.25rem; margin-bottom:1rem; }
+
+.controls{ display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; }
+.filter-group{ display:flex; align-items:center; gap:0.5rem; }
+.filter-group label{ font-weight:500; color:var(--muted); }
+.filter-group select{ padding:.5rem; border-radius:6px; border:1px solid #e2e8f0; background:var(--card); color:var(--text); font-size:.9rem; }
+.filter-group button{ padding:.5rem 1rem; border-radius:6px; border:0; font-weight:500; cursor:pointer; background:#6b7280; color:#fff; }
+.filter-group button:hover{ background:#4b5563; }
+
+canvas{ max-width:100%; }
+
+/* Dark mode */
+body.dark-mode{
+  --bg:#0f172a;
+  --text:#facc15;
+  --card:#111827;
+  --accent:#fbbf24;
+}
+body.dark-mode header{ background:#111827; color:var(--text); }
+body.dark-mode nav{ background:#111827; }
+body.dark-mode nav a{ background:var(--accent); color:#0f172a; }
+body.dark-mode .section{ background:#0b1320; color:var(--text); }
+body.dark-mode .controls select{ background:#1f2937; color:var(--text); border:1px solid #334155; }
+body.dark-mode .filter-group button{ background:#fbbf24; color:#0f172a; }
+
+@media(max-width:900px){ .controls{ flex-direction:column; align-items:flex-start; } nav{ flex-wrap:wrap; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Player Stats Trends</h1>
+  <button class="toggle-btn" id="darkToggle">🌙</button>
+</header>
+
+<nav>
+  <a href="index.html">Dashboard</a>
+  <a href="trends.html">Trends</a>
+  <a href="form.html">Add Data</a>
+</nav>
+
+<main>
+  <section class="section">
+    <h2>Player Performance Trend</h2>
+    <div class="controls">
+      <div class="filter-group">
+        <label for="trendPlayerSelect">Players:</label>
+        <select id="trendPlayerSelect" multiple size="5"></select>
+      </div>
+      <div class="filter-group">
+        <label for="trendMetricSelect">Metric:</label>
+        <select id="trendMetricSelect">
+          <option value="rawEff">Raw Efficiency</option>
+          <option value="points">Points</option>
+          <option value="power">Power</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <button id="resetBtn">Reset</button>
+      </div>
+    </div>
+    <canvas id="trendChart"></canvas>
+  </section>
+</main>
+
+<script>
+function loadData() {
+  try { return JSON.parse(localStorage.getItem('formData') || '[]'); }
+  catch(e){ console.error(e); return []; }
+}
+
+// *** UNIFIED METRIC CALCULATION LOGIC (Copied from form.html) ***
+function calculateMetrics(obj){
+  const power = +obj.power || 0;
+  const throne = +obj.throne || 0;
+  const points = +obj.points || 0;
+
+  // CONSTANTS
+  const ACTIVITY_TICK_VALUE = 2.5 / 3;
+  const PARTICIPATION_DV_ESB_VALUE = 2.5 / 3;
+  const PARTICIPATION_ESI_TICK_VALUE = 2.5 / 6;
+
+  // Activity: (max 2.5%)
+  const activityCount = (obj.lava) + (obj.challenge) + (obj.donations);
+  const activityPct = Math.min(activityCount * ACTIVITY_TICK_VALUE, 2.5);
+
+  // Participation (max 2.5%)
+  const dv = (obj.dv || 0) * PARTICIPATION_DV_ESB_VALUE;
+  const esb = (obj.esb || 0) * PARTICIPATION_DV_ESB_VALUE;
+  const esi = (obj.esi || 0) * PARTICIPATION_ESI_TICK_VALUE;
+  
+  const rawPartPct = dv + esb + esi;
+  const partPct = Math.min(rawPartPct, 2.5);
+
+  const picks = +obj.picks || 0;
+
+  // Efficiency
+  const rawEff = power > 0 ? points / power : 0;
+  const throneEfficiency = power > 0 ? throne / power : 0;
+
+  const total = rawEff + throneEfficiency + activityPct + partPct; 
+
+  return { 
+    ...obj, 
+    activityPct: parseFloat(activityPct.toFixed(2)), 
+    partPct: parseFloat(partPct.toFixed(2)), 
+    rawEff: parseFloat(rawEff.toFixed(2)), 
+    throneEfficiency: parseFloat(throneEfficiency.toFixed(2)), 
+    total: parseFloat(total.toFixed(2))
+  };
+}
+// *************************************************************
+
+let trendChart;
+const playerColors={};
+function getRandomColor(){const r=Math.floor(Math.random()*255),g=Math.floor(Math.random()*255),b=Math.floor(Math.random()*255); return `rgb(${r},${g},${b})`; }
+
+function updateGraph(){
+  // Ensure we calculate metrics using the correct, unified logic
+  const data=loadData().map(calculateMetrics); 
+  const selectedPlayers=Array.from(document.getElementById('trendPlayerSelect').options)
+    .filter(o=>o.selected).map(o=>o.value);
+  const metric=document.getElementById('trendMetricSelect').value;
+
+  if(trendChart) trendChart.destroy();
+  if(selectedPlayers.length===0){ 
+    const ctx=document.getElementById('trendChart').getContext('2d'); 
+    trendChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[]},options:{responsive:true,scales:{x:{type:'category'},y:{beginAtZero:true}}}}); 
+    return; 
+  }
+
+  const datasets=selectedPlayers.map(player=>{
+    const playerData=data.filter(e=>e.name===player).sort((a,b)=> (a.week||'').localeCompare(b.week||''));
+    if(!playerColors[player]) playerColors[player]=getRandomColor();
+    return {label:player,data:playerData.map(e=>e[metric]),borderColor:playerColors[player],fill:false,tension:0.1};
+  });
+
+  const allWeeks=Array.from(new Set(data.map(e=>e.week))).sort((a,b)=>a.localeCompare(b));
+  
+  // *** REMOVED custom yAxisConfig to let Chart.js auto-scale based on the data range ***
+  const ctx=document.getElementById('trendChart').getContext('2d');
+  trendChart=new Chart(ctx,{type:'line',data:{labels:allWeeks,datasets},options:{responsive:true,scales:{x:{type:'category'},y:{beginAtZero:true}}}});
+}
+
+function resetSelection(){ Array.from(document.getElementById('trendPlayerSelect').options).forEach(o=>o.selected=false); updateGraph(); }
+
+function populatePlayers(){
+  const data=loadData();
+  const playerSelect=document.getElementById('trendPlayerSelect');
+  const names=[...new Set(data.map(e=>e.name))].filter(Boolean).sort();
+  playerSelect.innerHTML=names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  updateGraph();
+}
+
+document.getElementById('trendPlayerSelect').addEventListener('change',updateGraph);
+document.getElementById('trendMetricSelect').addEventListener('change',updateGraph);
+document.getElementById('resetBtn').addEventListener('click',resetSelection);
+
+/* Dark mode toggle */
+const darkToggle=document.getElementById('darkToggle');
+if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark-mode');
+darkToggle.addEventListener('click',()=>{document.body.classList.toggle('dark-mode');localStorage.setItem('theme',document.body.classList.contains('dark-mode')?'dark':'light');});
+
+populatePlayers();
+</script>
+</body>
+</html>
