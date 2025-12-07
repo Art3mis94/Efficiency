@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Multiplier Configuration</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s;}
+header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08);}
+header h1{margin:0;font-size:1.25rem;font-weight:600;}
+nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
+nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
+nav a:hover{opacity:.95;transform:translateY(-1px);}
+main{max-width:800px;margin:2rem auto;padding:0 1rem;}
+.config-section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
+h2{margin-bottom:1.5rem;font-size:1.3rem;color:var(--accent);}
+.multiplier-group{margin-bottom:1.5rem;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;}
+.multiplier-group label{display:block;margin-bottom:0.5rem;font-weight:600;color:var(--text);}
+.multiplier-group input[type="number"], .multiplier-group input[type="range"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.range-display {
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 5px;
+}
+.save-btn{
+    background:#10b981;
+    color:#fff;
+    padding:0.75rem 1.5rem;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+    display:block;
+    width: 100%;
+    margin-top: 1.5rem;
+}
+.save-btn:hover{background:#059669;}
+
+</style>
+</head>
+<body>
+<header>
+  <h1>Multiplier Configuration</h1>
+</header>
+<nav>
+  <a href="index.html">Dashboard</a>
+  <a href="form.html">Add Data</a>
+  <a href="config.html">Config</a>
+</nav>
+<main>
+  <div class="config-section">
+    <h2>Adjust Scoring Weights 📊</h2>
+
+    <div class="multiplier-group">
+        <label for="M_WEEK1_input">Week 1 Score Bonus (% of Week 1 Total Score):</label>
+        <input type="number" id="M_WEEK1_input" min="0" step="any" placeholder="Enter percentage (e.g., 10 for 10%, 0.5 for 0.5%)">
+        <div style="font-size:0.85rem;color:var(--muted);margin-top:5px;">This value represents the percentage (e.g., enter 10 for 10%).</div>
+    </div>
+    
+    <div class="multiplier-group">
+        <label for="M_QUEST">Quest Multiplier (e.g., 0.0000025):</label>
+        <input type="number" id="M_QUEST" step="any">
+    </div>
+
+    <div class="multiplier-group">
+        <label for="M_HUNT">Ultimate Hunting Multiplier (e.g., 0.000005):</label>
+        <input type="number" id="M_HUNT" step="any">
+    </div>
+    
+    <div class="multiplier-group">
+        <label for="M_FROST">Frost Comparison Multiplier (Applied to Max Wk 2/3 Frosts):</label>
+        <input type="number" id="M_FROST" step="any">
+    </div>
+
+    <button id="saveBtn" class="save-btn">Save Multipliers</button>
+  </div>
+</main>
+
+<script>
+const MULTIPLIER_KEY = 'scoringMultipliers';
+
+// Default values (must match the defaults in index.html)
+const DEFAULTS = {
+    M_WEEK1: 0.1, // 10%
+    M_QUEST: 0.0000025,
+    M_HUNT: 0.000005, 
+    M_FROST: 0.00001
+};
+
+// 1. Load existing or default values
+function loadMultipliers() {
+    const saved = localStorage.getItem(MULTIPLIER_KEY);
+    return saved ? JSON.parse(saved) : DEFAULTS;
+}
+
+// 2. Set the UI elements based on loaded values
+function initializeUI() {
+    const multipliers = loadMultipliers();
+    
+    // Week 1 Multiplier (Input Logic)
+    const M_WEEK1_input = document.getElementById('M_WEEK1_input');
+    
+    // Convert the decimal multiplier (e.g., 0.1) back to a percentage for the user (e.g., 10)
+    const week1Pct = multipliers.M_WEEK1 * 100;
+    M_WEEK1_input.value = week1Pct;
+    
+    // M_QUEST, M_HUNT, M_FROST are left as decimals
+    document.getElementById('M_QUEST').value = multipliers.M_QUEST;
+    document.getElementById('M_HUNT').value = multipliers.M_HUNT;
+    document.getElementById('M_FROST').value = multipliers.M_FROST;
+}
+
+// 3. Save the new values to localStorage
+function saveMultipliers() {
+    const M_WEEK1_input = document.getElementById('M_WEEK1_input');
+    const week1InputVal = Number(M_WEEK1_input.value) || 0;
+
+    const newMultipliers = {
+        // Convert the input percentage (e.g., 10) back to a decimal multiplier (e.g., 0.1)
+        M_WEEK1: week1InputVal / 100, 
+        M_QUEST: Number(document.getElementById('M_QUEST').value) || 0,
+        M_HUNT: Number(document.getElementById('M_HUNT').value) || 0,
+        M_FROST: Number(document.getElementById('M_FROST').value) || 0,
+    };
+
+    localStorage.setItem(MULTIPLIER_KEY, JSON.stringify(newMultipliers));
+    alert('Multipliers saved successfully! The Dashboard will use these new values.');
+}
+
+document.getElementById('saveBtn').onclick = saveMultipliers;
+
+// Initialize when the page loads
+initializeUI();
+</script>
+</body>
+</html>
