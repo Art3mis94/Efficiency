@@ -188,71 +188,79 @@ function calculateMetrics(e) {
 }
 
 /**
- * Calculates the special Overall Total Score based on multi-week data.
+ * Calculates the special Overall Total Score based on multi-week data and specific rules.
  */
 function calculateOverallMetrics(playerEntries) {
     const multipliers = loadMultipliers(); // Load multipliers here
 
     const metrics = playerEntries.map(calculateMetrics);
     
-    // 1. Aggregate Total Values
-    const totalPower = metrics.reduce((sum, m) => sum + (Number(m.power) || 0), 0);
-    const totalPoints = metrics.reduce((sum, m) => sum + (Number(m.points) || 0), 0);
-    const totalThrone = metrics.reduce((sum, m) => sum + (Number(m.throne) || 0), 0);
-    const totalQuest = metrics.reduce((sum, m) => sum + (Number(m.quest) || 0), 0);
-    const totalHunt = metrics.reduce((sum, m) => sum + (Number(m.hunt) || 0), 0);
-    const totalPicks = metrics.reduce((sum, m) => sum + (Number(m.picks) || 0), 0);
-
+    // 1. Find specific week metrics
     const week1Metrics = metrics.find(m => m.week === 'week 1') || {};
+    const week3Metrics = metrics.find(m => m.week === 'week 3') || {};
+    const week1Points = Number(week1Metrics.points) || 0;
     const week2Frosts = Number(metrics.find(m => m.week === 'week 2')?.frosts) || 0;
     const week3Frosts = Number(metrics.find(m => m.week === 'week 3')?.frosts) || 0;
 
-    // 2. Calculate Efficiency Base (Raw Eff: Total Points - Wk1 Points)
-    const week1Points = Number(week1Metrics.points) || 0;
-    const pointsForEff = totalPoints - week1Points; // Points - Wk1 Points
+    // 2. Aggregate Base Totals (Sum across all 3 weeks)
+    const totalPoints = metrics.reduce((sum, m) => sum + (Number(m.points) || 0), 0);
+    const totalQuest = metrics.reduce((sum, m) => sum + (Number(m.quest) || 0), 0);
+    const totalHunt = metrics.reduce((sum, m) => sum + (Number(m.hunt) || 0), 0);
+    const totalPicks = metrics.reduce((sum, m) => sum + (Number(m.picks) || 0), 0); // Picks are summed but not scored
 
+    // 3. Overall Power and Throne (USE WEEK 3 ONLY)
+    const totalPower = Number(week3Metrics.power) || 0;
+    const totalThrone = Number(week3Metrics.throne) || 0;
+    
+    // 4. Efficiency Calculation (Raw + Throne)
+    // Efficiency: (week 3 power only, efficiency = (week 3 points - week 1 points)/week 3 power)
+    const pointsForEff = totalPoints - week1Points; 
+
+    // Raw Efficiency Calculation
     const overallRawEff = totalPower > 0 ? pointsForEff / totalPower : 0;
-    const overallThroneEff = totalPower > 0 ? (totalThrone / totalPower) * 3 : 0; // Throne 3x
-    const efficiencyBase = overallRawEff + overallThroneEff;
-
-    // 3. Calculate Activity & Participation Sum (Capped at 2.5% per week = 7.5% total)
+    
+    // Throne Efficiency Calculation (3 * Throne Eff)
+    const overallThroneEff = totalPower > 0 ? (totalThrone / totalPower) * 3 : 0;
+    
+    // 5. Activity & Participation Sum (Capped at 2.5% per week = 7.5% total)
+    // Sum of all weeks for activity + sum of all weeks participation
     const totalActivity = metrics.reduce((sum, m) => sum + m.activityPct, 0);
     const totalPart = metrics.reduce((sum, m) => sum + m.partPct, 0);
-    const cappedActivity = Math.min(totalActivity, 7.5);
-    const cappedPart = Math.min(totalPart, 7.5);
+    const cappedActivity = Math.min(totalActivity, 7.5); // Still capped per your logic
+    const cappedPart = Math.min(totalPart, 7.5);       // Still capped per your logic
     const activityPartSum = cappedActivity + cappedPart;
 
-    // 4. Calculate Weighted Contributions
-    
-    // A. Week 1 Bonus: percentage of the week 1 score to the total
-    // CHANGED: Using raw points for Week 1 Bonus
-    const week1BaseValue = week1Points; 
-    const c_week1 = week1BaseValue * multipliers.M_WEEK1;
+    // 6. Weighted Contributions
+    // Week 1 Bonus: week 1 points * multiplier
+    const c_week1 = week1Points * multipliers.M_WEEK1;
 
-    // B. Total Quest: percentage of quests
+    // Total Quest: quests * multiplier
     const c_quest = totalQuest * multipliers.M_QUEST;
 
-    // C. Total Ultimate Hunting: percentage of ultimate hunting
+    // Total Ultimate Hunting: ultimate hunting * multiplier
     const c_hunt = totalHunt * multipliers.M_HUNT;
 
-    // D. Frosts: compares Wk2 to Wk3, whichever is higher weighs more (max is used)
+    // Frosts: max(Wk2, Wk3) * multiplier
     const maxFrosts = Math.max(week2Frosts, week3Frosts);
     const c_frosts = maxFrosts * multipliers.M_FROST;
     
-    // 5. Final Overall Score
-    const overallTotal = efficiencyBase + activityPartSum + c_week1 + c_quest + c_hunt + c_frosts;
+    // 7. Final Overall Score
+    // Final Score = RawEff + Wk1Bonus + ThroneEff + ActSum + PartSum + QuestCont + HuntCont + FrostCont
+    const overallTotal = overallRawEff + c_week1 + overallThroneEff + activityPartSum + c_quest + c_hunt + c_frosts;
 
-    // NOTE: totalEfficiency is the sum (Raw Eff + Throne Eff)
+    // NOTE: totalEfficiency for display purposes
     const totalEfficiency = overallRawEff + overallThroneEff;
 
     return {
         name: playerEntries[0].name,
+        // Use Week 3 for Power/Throne, Total for Points/Picks
         power: totalPower,
         points: totalPoints,
         throne: totalThrone,
         picks: totalPicks,
+        // Calculated Metrics
         rawEff: overallRawEff, 
-        throneEfficiency: overallThroneEff, // Keep this separate for display
+        throneEfficiency: overallThroneEff, 
         totalEfficiency: totalEfficiency, 
         activityPct: cappedActivity,
         partPct: cappedPart,
