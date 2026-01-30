@@ -33,6 +33,8 @@
     .players-list{margin:0;padding:0;list-style:none;max-height:42vh;overflow:auto;}
     .players-list li{display:flex;align-items:center;justify-content:space-between;padding:.5rem;border-radius:8px;margin-bottom:.45rem;background:linear-gradient(180deg,rgba(0,0,0,0.01),transparent);box-shadow:0 1px 0 rgba(2,6,23,0.03);cursor:pointer;}
     .players-list li:hover{background:rgba(59,130,246,0.05);}
+    /* Styles for when a list item is filtered out */
+    .players-list li.hidden { display: none; }
     .players-list .name{font-weight:600;flex:1;}
     .players-list .actions button{margin-left:8px;}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
@@ -80,7 +82,12 @@
       </form>
       <p style="font-size:.85rem;color:var(--muted);margin-top:.5rem;">Creates entries for all 3 weeks automatically.</p>
       <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7"/>
-      <h3 style="margin:.25rem 0 .6rem 0">Players (Click name to edit)</h3>
+      
+      <h3 style="margin:.25rem 0 .6rem 0">Players List</h3>
+      <div style="margin-bottom: 0.75rem;">
+        <input type="text" id="playerSearch" placeholder="Search for a player..." class="input" style="border-color: var(--accent);">
+      </div>
+
       <ul class="players-list" id="playersList"></ul>
     </section>
 
@@ -172,6 +179,7 @@
       const E = {
         playerForm: document.getElementById('playerForm'),
         playerNameInput: document.getElementById('playerNameInput'),
+        playerSearch: document.getElementById('playerSearch'),
         playersList: document.getElementById('playersList'),
         selectedPlayerDisplay: document.getElementById('selectedPlayerDisplay'),
         weekOptions: document.getElementById('weekOptions'),
@@ -240,7 +248,6 @@
         const frostsContribution = f / 100000;
         const total = rawEff + throneEfficiency + act + part + questContribution + huntContribution + frostsContribution;
         
-        // Sum of picks checked
         let picksTotal = 0;
         if(o.p100) picksTotal += 100;
         if(o.p40) picksTotal += 40;
@@ -269,6 +276,17 @@
                     </span>
                   </li>`;
         }).join('');
+        // Re-apply current search if any
+        if(E.playerSearch.value) filterPlayers();
+      }
+
+      function filterPlayers() {
+        const term = E.playerSearch.value.toLowerCase().trim();
+        const items = E.playersList.querySelectorAll('li');
+        items.forEach(li => {
+          const name = li.dataset.player.toLowerCase();
+          li.classList.toggle('hidden', !name.includes(term));
+        });
       }
 
       function escapeHtml(s='') {
@@ -457,6 +475,10 @@
 
       function wireEvents() {
         E.playerForm.addEventListener('submit', (ev) => { ev.preventDefault(); addPlayer(document.getElementById('playerNameInput').value.trim()); });
+        
+        // Search event listener
+        E.playerSearch.addEventListener('input', filterPlayers);
+
         E.playersList.addEventListener('click', (ev) => {
           const action = ev.target.dataset.action;
           const playerName = ev.target.dataset.player;
