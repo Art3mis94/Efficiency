@@ -31,10 +31,13 @@
     .week-options{display:flex;gap:0.5rem;margin-top:0.25rem;}
     .week-options button{flex:1;padding:0.5rem;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:8px;font-weight:600;cursor:pointer;}
     .week-options button.selected{background:var(--accent);color:var(--card);}
-    .players-list{margin:0;padding:0;list-style:none;max-height:42vh;overflow:auto;}
+    
+    /* STABILITY FIX: Added min-height to prevent jumping */
+    .players-list{margin:0;padding:0;list-style:none;max-height:42vh;min-height:200px;overflow:auto;}
     .players-list li{display:flex;align-items:center;justify-content:space-between;padding:.5rem;border-radius:8px;margin-bottom:.45rem;background:linear-gradient(180deg,rgba(0,0,0,0.01),transparent);box-shadow:0 1px 0 rgba(2,6,23,0.03);cursor:pointer;}
     .players-list li:hover{background:rgba(59,130,246,0.05);}
-    .players-list li.hidden { display: none; }
+    .players-list li.hidden { display: none !important; }
+    
     .players-list .name{font-weight:600;flex:1;}
     .players-list .actions button{margin-left:8px;}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
@@ -248,13 +251,11 @@
         const huntContribution = h / 200000;
         const frostsContribution = f / 100000;
         const total = rawEff + throneEfficiency + act + part + questContribution + huntContribution + frostsContribution;
-        
         let picksTotal = 0;
         if(o.p100) picksTotal += 100;
         if(o.p40) picksTotal += 40;
         if(o.p20) picksTotal += 20;
         if(o.p5) picksTotal += 5;
-
         return {
           ...o, power:p, throne:t, points:pts, quest:q, hunt:h, frosts:f,
           activityPct: act, partPct: part, rawEff, throneEfficiency, questContribution, huntContribution, frostsContribution,
@@ -277,7 +278,8 @@
                     </span>
                   </li>`;
         }).join('');
-        if(E.playerSearch.value) filterPlayers();
+        // Immediately filter based on whatever is in search box WITHOUT re-rendering HTML
+        filterPlayers();
       }
 
       function filterPlayers() {
@@ -285,7 +287,11 @@
         const items = E.playersList.querySelectorAll('li');
         items.forEach(li => {
           const name = li.dataset.player.toLowerCase();
-          li.classList.toggle('hidden', !name.includes(term));
+          if (name.includes(term)) {
+            li.classList.remove('hidden');
+          } else {
+            li.classList.add('hidden');
+          }
         });
       }
 
@@ -444,15 +450,12 @@
       function wireEvents() {
         E.playerForm.addEventListener('submit', (ev) => { ev.preventDefault(); addPlayer(document.getElementById('playerNameInput').value.trim()); });
         E.playerSearch.addEventListener('input', filterPlayers);
-
-        // GLOBAL ENTER KEY LISTENER FOR STATS SECTION
         E.statsInputContainer.addEventListener('keydown', (ev) => {
             if (ev.key === 'Enter') {
                 ev.preventDefault();
                 saveStatsForWeek();
             }
         });
-
         E.playersList.addEventListener('click', (ev) => {
           const action = ev.target.dataset.action;
           const playerName = ev.target.dataset.player;
@@ -466,7 +469,6 @@
             }
           }
         });
-
         E.weekOptions.addEventListener('click', (ev) => {
           const btn = ev.target.closest('button[data-week]');
           if (!btn) return;
@@ -476,12 +478,10 @@
           if (currentPlayer) loadCurrentWeekEntry();
           updatePreview();
         });
-
         document.querySelectorAll('#statsSection input').forEach(inp => {
           inp.addEventListener('input', updatePreview);
           inp.addEventListener('change', updatePreview);
         });
-
         E.statsSaveBtn.addEventListener('click', saveStatsForWeek);
         E.statsDeleteBtn.addEventListener('click', () => {
            if (!currentPlayer) return;
@@ -493,7 +493,6 @@
              renderPlayersList();
            }
         });
-
         E.clearPlayerDataBtn.addEventListener('click', () => {
            if (!currentPlayer) return;
            if (confirm('Reset all stats for this player?')) {
@@ -508,7 +507,6 @@
              updatePreview();
            }
         });
-
         E.deleteAllBtn.addEventListener('click', () => { if(confirm('Delete ALL data?')) { localStorage.removeItem('formData'); renderPlayersList(); selectPlayer(null); } });
         E.darkToggle.addEventListener('click', () => {
           document.body.classList.toggle('dark-mode');
