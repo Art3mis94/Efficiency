@@ -19,9 +19,10 @@
     .section{background:var(--card);padding:1rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04);}
     .section h2{margin:0 0 .75rem;font-size:1.05rem;}
     .form-row{display:flex;gap:.5rem;flex-wrap:wrap;}
-    .input,select{width:100%;padding:.5rem;border-radius:8px;border:1px solid #e2e8f0;font-size:0.95rem;}
+    .input,select{width:100%;padding:.5rem;border-radius:8px;border:1px solid #e2e8f0;font-size:0.95rem;outline:none;transition: border-color 0.2s;}
+    .input:focus{border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);}
     .button-row{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.75rem;}
-    .btn{padding:.55rem .9rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;}
+    .btn{padding:.55rem .9rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;transition: all 0.2s;}
     .btn.save{background:var(--success)}.btn.save:hover{background:#059669}
     .btn.save.success-flash{background:#6ee7b7;color:#065f46;transform:scale(1.02);}
     .btn.cancel{background:#6b7280}.btn.cancel:hover{background:#4b5563}
@@ -106,7 +107,7 @@
         </div>
       </div>
 
-      <div class="grid-2" style="margin-top:.6rem">
+      <div class="grid-2" style="margin-top:.6rem" id="statsInputContainer">
         <div><label class="muted">Power</label><input id="f_power" type="number" placeholder="0" class="input"></div>
         <div><label class="muted">Throne</label><input id="f_throne" type="number" placeholder="0" class="input"></div>
         <div><label class="muted">Points</label><input id="f_points" type="number" placeholder="0" class="input"></div>
@@ -159,7 +160,7 @@
       </div>
 
       <div class="button-row" style="margin-top:.8rem">
-        <button class="btn save" id="statsSaveBtn">Save Stats</button>
+        <button class="btn save" id="statsSaveBtn">Save Stats (Enter)</button>
         <button class="btn delete" id="statsDeleteBtn">Delete Entry</button>
       </div>
       <div class="button-row">
@@ -219,6 +220,7 @@
         clearPlayerDataBtn: document.getElementById('clearPlayerDataBtn'),
         deleteAllBtn: document.getElementById('deleteAllBtn'),
         darkToggle: document.getElementById('darkToggle'),
+        statsInputContainer: document.getElementById('statsInputContainer'),
       };
 
       const loadData = () => {
@@ -312,15 +314,12 @@
       function loadCurrentWeekEntry() {
         const data = loadData();
         const entry = data.find(d => d.name === currentPlayer && d.week === currentWeek) || {};
-        
-        // Remove auto-zeroes: If value is 0, show empty string
         E.power.value = entry.power || '';
         E.throne.value = entry.throne || '';
         E.points.value = entry.points || '';
         E.quest.value = entry.quest || '';
         E.hunt.value = entry.hunt || '';
         E.frosts.value = entry.frosts || '';
-        
         E.lava.checked = !!entry.lava;
         E.challenge.checked = !!entry.challenge;
         E.donations.checked = !!entry.donations;
@@ -445,6 +444,15 @@
       function wireEvents() {
         E.playerForm.addEventListener('submit', (ev) => { ev.preventDefault(); addPlayer(document.getElementById('playerNameInput').value.trim()); });
         E.playerSearch.addEventListener('input', filterPlayers);
+
+        // GLOBAL ENTER KEY LISTENER FOR STATS SECTION
+        E.statsInputContainer.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') {
+                ev.preventDefault();
+                saveStatsForWeek();
+            }
+        });
+
         E.playersList.addEventListener('click', (ev) => {
           const action = ev.target.dataset.action;
           const playerName = ev.target.dataset.player;
@@ -458,6 +466,7 @@
             }
           }
         });
+
         E.weekOptions.addEventListener('click', (ev) => {
           const btn = ev.target.closest('button[data-week]');
           if (!btn) return;
@@ -467,10 +476,12 @@
           if (currentPlayer) loadCurrentWeekEntry();
           updatePreview();
         });
+
         document.querySelectorAll('#statsSection input').forEach(inp => {
           inp.addEventListener('input', updatePreview);
           inp.addEventListener('change', updatePreview);
         });
+
         E.statsSaveBtn.addEventListener('click', saveStatsForWeek);
         E.statsDeleteBtn.addEventListener('click', () => {
            if (!currentPlayer) return;
@@ -482,6 +493,7 @@
              renderPlayersList();
            }
         });
+
         E.clearPlayerDataBtn.addEventListener('click', () => {
            if (!currentPlayer) return;
            if (confirm('Reset all stats for this player?')) {
@@ -496,6 +508,7 @@
              updatePreview();
            }
         });
+
         E.deleteAllBtn.addEventListener('click', () => { if(confirm('Delete ALL data?')) { localStorage.removeItem('formData'); renderPlayersList(); selectPlayer(null); } });
         E.darkToggle.addEventListener('click', () => {
           document.body.classList.toggle('dark-mode');
