@@ -78,7 +78,6 @@
           <button type="button" class="btn cancel" id="playerCancelBtn">Clear</button>
         </div>
       </form>
-
       <p style="font-size:.85rem;color:var(--muted);margin-top:.5rem;">Creates entries for all 3 weeks automatically.</p>
       <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7"/>
       <h3 style="margin:.25rem 0 .6rem 0">Players (Click name to edit)</h3>
@@ -166,12 +165,10 @@
 
   <script>
     (function () {
-      // === Constants & initial state ===
       const WEEKS = ['week 1','week 2','week 3'];
       let currentPlayer = null;
       let currentWeek = 'week 1';
 
-      // === Elements map ===
       const E = {
         playerForm: document.getElementById('playerForm'),
         playerNameInput: document.getElementById('playerNameInput'),
@@ -180,7 +177,6 @@
         selectedPlayerDisplay: document.getElementById('selectedPlayerDisplay'),
         weekOptions: document.getElementById('weekOptions'),
         weekBtns: document.querySelectorAll('.week-btn'),
-        // inputs
         power: document.getElementById('f_power'),
         throne: document.getElementById('f_throne'),
         points: document.getElementById('f_points'),
@@ -198,7 +194,6 @@
         p40: document.getElementById('pick_40'),
         p20: document.getElementById('pick_20'),
         p5: document.getElementById('pick_5'),
-        // preview
         preview_total: document.getElementById('preview_total_value'),
         preview_raw: document.getElementById('preview_rawEff_value'),
         preview_throne: document.getElementById('preview_throneEff_value'),
@@ -220,14 +215,12 @@
         darkToggle: document.getElementById('darkToggle'),
       };
 
-      // === LocalStorage helpers ===
       const loadData = () => {
         try { return JSON.parse(localStorage.getItem('formData') || '[]'); }
-        catch(e) { console.error('corrupt storage', e); return []; }
+        catch(e) { return []; }
       };
       const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
 
-      // === Metrics computation (kept logic same as your provided) ===
       function computeMetrics(o = {}) {
         const p = Number(o.power) || 0;
         const t = Number(o.throne) || 0;
@@ -235,33 +228,25 @@
         const q = Number(o.quest) || 0;
         const h = Number(o.hunt) || 0;
         const f = Number(o.frosts) || 0;
-        // activity: lava + challenge + donations each 0/1; scaled to 2.5 max.
         const activityCount = (Number(o.lava) || 0) + (Number(o.challenge) || 0) + (Number(o.donations) || 0);
         const act = Math.min(activityCount * (2.5/3), 2.5);
-        // participation: dv/esb/esi logic, capped at 2.5
         const dv = Number(o.dv) || 0;
         const esb = Number(o.esb) || 0;
-        const esi = Number(o.esi) || 0; // 0,1,2 (both days => 2)
+        const esi = Number(o.esi) || 0;
         const part = Math.min((dv*(2.5/3)) + (esb*(2.5/3)) + (esi*(2.5/6)), 2.5);
-
         const rawEff = p > 0 ? pts / p : 0;
         const throneEfficiency = p > 0 ? (t / p) * 3 : 0;
         const questContribution = q * 0.0000025;
         const huntContribution = h / 200000;
         const frostsContribution = f / 100000;
-
         const total = rawEff + throneEfficiency + act + part + questContribution + huntContribution + frostsContribution;
-
         return {
-          ...o,
-          power: Number(o.power)||0, throne: Number(o.throne)||0, points: Number(o.points)||0,
-          quest: Number(o.quest)||0, hunt: Number(o.hunt)||0, frosts: Number(o.frosts)||0,
+          ...o, power:p, throne:t, points:pts, quest:q, hunt:h, frosts:f,
           activityPct: act, partPct: part, rawEff, throneEfficiency, questContribution, huntContribution, frostsContribution,
           total, picks: Number(o.picks)||0
         };
       }
 
-      // === UI Rendering ===
       function renderPlayersList() {
         const data = loadData();
         const names = Array.from(new Set(data.map(d => d.name).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
@@ -279,16 +264,13 @@
         }).join('');
       }
 
-      // small escape guard to avoid injection inside attributes
       function escapeHtml(s='') {
-        return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/</g,'&gt;');
+        return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       }
 
-      // === Selection & form population ===
       function selectPlayer(name) {
         currentPlayer = name;
         E.selectedPlayerDisplay.textContent = name || '—';
-        // load the currentWeek entry if it exists, otherwise clear form
         if (name) {
           loadCurrentWeekEntry();
           enableStatsArea(true);
@@ -296,11 +278,10 @@
           clearForm();
           enableStatsArea(false);
         }
-        updatePreview(); // compute + show preview (or placeholders)
+        updatePreview();
       }
 
       function enableStatsArea(enabled) {
-        // enable/disable inputs and buttons in the stats area
         const statsControls = [
           E.power,E.throne,E.points,E.quest,E.hunt,E.frosts,
           E.lava,E.challenge,E.donations,E.dv,E.esb,E.esi_tue,E.esi_thu,
@@ -313,7 +294,6 @@
       function loadCurrentWeekEntry() {
         const data = loadData();
         const entry = data.find(d => d.name === currentPlayer && d.week === currentWeek) || {};
-        // populate inputs
         E.power.value = entry.power || 0;
         E.throne.value = entry.throne || 0;
         E.points.value = entry.points || 0;
@@ -336,17 +316,15 @@
       }
 
       function clearForm() {
-        document.querySelectorAll('input[type=number]').forEach(i => i.value = 0);
-        document.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false);
+        document.querySelectorAll('#statsSection input[type=number]').forEach(i => i.value = 0);
+        document.querySelectorAll('#statsSection input[type=checkbox]').forEach(c => c.checked = false);
       }
 
-      // === Form state extraction ===
       function getFormStateObject() {
         const esi = (E.esi_tue.checked && E.esi_thu.checked) ? 2 : (E.esi_tue.checked || E.esi_thu.checked) ? 1 : 0;
         const picks = [E.p100,E.p40,E.p20,E.p5].filter(c => c.checked).reduce((s,c) => s + Number(c.dataset.value), 0);
         return {
-          name: currentPlayer,
-          week: currentWeek,
+          name: currentPlayer, week: currentWeek,
           power: Number(E.power.value) || 0,
           throne: Number(E.throne.value) || 0,
           points: Number(E.points.value) || 0,
@@ -358,36 +336,23 @@
           donations: E.donations.checked ? 1 : 0,
           dv: E.dv.checked ? 1 : 0,
           esb: E.esb.checked ? 1 : 0,
-          esi,
-          picks
+          esi, picks
         };
       }
 
-      // === Preview and ranking ===
       function updatePreview() {
-        // when no player selected, show defaults
-        if (!currentPlayer) {
-          setPreviewValues(null);
-          return;
-        }
+        if (!currentPlayer) { setPreviewValues(null); return; }
         const state = getFormStateObject();
         const m = computeMetrics(state);
-
-        // get all entries for the selected week (computed)
         const weekEntries = loadData().filter(d => d.week === currentWeek).map(computeMetrics);
-
-        // ensure current player's computed item considered
         const existsForPlayer = weekEntries.some(e => e.name === currentPlayer);
         const all = existsForPlayer ? weekEntries : weekEntries.concat([m]);
-
         setPreviewValues(m);
-        // compute ranks for several metrics
         const rankFor = (key) => {
           const sorted = [...all].sort((a,b) => (b[key] || 0) - (a[key] || 0));
           const idx = sorted.findIndex(x => x.name === currentPlayer);
           return idx >= 0 ? `${idx+1}/${sorted.length}` : '—';
         };
-
         E.rank_total.textContent = rankFor('total');
         E.rank_raw.textContent = rankFor('rawEff');
         E.rank_throne.textContent = rankFor('throneEfficiency');
@@ -397,20 +362,11 @@
 
       function setPreviewValues(m) {
         if (!m) {
-          E.preview_total.textContent = '0.00';
-          E.preview_raw.textContent = '0.00';
-          E.preview_throne.textContent = '0.00';
-          E.preview_act.textContent = '0.00%';
-          E.preview_part.textContent = '0.00%';
-          E.preview_qc.textContent = '0.00';
-          E.preview_hc.textContent = '0.00';
-          E.preview_fc.textContent = '0.00';
-          E.preview_picks.textContent = '0';
-          E.rank_total.textContent = '—';
-          E.rank_raw.textContent = '—';
-          E.rank_throne.textContent = '—';
-          E.rank_act.textContent = '—';
-          E.rank_part.textContent = '—';
+          E.preview_total.textContent = '0.00'; E.preview_raw.textContent = '0.00';
+          E.preview_throne.textContent = '0.00'; E.preview_act.textContent = '0.00%';
+          E.preview_part.textContent = '0.00%'; E.preview_qc.textContent = '0.00';
+          E.preview_hc.textContent = '0.00'; E.preview_fc.textContent = '0.00';
+          E.preview_picks.textContent = '0'; E.rank_total.textContent = '—';
           return;
         }
         E.preview_total.textContent = (m.total || 0).toFixed(2);
@@ -424,37 +380,27 @@
         E.preview_picks.textContent = (m.picks || 0);
       }
 
-      // === CRUD actions ===
-      // Add player (creates entries for all weeks)
       function addPlayer(name) {
         const normalized = String(name).trim();
         if (!normalized) { alert('Enter a name'); return; }
-
         const data = loadData();
-        if (data.some(d => d.name.toLowerCase() === normalized.toLowerCase())) {
-          alert('Player exists');
-          return;
-        }
+        if (data.some(d => d.name.toLowerCase() === normalized.toLowerCase())) { alert('Player exists'); return; }
         const now = Date.now();
         WEEKS.forEach((wk, i) => {
-          const row = {
-            id: `id_${now}_${i}_${normalized}`,
-            name: normalized,
-            week: wk,
+          data.push({
+            id: `id_${now}_${i}_${normalized}`, name: normalized, week: wk,
             power: 0, throne: 0, points: 0, quest: 0, hunt: 0, frosts: 0,
             lava: 0, challenge: 0, donations: 0, dv: 0, esi: 0, esb: 0, picks: 0
-          };
-          data.push(row);
+          });
         });
         saveData(data);
         renderPlayersList();
-        // auto-select the new player
         selectPlayer(normalized);
         E.playerNameInput.value = '';
       }
 
       function deletePlayer(name) {
-        if (!confirm(`Are you sure you want to delete the player "${name}" and ALL their weekly stats? This cannot be undone.`)) return;
+        if (!confirm(`Delete player "${name}" and ALL stats?`)) return;
         const data = loadData().filter(e => e.name !== name);
         saveData(data);
         renderPlayersList();
@@ -462,11 +408,10 @@
       }
 
       function saveStatsForWeek() {
-        if (!currentPlayer) { alert('Select player'); return; }
+        if (!currentPlayer) return;
         const data = loadData();
         const state = getFormStateObject();
         const computed = computeMetrics(state);
-        // ensure id if existing
         const idx = data.findIndex(d => d.name === currentPlayer && d.week === currentWeek);
         computed.id = idx >= 0 ? data[idx].id : `id_${Date.now()}_${currentPlayer}_${currentWeek}`;
         if (idx >= 0) data[idx] = computed;
@@ -478,26 +423,21 @@
       }
 
       function deleteWeekEntry() {
-        if (!currentPlayer) return alert('Select a player first');
+        if (!currentPlayer) return;
         if (!confirm('Delete this week entry?')) return;
         const data = loadData().filter(d => !(d.name === currentPlayer && d.week === currentWeek));
         saveData(data);
-        // After deletion, either load a blank state or clear inputs
         clearForm();
         updatePreview();
         renderPlayersList();
       }
 
       function resetPlayerStats() {
-        if (!currentPlayer) return alert('Select a player first');
-        if (!confirm('Reset all stats for this player (all weeks)?')) return;
+        if (!currentPlayer) return;
+        if (!confirm('Reset all stats for this player?')) return;
         const data = loadData().map(e => {
           if (e.name === currentPlayer) {
-            return {
-              ...e,
-              power: 0, throne: 0, points: 0, quest: 0, hunt: 0, frosts: 0,
-              lava: 0, challenge: 0, donations: 0, dv: 0, esi: 0, esb: 0, picks: 0
-            };
+            return { ...e, power:0, throne:0, points:0, quest:0, hunt:0, frosts:0, lava:0, challenge:0, donations:0, dv:0, esi:0, esb:0, picks:0 };
           }
           return e;
         });
@@ -513,36 +453,20 @@
         selectPlayer(null);
       }
 
-      // small UI helpers
       function flashButton(btn) {
-        if (!btn) return;
         btn.classList.add('success-flash');
         setTimeout(() => btn.classList.remove('success-flash'), 900);
       }
 
-      // === Event wiring ===
       function wireEvents() {
-        // Player form submit
-        E.playerForm.addEventListener('submit', (ev) => {
-          ev.preventDefault();
-          addPlayer(E.playerNameInput.value.trim());
-        });
-        E.playerCancelBtn.addEventListener('click', (e) => { E.playerNameInput.value = ''; });
-
-        // Players list delegation (select / delete)
+        E.playerForm.addEventListener('submit', (ev) => { ev.preventDefault(); addPlayer(E.playerNameInput.value.trim()); });
+        E.playerCancelBtn.addEventListener('click', () => { E.playerNameInput.value = ''; });
         E.playersList.addEventListener('click', (ev) => {
           const action = ev.target.dataset.action;
           const playerName = ev.target.dataset.player;
-          if (!action) return;
-          if (action === 'select') {
-            selectPlayer(playerName);
-            // ensure selected week button remains correct (loadCurrentWeekEntry already called)
-          } else if (action === 'delete-player') {
-            deletePlayer(playerName);
-          }
+          if (action === 'select') selectPlayer(playerName);
+          else if (action === 'delete-player') deletePlayer(playerName);
         });
-
-        // Week buttons
         E.weekOptions.addEventListener('click', (ev) => {
           const btn = ev.target.closest('button[data-week]');
           if (!btn) return;
@@ -552,63 +476,46 @@
           if (currentPlayer) loadCurrentWeekEntry();
           updatePreview();
         });
-
-        // Inputs -> update preview (delegated)
         document.querySelectorAll('#statsSection input').forEach(inp => {
-          inp.addEventListener('input', () => updatePreview());
-          inp.addEventListener('change', () => updatePreview());
+          inp.addEventListener('input', updatePreview);
+          inp.addEventListener('change', updatePreview);
         });
-
-        // stat buttons
         E.statsSaveBtn.addEventListener('click', saveStatsForWeek);
         E.statsDeleteBtn.addEventListener('click', deleteWeekEntry);
         E.clearPlayerDataBtn.addEventListener('click', resetPlayerStats);
         E.deleteAllBtn.addEventListener('click', deleteAllData);
-
-        // keyboard: pressing Enter while name input focused triggers add
-        E.playerNameInput.addEventListener('keypress', (ev) => {
-          if (ev.key === 'Enter') {
-            ev.preventDefault();
-            addPlayer(E.playerNameInput.value.trim());
-          }
-        });
-
-        // dark mode toggle + persistence
         E.darkToggle.addEventListener('click', () => {
           document.body.classList.toggle('dark-mode');
           localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
         });
       }
 
-      // === Initialization ===
       function init() {
-        // Render list immediately from storage
         renderPlayersList();
-
-        // Default: no player selected; disable stats area until user selects a player
         enableStatsArea(false);
-
-        // restore theme
         if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-
-        // wire up events
         wireEvents();
 
-        // If there's exactly one player in storage, auto-select them (nice UX)
-        const data = loadData();
-        const uniqueNames = Array.from(new Set(data.map(d=>d.name).filter(Boolean)));
-        if (uniqueNames.length === 1) {
-          selectPlayer(uniqueNames[0]);
+        // --- THE FIX: HANDLE EDIT REDIRECT ---
+        const editName = localStorage.getItem('editTargetName');
+        const editWeek = localStorage.getItem('editTargetWeek');
+
+        if (editName) {
+          if (editWeek) {
+            currentWeek = editWeek;
+            E.weekBtns.forEach(b => b.classList.toggle('selected', b.dataset.week === editWeek));
+          }
+          selectPlayer(editName);
+          localStorage.removeItem('editTargetName');
+          localStorage.removeItem('editTargetWeek');
+        } else {
+          const data = loadData();
+          const uniqueNames = Array.from(new Set(data.map(d=>d.name).filter(Boolean)));
+          if (uniqueNames.length === 1) selectPlayer(uniqueNames[0]);
         }
       }
 
-      // run init on DOM ready
       document.addEventListener('DOMContentLoaded', init);
-
-      // Expose some functions to window for console debugging if needed
-      window._pm = {
-        loadData, saveData, computeMetrics, selectPlayer, renderPlayersList
-      };
     })();
   </script>
 </body>
