@@ -23,47 +23,25 @@ h2{margin-bottom:1rem;font-size:1.3rem;}
 .filter-group label{font-weight:500;color:var(--muted);}
 .filter-group select,.filter-group input{padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;}
 
-/* --- TABLE SORTING STYLES --- */
-th.sortable {
-  cursor: pointer;
-  position: relative;
-  user-select: none;
-}
-th.sortable:hover {
-  background: #e2e8f0;
-}
-th.sortable::after {
-  content: ' ↕';
-  font-size: 0.7rem;
-  opacity: 0.5;
-}
-th.active-sort {
-  background: #dbeafe !important;
-  color: #1e40af;
-}
-th.active-sort::after {
-  content: ' ↓';
-  opacity: 1;
-}
+th.sortable { cursor: pointer; position: relative; user-select: none; }
+th.sortable:hover { background: #e2e8f0; }
+th.sortable::after { content: ' ↕'; font-size: 0.7rem; opacity: 0.5; }
+th.active-sort { background: #dbeafe !important; color: #1e40af; }
+th.active-sort::after { content: ' ↓'; opacity: 1; }
 
-.export-import-btn{ background:var(--accent); color: var(--text); font-weight: 600; }
+.export-import-btn{ background:var(--accent); color: #fff; font-weight: 600; border:none; padding:.5rem 1rem; border-radius:6px; cursor:pointer;}
 .export-import-btn:hover{opacity:.9;}
-.clear-btn{background:#ef4444;}
+.clear-btn{background:#ef4444; color:#fff; border:none; padding:.5rem 1rem; border-radius:6px; cursor:pointer;}
 .clear-btn:hover{background:#dc2626;}
-table{width:100%;border-collapse:collapse;}
+table{width:100%;border-collapse:collapse; font-size: 0.85rem;}
 th,td{padding:0.75rem;text-align:left;border-bottom:1px solid #e2e8f0;}
 th{background:#f1f5f9;font-weight:600;}
 tr:hover{background:#f8fafc;}
-.action-buttons{display:flex;gap:0.5rem;}
-.edit-btn{background:#10b981;color:#fff;padding:0.5rem 1rem;text-decoration:none;border-radius:6px;}
-.edit-btn:hover{background:#059669;}
-.delete-btn{background:#ef4444;color:#fff;padding:0.5rem 1rem;border:none;border-radius:6px;cursor:pointer;}
-.delete-btn:hover{background:#dc2626;}
+.action-buttons{display:flex;gap:0.4rem;}
+.edit-btn{background:#10b981;color:#fff;padding:0.3rem 0.6rem;text-decoration:none;border-radius:4px; font-size: 0.75rem;}
+.delete-btn{background:#ef4444;color:#fff;padding:0.3rem 0.6rem;border:none;border-radius:4px;cursor:pointer; font-size: 0.75rem;}
 .top-performers{background:var(--card);padding:1rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);position:sticky;top:1rem;}
 .top-performers h3{margin:0 0 .75rem;font-size:1.1rem;}
-.top-performers ol{margin:0;padding-left:1.4rem;}
-.top-performers li{font-weight:600;margin-bottom:.4rem;}
-.top-performers .score{font-weight:400;color:var(--muted);font-size:.9rem;}
 @media (max-width:992px){main{grid-template-columns:1fr;}}
 
 body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;}
@@ -104,10 +82,12 @@ body.dark-mode th.active-sort { background: #1e293b !important; color: #fbbf24; 
       <input type="file" id="importFile" accept=".csv" style="display:none;">
       <button id="deleteAllBtn" class="clear-btn">Delete All</button>
     </div>
-    <table id="dataTable">
-      <thead><tr id="tableHeaderRow"></tr></thead>
-      <tbody id="dataTableBody"></tbody>
-    </table>
+    <div style="overflow-x:auto;">
+      <table id="dataTable">
+        <thead><tr id="tableHeaderRow"></tr></thead>
+        <tbody id="dataTableBody"></tbody>
+      </table>
+    </div>
   </div>
   <div class="top-performers">
     <h3>Top 3 Overall</h3>
@@ -116,9 +96,7 @@ body.dark-mode th.active-sort { background: #1e293b !important; color: #fbbf24; 
 </main>
 
 <script>
-// --- GLOBAL STATE FOR SORTING ---
 let currentSortKey = 'total';
-
 const WEEKS = ['week 1', 'week 2', 'week 3'];
 const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
 const saveData = d => localStorage.setItem('formData', JSON.stringify(d));
@@ -158,8 +136,8 @@ function calculateMetrics(e) {
   const multipliers = loadMultipliers();
   const power = Number(e.power) || 0;
   const points = Number(e.points) || 0;
-  const act = Math.min((e.lava||0 + e.challenge||0 + e.donations||0) * (2.5/3), 2.5);
-  const part = Math.min((e.dv||0)*(2.5/3) + (e.esb||0)*(2.5/3) + (e.esi||0)*(2.5/6), 2.5);
+  const act = Math.min((Number(e.lava||0) + Number(e.challenge||0) + Number(e.donations||0)) * (2.5/3), 2.5);
+  const part = Math.min((Number(e.dv||0))*(2.5/3) + (Number(e.esb||0))*(2.5/3) + (Number(e.esi||0))*(2.5/6), 2.5);
   const rawEff = power > 0 ? points / power : 0;
   const throneEff = power > 0 ? (Number(e.throne||0) / power) * 3 : 0;
   const questC = (Number(e.quest)||0) * multipliers.M_QUEST;
@@ -170,9 +148,8 @@ function calculateMetrics(e) {
 function calculateOverallMetrics(playerEntries) {
     const multipliers = loadMultipliers();
     const metrics = playerEntries.map(calculateMetrics);
-    const week1Metrics = metrics.find(m => m.week === 'week 1') || {};
     const week3Metrics = metrics.find(m => m.week === 'week 3') || {};
-    const week1Points = Number(week1Metrics.points) || 0;
+    const week1Points = Number(metrics.find(m => m.week === 'week 1')?.points) || 0;
     const week2Frosts = Number(metrics.find(m => m.week === 'week 2')?.frosts) || 0;
     const week3Frosts = Number(metrics.find(m => m.week === 'week 3')?.frosts) || 0;
     const totalPoints = metrics.reduce((sum, m) => sum + (Number(m.points) || 0), 0);
@@ -185,17 +162,15 @@ function calculateOverallMetrics(playerEntries) {
     const overallThroneEff = totalPower > 0 ? (totalThrone / totalPower) * 3 : 0;
     const totalActivity = metrics.reduce((sum, m) => sum + m.activityPct, 0);
     const totalPart = metrics.reduce((sum, m) => sum + m.partPct, 0);
-    const cappedActivity = Math.min(totalActivity, 7.5);
-    const cappedPart = Math.min(totalPart, 7.5);
     const c_week1 = week1Points * multipliers.M_WEEK1;
     const c_quest = totalQuest * multipliers.M_QUEST;
     const c_hunt = totalHunt * multipliers.M_HUNT;
     const c_frosts = Math.max(week2Frosts, week3Frosts) * multipliers.M_FROST;
-    const overallTotal = overallRawEff + c_week1 + overallThroneEff + cappedActivity + cappedPart + c_quest + c_hunt + c_frosts;
+    const overallTotal = overallRawEff + c_week1 + overallThroneEff + Math.min(totalActivity, 7.5) + Math.min(totalPart, 7.5) + c_quest + c_hunt + c_frosts;
 
     return {
         name: playerEntries[0].name, power: totalPower, points: totalPoints, throne: totalThrone, picks: totalPicks,
-        rawEff: overallRawEff, throneEfficiency: overallThroneEff, activityPct: cappedActivity, partPct: cappedPart,
+        rawEff: overallRawEff, throneEfficiency: overallThroneEff, activityPct: Math.min(totalActivity, 7.5), partPct: Math.min(totalPart, 7.5),
         c_week1, c_quest, c_hunt, c_frosts, total: overallTotal
     };
 }
@@ -221,7 +196,6 @@ const sortOptions = {
   name:(a,b)=>a.name.localeCompare(b.name)
 };
 
-// Set sorting key and refresh
 function setSort(key) {
     currentSortKey = key;
     updateDisplay();
@@ -232,7 +206,6 @@ function updateDisplay() {
   localStorage.setItem('lastSelectedWeek', view);
   const search = document.getElementById('searchInput').value.toLowerCase();
   let data = loadData();
-  let display = [];
   const header = document.getElementById('tableHeaderRow');
   const tbody = document.getElementById('dataTableBody');
   tbody.innerHTML = '';
@@ -244,10 +217,8 @@ function updateDisplay() {
       return acc;
     }, {});
     
-    display = Object.values(playerGroups).map(calculateOverallMetrics);
+    let display = Object.values(playerGroups).map(calculateOverallMetrics);
     display = display.filter(d => d.name.toLowerCase().includes(search));
-    
-    // Sort logic
     if (sortOptions[currentSortKey]) display.sort(sortOptions[currentSortKey]);
 
     header.innerHTML = `
@@ -260,7 +231,7 @@ function updateDisplay() {
         <th class="sortable ${currentSortKey==='activityPct'?'active-sort':''}" onclick="setSort('activityPct')">Act %</th>
         <th class="sortable ${currentSortKey==='partPct'?'active-sort':''}" onclick="setSort('partPct')">Part %</th>
         <th>Quest Cont.</th><th>Hunt Cont.</th><th>Frost Cont.</th><th>Wk 1 Cont.</th>
-        <th class="sortable ${currentSortKey==='total'?'active-sort':''}" onclick="setSort('total')"><strong>TOTAL Score</strong></th>
+        <th class="sortable ${currentSortKey==='total'?'active-sort':''}" onclick="setSort('total')"><strong>TOTAL</strong></th>
         <th class="sortable ${currentSortKey==='picks'?'active-sort':''}" onclick="setSort('picks')">Picks</th>`;
 
     display.forEach((d,i) => {
@@ -276,10 +247,11 @@ function updateDisplay() {
     });
 
   } else {
-    display = data.filter(e => e.week === view).map(calculateMetrics);
+    let display = data.filter(e => e.week === view).map(calculateMetrics);
     display = display.filter(d => d.name.toLowerCase().includes(search));
     if (sortOptions[currentSortKey]) display.sort(sortOptions[currentSortKey]);
 
+    // REMOVED LANE FROM HEADER
     header.innerHTML = `
         <th class="sortable ${currentSortKey==='name'?'active-sort':''}" onclick="setSort('name')">Name</th>
         <th>Week</th>
@@ -289,16 +261,17 @@ function updateDisplay() {
         <th class="sortable ${currentSortKey==='activityPct'?'active-sort':''}" onclick="setSort('activityPct')">Act %</th>
         <th class="sortable ${currentSortKey==='partPct'?'active-sort':''}" onclick="setSort('partPct')">Part %</th>
         <th class="sortable ${currentSortKey==='throneEfficiency'?'active-sort':''}" onclick="setSort('throneEfficiency')">Throne Eff.</th>
-        <th>Quest</th><th>Lane</th><th>Hunt</th><th>Frosts</th>
+        <th>Quest</th><th>Hunt</th><th>Frosts</th>
         <th class="sortable ${currentSortKey==='picks'?'active-sort':''}" onclick="setSort('picks')">Picks</th><th>Actions</th>`;
 
     display.forEach((d) => {
       const row = document.createElement('tr');
+      // REMOVED LANE FROM ROW DATA
       row.innerHTML = `<td>${d.name}</td><td>${d.week}</td><td>${formatPower(d.power)}</td>
         <td>${formatNum(d.points)}</td><td>${formatDec(d.rawEff)}</td>
         <td>${formatDec(d.activityPct)}%</td><td>${formatDec(d.partPct)}%</td>
         <td>${formatDec(d.throneEfficiency)}</td><td>${formatDec(d.quest)}</td>
-        <td>${formatDec(d.lane)}</td><td>${formatDec(d.hunt)}</td><td>${formatDec(d.frosts)}</td><td>${formatNum(d.picks)}</td>
+        <td>${formatDec(d.hunt)}</td><td>${formatDec(d.frosts)}</td><td>${formatNum(d.picks)}</td>
         <td class="action-buttons">
           <a href="form.html" class="edit-btn" onclick="editPlayer('${d.name}','${d.week}');return false;">Edit</a>
           <button class="delete-btn" onclick="deleteEntry('${d.id}')">Delete</button>
@@ -308,7 +281,6 @@ function updateDisplay() {
   }
 }
 
-// ... Rest of your existing support functions (populateWeekFilter, deleteEntry, etc.) ...
 function populateWeekFilter() {
   const weeks = ['__total', ...WEEKS];
   const sel = document.getElementById('weekSelect');
@@ -340,6 +312,17 @@ function updateTop3() {
   const list = document.getElementById('top3List');
   list.innerHTML = top3.length ? top3.map((p,i) => `<li>${i+1}. ${p.name} <span class="score"><strong>${formatDec(p.total)}</strong></span></li>`).join('') : '<li>No data</li>';
 }
+
+document.getElementById('exportBtn').onclick = () => {
+  const data = loadData().map(calculateMetrics);
+  if (!data.length) return alert("No data");
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(','), ...data.map(r => headers.map(h => r[h]).join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'}));
+  a.download = 'player_stats.csv';
+  a.click();
+};
 
 document.getElementById('weekSelect').onchange = () => { updateDisplay(); updateTop3(); };
 document.getElementById('searchInput').oninput = updateDisplay;
