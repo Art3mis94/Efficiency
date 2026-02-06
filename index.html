@@ -5,44 +5,51 @@
 <title>Player Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;}
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
-header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
-nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;flex-wrap:wrap;}
-nav a{background:var(--accent);color:#fff;padding:.6rem 1rem;border-radius:6px;font-weight:600;text-decoration:none;}
+body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s;}
+header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08);}
+header h1{margin:0;font-size:1.25rem;font-weight:600;}
+.toggle-btn{background:none;border:2px solid var(--accent);color:var(--accent);padding:.45rem .7rem;border-radius:8px;cursor:pointer;font-weight:600;}
+nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;flex-wrap:wrap;}
+nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;margin:2px 0;}
+nav a:hover{opacity:.95;transform:translateY(-1px);}
 main{max-width:1200px;margin:1.5rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 300px;gap:1.5rem;}
-.dashboard-section,.top-performers{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.05);}
-@media(max-width:992px){main{grid-template-columns:1fr}}
+.dashboard-section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
+h2{margin-bottom:1rem;font-size:1.3rem;}
+.controls{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;align-items:center;}
+.filter-group{display:flex;align-items:center;gap:0.5rem;}
+.filter-group select,.filter-group input{padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;}
 
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-th,td{padding:.75rem;border-bottom:1px solid #e2e8f0}
-th{background:#f1f5f9}
-th.sortable{cursor:pointer}
-th.active-sort{background:#dbeafe;color:#1e40af}
+table{width:100%;border-collapse:collapse; font-size: 0.85rem;}
+th,td{padding:0.75rem;text-align:left;border-bottom:1px solid #e2e8f0;}
+th{background:#f1f5f9;font-weight:600;}
+tr:hover{background:#f8fafc;}
 
-.highlight-picks{
-  background:#dcfce7;
-  color:#166534;
-  font-weight:700;
-  padding:2px 6px;
-  border-radius:4px;
+.highlight-picks {
+  background-color: #dcfce7;
+  color: #166534;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
 }
-body.dark-mode{
-  --bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;
-}
-body.dark-mode header,body.dark-mode nav{background:#111827}
+
+.top-performers{background:var(--card);padding:1rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);position:sticky;top:1rem;}
+@media (max-width:992px){main{grid-template-columns:1fr;}}
+
+body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;}
+body.dark-mode header,body.dark-mode nav{background:#111827;}
+body.dark-mode .dashboard-section,body.dark-mode .top-performers{background:#0b1320;color:var(--text);}
+body.dark-mode .highlight-picks { background-color: #064e3b; color: #34d399; }
 </style>
 </head>
-
 <body>
 <header>
   <h1>Player Dashboard</h1>
-  <button id="darkToggle">Dark Mode</button>
+  <button class="toggle-btn" id="darkToggle">Dark Mode</button>
 </header>
-
 <nav>
   <a href="index.html">Dashboard</a>
   <a href="trends.html">Trends</a>
@@ -50,20 +57,26 @@ body.dark-mode header,body.dark-mode nav{background:#111827}
   <a href="form.html">Add Data</a>
   <a href="config.html">Config</a>
 </nav>
-
 <main>
   <div class="dashboard-section">
     <h2>Weekly Data</h2>
-
-    <select id="weekSelect"></select>
-    <input id="searchInput" placeholder="Search name...">
-
-    <table>
-      <thead><tr id="tableHeaderRow"></tr></thead>
-      <tbody id="dataTableBody"></tbody>
-    </table>
+    <div class="controls">
+      <div class="filter-group">
+        <label>View:</label>
+        <select id="weekSelect"></select>
+      </div>
+      <div class="filter-group">
+        <label>Search:</label>
+        <input type="text" id="searchInput" placeholder="Enter name...">
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table id="dataTable">
+        <thead><tr id="tableHeaderRow"></tr></thead>
+        <tbody id="dataTableBody"></tbody>
+      </table>
+    </div>
   </div>
-
   <div class="top-performers">
     <h3>Top 3 Overall</h3>
     <ol id="top3List"></ol>
@@ -71,111 +84,89 @@ body.dark-mode header,body.dark-mode nav{background:#111827}
 </main>
 
 <script>
-/* ------------------ CORE STORAGE ------------------ */
-const WEEKS = ['week 1','week 2','week 3'];
-const loadData = () => JSON.parse(localStorage.getItem('formData')||'[]');
-const saveData = d => localStorage.setItem('formData',JSON.stringify(d));
+const WEEKS = ['week 1', 'week 2', 'week 3'];
+const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
 
-/* ------------------ PICKS FIX ------------------ */
-function computePicks(e){
-  return (e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0);
+/* --- Logic for Picks (New Implementation) --- */
+function computePicks(e) {
+  return (e.p100 ? 100 : 0) + (e.p40 ? 40 : 0) + (e.p20 ? 20 : 0) + (e.p5 ? 5 : 0);
 }
 
-/* ------------------ METRICS ------------------ */
-function calculateMetrics(e){
-  const power = Number(e.power)||0;
-  const points = Number(e.points)||0;
-  const rawEff = power ? points/power : 0;
-  const throneEff = power ? (Number(e.throne||0)/power)*3 : 0;
-
-  const act = Math.min(((e.lava||0)+(e.challenge||0)+(e.donations||0))*(2.5/3),2.5);
-  const part = Math.min(((e.dv||0)*(2.5/3))+((e.esb||0)*(2.5/3))+(((e.esi_mon||0)+(e.esi_thu||0))*(2.5/6)),2.5);
-
-  return {
-    ...e,
-    rawEff,
-    throneEfficiency:throneEff,
-    activityPct:act,
-    partPct:part,
-    total:rawEff+throneEff+act+part,
-    picks:computePicks(e)
-  };
+function calculateMetrics(e) {
+  const power = Number(e.power) || 0;
+  const points = Number(e.points) || 0;
+  const rawEff = power > 0 ? points / power : 0;
+  const act = Math.min(((Number(e.lava||0)) + (Number(e.challenge||0)) + (Number(e.donations||0))) * (2.5/3), 2.5);
+  const part = Math.min(((Number(e.dv||0))*(2.5/3)) + ((Number(e.esb||0))*(2.5/3)) + (((Number(e.esi_mon||0))+(Number(e.esi_thu||0)))*(2.5/6)), 2.5);
+  const total = rawEff + act + part; // Simplified for the example
+  
+  return { ...e, rawEff, activityPct: act, partPct: part, total, picks: computePicks(e) };
 }
 
-function calculateOverallMetrics(entries){
-  const metrics = entries.map(calculateMetrics);
-  return {
-    name:entries[0].name,
-    total:metrics.reduce((s,m)=>s+m.total,0),
-    picks:metrics.reduce((s,m)=>s+m.picks,0)
-  };
+function calculateOverallMetrics(playerEntries) {
+    const metrics = playerEntries.map(calculateMetrics);
+    const totalPower = Number(metrics.find(m => m.week === 'week 3')?.power) || 0;
+    
+    return {
+        name: playerEntries[0].name,
+        power: totalPower,
+        total: metrics.reduce((sum, m) => sum + m.total, 0),
+        picks: metrics.reduce((sum, m) => sum + m.picks, 0)
+    };
 }
 
-/* ------------------ DISPLAY ------------------ */
-let currentSort='total';
+function updateDisplay() {
+  const view = weekSelect.value;
+  const search = searchInput.value.toLowerCase();
+  const data = loadData();
+  const header = document.getElementById('tableHeaderRow');
+  const tbody = document.getElementById('dataTableBody');
+  tbody.innerHTML = '';
 
-function updateDisplay(){
-  const view=weekSelect.value;
-  const search=searchInput.value.toLowerCase();
-  const data=loadData();
-
-  tableHeaderRow.innerHTML='';
-  dataTableBody.innerHTML='';
-
-  if(view==='__total'){
-    tableHeaderRow.innerHTML=`
-      <th>Name</th>
-      <th class="sortable">Total</th>
-      <th>Picks</th>
-    `;
-
-    const grouped={};
-    data.forEach(d=>{grouped[d.name]=grouped[d.name]||[];grouped[d.name].push(d);});
+  if (view === '__total') {
+    header.innerHTML = `<th>Rank</th><th>Name</th><th>Latest Power</th><th>Total Score</th><th>Picks Total</th>`;
+    
+    const grouped = {};
+    data.forEach(d => { grouped[d.name] = grouped[d.name] || []; grouped[d.name].push(d); });
 
     Object.values(grouped)
       .map(calculateOverallMetrics)
-      .filter(p=>p.name.toLowerCase().includes(search))
-      .sort((a,b)=>b.total-a.total)
-      .forEach(p=>{
-        const picks=p.picks>=100?`<span class="highlight-picks">${p.picks}</span>`:p.picks;
-        dataTableBody.innerHTML+=`<tr><td>${p.name}</td><td>${p.total.toFixed(2)}</td><td>${picks}</td></tr>`;
+      .filter(p => p.name.toLowerCase().includes(search))
+      .sort((a,b) => b.total - a.total)
+      .forEach((p, i) => {
+        const picksHtml = p.picks >= 100 ? `<span class="highlight-picks">${p.picks}</span>` : p.picks;
+        tbody.innerHTML += `<tr><td>${i+1}</td><td>${p.name}</td><td>${(p.power/1e9).toFixed(1)}B</td><td>${p.total.toFixed(2)}</td><td>${picksHtml}</td></tr>`;
       });
-
   } else {
-    tableHeaderRow.innerHTML=`
-      <th>Name</th><th>Week</th><th>Total</th><th>Picks</th>
-    `;
-    data.filter(d=>d.week===view)
+    header.innerHTML = `<th>Name</th><th>Week</th><th>Raw Eff.</th><th>Act %</th><th>Part %</th><th>Total</th><th>Picks</th>`;
+    data.filter(d => d.week === view)
       .map(calculateMetrics)
-      .filter(d=>d.name.toLowerCase().includes(search))
-      .forEach(d=>{
-        const picks=d.picks>=100?`<span class="highlight-picks">${d.picks}</span>`:d.picks;
-        dataTableBody.innerHTML+=`
-          <tr><td>${d.name}</td><td>${d.week}</td><td>${d.total.toFixed(2)}</td><td>${picks}</td></tr>
-        `;
+      .filter(d => d.name.toLowerCase().includes(search))
+      .forEach(d => {
+        const picksHtml = d.picks >= 100 ? `<span class="highlight-picks">${d.picks}</span>` : d.picks;
+        tbody.innerHTML += `<tr><td>${d.name}</td><td>${d.week}</td><td>${d.rawEff.toFixed(4)}</td><td>${(d.activityPct*40).toFixed(0)}%</td><td>${(d.partPct*40).toFixed(0)}%</td><td>${d.total.toFixed(2)}</td><td>${picksHtml}</td></tr>`;
       });
   }
 }
 
-function updateTop3(){
-  const grouped={};
-  loadData().forEach(d=>{grouped[d.name]=grouped[d.name]||[];grouped[d.name].push(d);});
-  const top=Object.values(grouped).map(calculateOverallMetrics).sort((a,b)=>b.total-a.total).slice(0,3);
-  top3List.innerHTML=top.map((p,i)=>`<li>${i+1}. ${p.name} — ${p.total.toFixed(2)}</li>`).join('');
+function updateTop3() {
+  const grouped = {};
+  loadData().forEach(d => { grouped[d.name] = grouped[d.name] || []; grouped[d.name].push(d); });
+  const top = Object.values(grouped).map(calculateOverallMetrics).sort((a,b) => b.total - a.total).slice(0,3);
+  top3List.innerHTML = top.map((p,i) => `<li>${i+1}. ${p.name} — <strong>${p.total.toFixed(2)}</strong></li>`).join('');
 }
 
-/* ------------------ INIT ------------------ */
-weekSelect.innerHTML=['__total',...WEEKS].map(w=>`<option value="${w}">${w==='__total'?'Overall':w}</option>`).join('');
-weekSelect.onchange=()=>{updateDisplay();updateTop3();}
-searchInput.oninput=updateDisplay;
-
-darkToggle.onclick=()=>{
+/* Init */
+weekSelect.innerHTML = ['__total', ...WEEKS].map(w => `<option value="${w}">${w === '__total' ? 'Overall Score' : w}</option>`).join('');
+weekSelect.onchange = updateDisplay;
+searchInput.oninput = updateDisplay;
+darkToggle.onclick = () => {
   document.body.classList.toggle('dark-mode');
-  localStorage.setItem('theme',document.body.classList.contains('dark-mode')?'dark':'light');
+  localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
 };
-if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark-mode');
+if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 
-updateDisplay();updateTop3();
+updateDisplay(); updateTop3();
 </script>
 </body>
 </html>
