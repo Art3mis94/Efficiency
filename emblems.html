@@ -5,33 +5,41 @@
 <title>Emblem Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{font-family:Inter,sans-serif;margin:0;background:#f8fafc;color:#1e293b;}
+:root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;}
+body{font-family:Inter,sans-serif;margin:0;background:var(--bg);color:var(--text);transition:all .25s;}
+
+/* Dark Mode Support to match your Dashboard */
+body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;}
+
 header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
 header h1{margin:0;font-size:1.25rem;}
-nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;}
-nav a{background:#3b82f6;color:#fff;padding:.6rem 1rem;border-radius:6px;text-decoration:none;font-weight:600;}
+nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;flex-wrap:wrap;}
+nav a{background:var(--accent);color:white;padding:.6rem 1rem;border-radius:6px;text-decoration:none;font-weight:600;}
+
+/* Toggle Button for consistency */
+.toggle-btn{background:none;border:2px solid var(--accent);color:var(--accent);padding:.45rem .7rem;border-radius:8px;cursor:pointer;font-weight:600;}
+
 main{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
+
 .player-card {
-    background: #fff;
-    padding: 1rem;
+    background: var(--card);
+    padding: 1.25rem;
     border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 .player-info h3 { margin: 0; font-size: 1.1rem; }
-.controls { display: flex; align-items: center; gap: 1rem; }
-.count { font-size: 1.5rem; font-weight: 700; min-width: 40px; text-align: center; }
+.controls { display: flex; align-items: center; gap: 1.2rem; }
+.count { font-size: 1.75rem; font-weight: 700; min-width: 50px; text-align: center; }
+
 .btn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     border: none;
     font-size: 1.5rem;
@@ -41,121 +49,111 @@ main{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.1s;
 }
-.btn:active { transform: scale(0.9); }
 .btn.minus { background: #ef4444; }
 .btn.plus { background: #10b981; }
-.loading { text-align: center; padding: 2rem; color: #64748b; }
+.btn:hover { opacity: 0.9; }
+.btn:active { transform: scale(0.95); }
+
+.empty-state { text-align: center; padding: 3rem; color: var(--muted); }
 </style>
 </head>
 <body>
 
 <header>
   <h1>Emblem Tracker</h1>
+  <button class="toggle-btn" id="darkToggle">Dark Mode</button>
 </header>
 
 <nav>
   <a href="index.html">Dashboard</a>
-  <a href="power.html">Edit Players</a>
-  <a href="compare.html">Compare</a>
+  <a href="trends.html">Trends</a>
+  <a href="emblems.html">Emblems</a>
+  <a href="form.html">Add Data</a>
+  <a href="config.html">Config</a>
 </nav>
 
 <main id="emblemList">
-    <div class="loading">Loading players...</div>
-</main>
+    </main>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAyhGftf_DfotmvL4iLx60NT98BjkbG6DM",
-  authDomain: "powercompare-bafd9.firebaseapp.com",
-  projectId: "powercompare-bafd9",
-  storageBucket: "powercompare-bafd9.firebasestorage.app",
-  messagingSenderId: "768897803088",
-  appId: "1:768897803088:web:ff55aed87037cef6720255",
-  measurementId: "G-09ENH5L0VG"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+// Keys used to match your Dashboard
+const DATA_KEY = 'formData';
+const EMBLEM_KEY = 'emblemData';
 
-let uid = null;
-let playerNames = [];
-let emblemCounts = {};
-
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-  uid = user.uid;
-  syncData();
-});
-
-/**
- * Real-time sync: Listens to Player Names from the Power path 
- * and Emblem Counts from the Emblem path.
- */
-function syncData() {
-    // 1. Listen for Player Names (from your Power Entries)
-    db.collection("powers").doc(uid).collection("entries")
-    .onSnapshot(snapshot => {
-        const names = new Set();
-        snapshot.forEach(doc => names.add(doc.data().player));
-        playerNames = Array.from(names).sort();
-        
-        // 2. Listen for Emblem Counts
-        db.collection("emblems").doc(uid).collection("players")
-        .onSnapshot(countSnapshot => {
-            emblemCounts = {};
-            countSnapshot.forEach(doc => {
-                emblemCounts[doc.id] = doc.data().count || 0;
-            });
-            renderEmblems();
-        });
-    });
+// 1. Get Unique Names from the Dashboard Data
+function getPlayerNames() {
+    const rawData = JSON.parse(localStorage.getItem(DATA_KEY) || '[]');
+    // Filter out duplicates and empty names
+    const names = [...new Set(rawData.map(item => item.name))].filter(Boolean);
+    return names.sort();
 }
 
-function renderEmblems() {
+// 2. Load and Save Emblem Counts
+function getEmblemCounts() {
+    return JSON.parse(localStorage.getItem(EMBLEM_KEY) || '{}');
+}
+
+function saveEmblemCounts(counts) {
+    localStorage.setItem(EMBLEM_KEY, JSON.stringify(counts));
+}
+
+// 3. Render the list
+function render() {
+    const names = getPlayerNames();
+    const counts = getEmblemCounts();
     const container = document.getElementById('emblemList');
-    if (playerNames.length === 0) {
-        container.innerHTML = '<div class="loading">No players found. Add them in "Edit Players".</div>';
+
+    if (names.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <p>No players found in Dashboard data.</p>
+                <a href="form.html" style="color:var(--accent)">Add a player in "Add Data" first.</a>
+            </div>`;
         return;
     }
 
-    container.innerHTML = playerNames.map(name => {
-        const count = emblemCounts[name] || 0;
+    container.innerHTML = names.map(name => {
+        const currentCount = counts[name] || 0;
         return `
             <div class="player-card">
                 <div class="player-info">
                     <h3>${name}</h3>
                 </div>
                 <div class="controls">
-                    <button class="btn minus" onclick="updateEmblem('${name}', -1)">−</button>
-                    <div class="count">${count}</div>
-                    <button class="btn plus" onclick="updateEmblem('${name}', 1)">+</button>
+                    <button class="btn minus" onclick="updateCount('${name}', -1)">−</button>
+                    <div class="count">${currentCount}</div>
+                    <button class="btn plus" onclick="updateCount('${name}', 1)">+</button>
                 </div>
             </div>
         `;
     }).join('');
 }
 
-/**
- * Updates the count in Firestore. 
- * Since it's separate, it uses the /emblems/ path.
- */
-async function updateEmblem(playerName, delta) {
-    const docRef = db.collection("emblems").doc(uid).collection("players").doc(playerName);
+// 4. Increment / Decrement logic
+window.updateCount = function(name, delta) {
+    const counts = getEmblemCounts();
+    const current = counts[name] || 0;
     
-    // Use an atomic increment to prevent sync issues if clicking fast
-    try {
-        await docRef.set({
-            count: firebase.firestore.FieldValue.increment(delta)
-        }, { merge: true });
-    } catch (e) {
-        console.error("Error updating emblems: ", e);
-    }
-}
+    // Update count (prevents going below 0 if you want)
+    counts[name] = Math.max(0, current + delta);
+    
+    saveEmblemCounts(counts);
+    render();
+};
+
+// Dark Mode Toggle (Matches Dashboard behavior)
+document.getElementById('darkToggle').onclick = () => {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+};
+
+// Initialize
+if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+render();
+
+// Optional: Refresh list if user switches back to this tab
+window.onfocus = render;
 </script>
 </body>
 </html>
