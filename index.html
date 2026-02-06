@@ -37,6 +37,20 @@ table{width:100%;border-collapse:collapse; font-size: 0.85rem;}
 th,td{padding:0.75rem;text-align:left;border-bottom:1px solid #e2e8f0;}
 th{background:#f1f5f9;font-weight:600;}
 tr:hover{background:#f8fafc;}
+
+/* NEW: Highlight for 100 Picks */
+.highlight-picks {
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+body.dark-mode .highlight-picks {
+  background: #064e3b;
+  color: #34d399;
+}
+
 .action-buttons{display:flex;gap:0.4rem;}
 .edit-btn{background:#10b981;color:#fff;padding:0.3rem 0.6rem;text-decoration:none;border-radius:4px; font-size: 0.75rem;}
 .delete-btn{background:#ef4444;color:#fff;padding:0.3rem 0.6rem;border:none;border-radius:4px;cursor:pointer; font-size: 0.75rem;}
@@ -236,6 +250,9 @@ function updateDisplay() {
         <th class="sortable ${currentSortKey==='picks'?'active-sort':''}" onclick="setSort('picks')">Picks</th>`;
 
     display.forEach((d,i) => {
+      // Logic: Highlight if picks > 0
+      const picksDisplay = d.picks > 0 ? `<span class="highlight-picks">${formatNum(d.picks)}</span>` : formatNum(d.picks);
+
       const row = document.createElement('tr');
       row.innerHTML = `<td>${i+1}</td><td>${d.name}</td><td>${formatPower(d.power)}</td>
         <td>${formatNum(d.points)}</td><td>${formatDec(d.rawEff)}</td>
@@ -243,7 +260,7 @@ function updateDisplay() {
         <td>${formatDec(d.activityPct)}%</td><td>${formatDec(d.partPct)}%</td>
         <td>${formatDec(d.c_quest)}</td><td>${formatDec(d.c_hunt)}</td>
         <td>${formatDec(d.c_frosts)}</td><td>${formatDec(d.c_week1)}</td>
-        <td><strong>${formatDec(d.total)}</strong></td><td>${formatNum(d.picks)}</td>`;
+        <td><strong>${formatDec(d.total)}</strong></td><td>${picksDisplay}</td>`;
       tbody.appendChild(row);
     });
 
@@ -265,12 +282,15 @@ function updateDisplay() {
         <th class="sortable ${currentSortKey==='picks'?'active-sort':''}" onclick="setSort('picks')">Picks</th><th>Actions</th>`;
 
     display.forEach((d) => {
+      // Logic: Highlight if picks > 0
+      const picksDisplay = d.picks > 0 ? `<span class="highlight-picks">${formatNum(d.picks)}</span>` : formatNum(d.picks);
+
       const row = document.createElement('tr');
       row.innerHTML = `<td>${d.name}</td><td>${d.week}</td><td>${formatPower(d.power)}</td>
         <td>${formatNum(d.points)}</td><td>${formatDec(d.rawEff)}</td>
         <td>${formatDec(d.activityPct)}%</td><td>${formatDec(d.partPct)}%</td>
         <td>${formatDec(d.throneEfficiency)}</td><td>${formatDec(d.quest)}</td>
-        <td>${formatDec(d.hunt)}</td><td>${formatDec(d.frosts)}</td><td>${formatNum(d.picks)}</td>
+        <td>${formatDec(d.hunt)}</td><td>${formatDec(d.frosts)}</td><td>${picksDisplay}</td>
         <td class="action-buttons">
           <a href="form.html" class="edit-btn" onclick="editPlayer('${d.name}','${d.week}');return false;">Edit</a>
           <button class="delete-btn" onclick="deleteEntry('${d.id}')">Delete</button>
