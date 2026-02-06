@@ -8,21 +8,18 @@
 
 <style>
 :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;}
-body{font-family:Inter,sans-serif;margin:0;background:var(--bg);color:var(--text);transition:all .25s;}
-
-/* Dark Mode Support to match your Dashboard */
+body{font-family:Inter,sans-serif;margin:0;background:var(--bg);color:var(--text);transition:all .25s;min-height:100vh;}
 body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;}
 
-header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
-header h1{margin:0;font-size:1.25rem;}
-nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;flex-wrap:wrap;}
-nav a{background:var(--accent);color:white;padding:.6rem 1rem;border-radius:6px;text-decoration:none;font-weight:600;}
-
-/* Toggle Button for consistency */
+header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08);}
+header h1{margin:0;font-size:1.25rem;font-weight:600;}
 .toggle-btn{background:none;border:2px solid var(--accent);color:var(--accent);padding:.45rem .7rem;border-radius:8px;cursor:pointer;font-weight:600;}
 
-main{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
+nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;flex-wrap:wrap;}
+nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;font-size:0.9rem;}
+nav a:hover{opacity:.95;transform:translateY(-1px);}
 
+main{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
 .player-card {
     background: var(--card);
     padding: 1.25rem;
@@ -55,7 +52,7 @@ main{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
 .btn:hover { opacity: 0.9; }
 .btn:active { transform: scale(0.95); }
 
-.empty-state { text-align: center; padding: 3rem; color: var(--muted); }
+.status-msg { text-align: center; padding: 3rem; color: var(--muted); background: var(--card); border-radius: 12px; }
 </style>
 </head>
 <body>
@@ -74,24 +71,39 @@ main{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
 </nav>
 
 <main id="emblemList">
-    </main>
+    <div class="status-msg">Initialising...</div>
+</main>
 
 <script>
-// Keys used to match your Dashboard
 const DATA_KEY = 'formData';
 const EMBLEM_KEY = 'emblemData';
 
-// 1. Get Unique Names from the Dashboard Data
+// 1. SAFELY Get Unique Names from LocalStorage
 function getPlayerNames() {
-    const rawData = JSON.parse(localStorage.getItem(DATA_KEY) || '[]');
-    // Filter out duplicates and empty names
-    const names = [...new Set(rawData.map(item => item.name))].filter(Boolean);
-    return names.sort();
+    try {
+        const raw = localStorage.getItem(DATA_KEY);
+        if (!raw) return [];
+        
+        const parsed = JSON.parse(raw);
+        // Ensure parsed data is actually an array
+        if (!Array.isArray(parsed)) return [];
+
+        const names = [...new Set(parsed.map(item => item.name))].filter(Boolean);
+        return names.sort();
+    } catch (e) {
+        console.error("Data Load Error:", e);
+        return [];
+    }
 }
 
-// 2. Load and Save Emblem Counts
+// 2. SAFELY Load Emblem Counts
 function getEmblemCounts() {
-    return JSON.parse(localStorage.getItem(EMBLEM_KEY) || '{}');
+    try {
+        const raw = localStorage.getItem(EMBLEM_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+        return {};
+    }
 }
 
 function saveEmblemCounts(counts) {
@@ -106,9 +118,9 @@ function render() {
 
     if (names.length === 0) {
         container.innerHTML = `
-            <div class="empty-state">
+            <div class="status-msg">
                 <p>No players found in Dashboard data.</p>
-                <a href="form.html" style="color:var(--accent)">Add a player in "Add Data" first.</a>
+                <p style="font-size:0.8rem">Make sure you have added data in the "Add Data" page.</p>
             </div>`;
         return;
     }
@@ -130,30 +142,29 @@ function render() {
     }).join('');
 }
 
-// 4. Increment / Decrement logic
+// 4. Update Function
 window.updateCount = function(name, delta) {
     const counts = getEmblemCounts();
     const current = counts[name] || 0;
-    
-    // Update count (prevents going below 0 if you want)
     counts[name] = Math.max(0, current + delta);
-    
     saveEmblemCounts(counts);
     render();
 };
 
-// Dark Mode Toggle (Matches Dashboard behavior)
+// Dark Mode logic (matches your Dashboard)
 document.getElementById('darkToggle').onclick = () => {
   document.body.classList.toggle('dark-mode');
   localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
 };
 
-// Initialize
+// On Load
 if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 render();
 
-// Optional: Refresh list if user switches back to this tab
-window.onfocus = render;
+// Refresh if data changes in another tab
+window.addEventListener('storage', (e) => {
+    if (e.key === DATA_KEY || e.key === EMBLEM_KEY) render();
+});
 </script>
 </body>
 </html>
