@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Emblem Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{font-family:Inter,sans-serif;margin:0;background:#f8fafc;color:#1e293b;}
+header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
+header h1{margin:0;font-size:1.25rem;}
+nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;}
+nav a{background:#3b82f6;color:#fff;padding:.6rem 1rem;border-radius:6px;text-decoration:none;font-weight:600;}
+main{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
+.player-card {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.player-info h3 { margin: 0; font-size: 1.1rem; }
+.controls { display: flex; align-items: center; gap: 1rem; }
+.count { font-size: 1.5rem; font-weight: 700; min-width: 40px; text-align: center; }
+.btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+}
+.btn:active { transform: scale(0.9); }
+.btn.minus { background: #ef4444; }
+.btn.plus { background: #10b981; }
+.loading { text-align: center; padding: 2rem; color: #64748b; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Emblem Tracker</h1>
+</header>
+
+<nav>
+  <a href="index.html">Dashboard</a>
+  <a href="power.html">Edit Players</a>
+  <a href="compare.html">Compare</a>
+</nav>
+
+<main id="emblemList">
+    <div class="loading">Loading players...</div>
+</main>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAyhGftf_DfotmvL4iLx60NT98BjkbG6DM",
+  authDomain: "powercompare-bafd9.firebaseapp.com",
+  projectId: "powercompare-bafd9",
+  storageBucket: "powercompare-bafd9.firebasestorage.app",
+  messagingSenderId: "768897803088",
+  appId: "1:768897803088:web:ff55aed87037cef6720255",
+  measurementId: "G-09ENH5L0VG"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let uid = null;
+let playerNames = [];
+let emblemCounts = {};
+
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+  uid = user.uid;
+  syncData();
+});
+
+/**
+ * Real-time sync: Listens to Player Names from the Power path 
+ * and Emblem Counts from the Emblem path.
+ */
+function syncData() {
+    // 1. Listen for Player Names (from your Power Entries)
+    db.collection("powers").doc(uid).collection("entries")
+    .onSnapshot(snapshot => {
+        const names = new Set();
+        snapshot.forEach(doc => names.add(doc.data().player));
+        playerNames = Array.from(names).sort();
+        
+        // 2. Listen for Emblem Counts
+        db.collection("emblems").doc(uid).collection("players")
+        .onSnapshot(countSnapshot => {
+            emblemCounts = {};
+            countSnapshot.forEach(doc => {
+                emblemCounts[doc.id] = doc.data().count || 0;
+            });
+            renderEmblems();
+        });
+    });
+}
+
+function renderEmblems() {
+    const container = document.getElementById('emblemList');
+    if (playerNames.length === 0) {
+        container.innerHTML = '<div class="loading">No players found. Add them in "Edit Players".</div>';
+        return;
+    }
+
+    container.innerHTML = playerNames.map(name => {
+        const count = emblemCounts[name] || 0;
+        return `
+            <div class="player-card">
+                <div class="player-info">
+                    <h3>${name}</h3>
+                </div>
+                <div class="controls">
+                    <button class="btn minus" onclick="updateEmblem('${name}', -1)">−</button>
+                    <div class="count">${count}</div>
+                    <button class="btn plus" onclick="updateEmblem('${name}', 1)">+</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Updates the count in Firestore. 
+ * Since it's separate, it uses the /emblems/ path.
+ */
+async function updateEmblem(playerName, delta) {
+    const docRef = db.collection("emblems").doc(uid).collection("players").doc(playerName);
+    
+    // Use an atomic increment to prevent sync issues if clicking fast
+    try {
+        await docRef.set({
+            count: firebase.firestore.FieldValue.increment(delta)
+        }, { merge: true });
+    } catch (e) {
+        console.error("Error updating emblems: ", e);
+    }
+}
+</script>
+</body>
+</html>
