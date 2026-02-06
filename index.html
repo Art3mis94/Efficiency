@@ -12,8 +12,8 @@ body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text)
 header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08);}
 header h1{margin:0;font-size:1.25rem;font-weight:600;}
 .toggle-btn{background:none;border:2px solid var(--accent);color:var(--accent);padding:.45rem .7rem;border-radius:8px;cursor:pointer;font-weight:600;}
-nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
-nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
+nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;flex-wrap:wrap;}
+nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;margin:2px 0;}
 nav a:hover{opacity:.95;transform:translateY(-1px);}
 main{max-width:1200px;margin:1.5rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 300px;gap:1.5rem;}
 .dashboard-section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
@@ -60,6 +60,7 @@ body.dark-mode th.active-sort { background: #1e293b !important; color: #fbbf24; 
 <nav>
   <a href="index.html">Dashboard</a>
   <a href="trends.html">Trends</a>
+  <a href="emblems.html">Emblems</a>
   <a href="form.html">Add Data</a>
   <a href="config.html">Config</a>
 </nav>
@@ -251,7 +252,6 @@ function updateDisplay() {
     display = display.filter(d => d.name.toLowerCase().includes(search));
     if (sortOptions[currentSortKey]) display.sort(sortOptions[currentSortKey]);
 
-    // REMOVED LANE FROM HEADER
     header.innerHTML = `
         <th class="sortable ${currentSortKey==='name'?'active-sort':''}" onclick="setSort('name')">Name</th>
         <th>Week</th>
@@ -266,7 +266,6 @@ function updateDisplay() {
 
     display.forEach((d) => {
       const row = document.createElement('tr');
-      // REMOVED LANE FROM ROW DATA
       row.innerHTML = `<td>${d.name}</td><td>${d.week}</td><td>${formatPower(d.power)}</td>
         <td>${formatNum(d.points)}</td><td>${formatDec(d.rawEff)}</td>
         <td>${formatDec(d.activityPct)}%</td><td>${formatDec(d.partPct)}%</td>
