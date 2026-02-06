@@ -38,16 +38,17 @@ th,td{padding:0.75rem;text-align:left;border-bottom:1px solid #e2e8f0;}
 th{background:#f1f5f9;font-weight:600;}
 tr:hover{background:#f8fafc;}
 
-/* NEW: Highlight for 100 Picks */
+/* HIGHLIGHT FOR 100+ PICKS */
 .highlight-picks {
-  background: #dcfce7;
+  background-color: #dcfce7;
   color: #166534;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
+  display: inline-block;
 }
 body.dark-mode .highlight-picks {
-  background: #064e3b;
+  background-color: #064e3b;
   color: #34d399;
 }
 
@@ -250,8 +251,10 @@ function updateDisplay() {
         <th class="sortable ${currentSortKey==='picks'?'active-sort':''}" onclick="setSort('picks')">Picks</th>`;
 
     display.forEach((d,i) => {
-      // Logic: Highlight if picks > 0
-      const picksDisplay = d.picks > 0 ? `<span class="highlight-picks">${formatNum(d.picks)}</span>` : formatNum(d.picks);
+      // Running total is shown, but highlighted ONLY if >= 100
+      const picksDisplay = d.picks >= 100 
+        ? `<span class="highlight-picks">${formatNum(d.picks)}</span>` 
+        : formatNum(d.picks);
 
       const row = document.createElement('tr');
       row.innerHTML = `<td>${i+1}</td><td>${d.name}</td><td>${formatPower(d.power)}</td>
@@ -282,8 +285,10 @@ function updateDisplay() {
         <th class="sortable ${currentSortKey==='picks'?'active-sort':''}" onclick="setSort('picks')">Picks</th><th>Actions</th>`;
 
     display.forEach((d) => {
-      // Logic: Highlight if picks > 0
-      const picksDisplay = d.picks > 0 ? `<span class="highlight-picks">${formatNum(d.picks)}</span>` : formatNum(d.picks);
+      // Highlight weekly picks if they hit 100
+      const picksDisplay = d.picks >= 100 
+        ? `<span class="highlight-picks">${formatNum(d.picks)}</span>` 
+        : formatNum(d.picks);
 
       const row = document.createElement('tr');
       row.innerHTML = `<td>${d.name}</td><td>${d.week}</td><td>${formatPower(d.power)}</td>
