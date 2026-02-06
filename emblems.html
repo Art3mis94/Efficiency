@@ -5,54 +5,42 @@
 <title>Emblem Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
-:root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;}
-body{font-family:Inter,sans-serif;margin:0;background:var(--bg);color:var(--text);transition:all .25s;min-height:100vh;}
-body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;}
+:root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#64748b;--border:#e2e8f0;}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);transition:all .2s;font-size:0.9rem;}
+body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;--border:#1e293b;}
 
-header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08);}
-header h1{margin:0;font-size:1.25rem;font-weight:600;}
-.toggle-btn{background:none;border:2px solid var(--accent);color:var(--accent);padding:.45rem .7rem;border-radius:8px;cursor:pointer;font-weight:600;}
+header{background:#1e40af;color:#fff;padding:0.8rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08);}
+header h1{margin:0;font-size:1.1rem;font-weight:600;}
+.toggle-btn{background:none;border:1px solid var(--accent);color:var(--accent);padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:600;}
 
-nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;flex-wrap:wrap;}
-nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;font-size:0.9rem;}
-nav a:hover{opacity:.95;transform:translateY(-1px);}
+nav{display:flex;justify-content:center;gap:8px;padding:0.6rem;background:#e2e8f0;flex-wrap:wrap;}
+nav a{color:#fff;text-decoration:none;padding:0.5rem 0.9rem;background:var(--accent);border-radius:6px;font-weight:600;font-size:0.85rem;}
+nav a:hover{opacity:0.9;transform:translateY(-1px);}
 
-main{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
-.player-card {
-    background: var(--card);
-    padding: 1.25rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.player-info h3 { margin: 0; font-size: 1.1rem; }
-.controls { display: flex; align-items: center; gap: 1.2rem; }
-.count { font-size: 1.75rem; font-weight: 700; min-width: 50px; text-align: center; }
+main{max-width:800px;margin:1.5rem auto;padding:0 1rem;}
+.table-container{background:var(--card);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);overflow:hidden;border:1px solid var(--border);}
 
-.btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: none;
-    font-size: 1.5rem;
-    font-weight: bold;
-    cursor: pointer;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.btn.minus { background: #ef4444; }
-.btn.plus { background: #10b981; }
-.btn:hover { opacity: 0.9; }
-.btn:active { transform: scale(0.95); }
+table{width:100%;border-collapse:collapse;}
+th{background:#f1f5f9;font-weight:600;text-align:left;color:var(--muted);text-transform:uppercase;font-size:0.75rem;letter-spacing:0.05em;}
+th,td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tr:hover{background:rgba(59,130,246,0.02);}
 
-.status-msg { text-align: center; padding: 3rem; color: var(--muted); background: var(--card); border-radius: 12px; }
+.player-name{font-weight:600;color:var(--text);}
+.count-cell{display:flex;align-items:center;gap:1rem;justify-content:flex-end;}
+.count-val{font-weight:700;font-size:1.1rem;min-width:30px;text-align:center;}
+
+.btn-sm{width:28px;height:28px;border-radius:6px;border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.1rem;}
+.btn-minus{background:#ef4444;}
+.btn-plus{background:#10b981;}
+.btn-sm:hover{opacity:0.8;}
+.btn-sm:active{transform:scale(0.9);}
+
+.status-msg{text-align:center;padding:3rem;color:var(--muted);font-size:0.85rem;}
+
+body.dark-mode th{background:#1e293b;color:var(--accent);}
 </style>
 </head>
 <body>
@@ -70,98 +58,96 @@ main{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
   <a href="config.html">Config</a>
 </nav>
 
-<main id="emblemList">
-    <div class="status-msg">Initialising...</div>
+<main>
+  <div class="table-container" id="tableContent">
+      <div class="status-msg">Loading players...</div>
+  </div>
 </main>
 
 <script>
 const DATA_KEY = 'formData';
 const EMBLEM_KEY = 'emblemData';
 
-// 1. SAFELY Get Unique Names from LocalStorage
+// 1. Get Names from Dashboard Data
 function getPlayerNames() {
     try {
         const raw = localStorage.getItem(DATA_KEY);
         if (!raw) return [];
-        
         const parsed = JSON.parse(raw);
-        // Ensure parsed data is actually an array
         if (!Array.isArray(parsed)) return [];
-
-        const names = [...new Set(parsed.map(item => item.name))].filter(Boolean);
-        return names.sort();
+        return [...new Set(parsed.map(item => item.name))].filter(Boolean).sort();
     } catch (e) {
-        console.error("Data Load Error:", e);
         return [];
     }
 }
 
-// 2. SAFELY Load Emblem Counts
+// 2. Load/Save Emblem Counts
 function getEmblemCounts() {
     try {
         const raw = localStorage.getItem(EMBLEM_KEY);
         return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-        return {};
-    }
+    } catch (e) { return {}; }
 }
 
 function saveEmblemCounts(counts) {
     localStorage.setItem(EMBLEM_KEY, JSON.stringify(counts));
 }
 
-// 3. Render the list
+// 3. Render Table
 function render() {
     const names = getPlayerNames();
     const counts = getEmblemCounts();
-    const container = document.getElementById('emblemList');
+    const container = document.getElementById('tableContent');
 
     if (names.length === 0) {
-        container.innerHTML = `
-            <div class="status-msg">
-                <p>No players found in Dashboard data.</p>
-                <p style="font-size:0.8rem">Make sure you have added data in the "Add Data" page.</p>
-            </div>`;
+        container.innerHTML = `<div class="status-msg">No players found in Dashboard data. Add some in "Add Data".</div>`;
         return;
     }
 
-    container.innerHTML = names.map(name => {
-        const currentCount = counts[name] || 0;
-        return `
-            <div class="player-card">
-                <div class="player-info">
-                    <h3>${name}</h3>
-                </div>
-                <div class="controls">
-                    <button class="btn minus" onclick="updateCount('${name}', -1)">−</button>
-                    <div class="count">${currentCount}</div>
-                    <button class="btn plus" onclick="updateCount('${name}', 1)">+</button>
-                </div>
-            </div>
-        `;
-    }).join('');
+    let html = `<table>
+        <thead>
+            <tr>
+                <th>Player Name</th>
+                <th style="text-align:right">Emblems</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    names.forEach(name => {
+        const val = counts[name] || 0;
+        html += `
+            <tr>
+                <td class="player-name">${name}</td>
+                <td>
+                    <div class="count-cell">
+                        <button class="btn-sm btn-minus" onclick="updateCount('${name}', -1)">−</button>
+                        <span class="count-val">${val}</span>
+                        <button class="btn-sm btn-plus" onclick="updateCount('${name}', 1)">+</button>
+                    </div>
+                </td>
+            </tr>`;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
 }
 
-// 4. Update Function
 window.updateCount = function(name, delta) {
     const counts = getEmblemCounts();
-    const current = counts[name] || 0;
-    counts[name] = Math.max(0, current + delta);
+    counts[name] = Math.max(0, (counts[name] || 0) + delta);
     saveEmblemCounts(counts);
     render();
 };
 
-// Dark Mode logic (matches your Dashboard)
 document.getElementById('darkToggle').onclick = () => {
   document.body.classList.toggle('dark-mode');
   localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
 };
 
-// On Load
 if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 render();
 
-// Refresh if data changes in another tab
+// Auto-sync if data changes elsewhere
 window.addEventListener('storage', (e) => {
     if (e.key === DATA_KEY || e.key === EMBLEM_KEY) render();
 });
