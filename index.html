@@ -9,7 +9,7 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s;}
 header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
-nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
+nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;flex-wrap:wrap;}
 nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
 main{max-width:1400px;margin:1.5rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 320px;gap:1.5rem;}
 .dashboard-section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);overflow-x:auto;}
@@ -17,13 +17,12 @@ main{max-width:1400px;margin:1.5rem auto;padding:0 1rem;display:grid;grid-templa
 input, select{padding:0.6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;}
 
 /* SORTING & BUTTONS */
-th.sortable { cursor: pointer; user-select: none; }
+th.sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
 th.sortable:hover { background: #e2e8f0 !important; color: #1e40af; }
 
 .edit-btn { 
     background: #10b981; color: white; border: none; padding: 6px 12px; 
-    border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600;
-    text-decoration: none; transition: background 0.2s;
+    border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700;
 }
 .edit-btn:hover { background: #059669; }
 
@@ -37,9 +36,9 @@ th.sortable:hover { background: #e2e8f0 !important; color: #1e40af; }
   display: inline-block;
 }
 
-table{width:100%;border-collapse:collapse; font-size: 0.82rem;}
-th,td{padding:0.8rem;text-align:left;border-bottom:1px solid #e2e8f0;}
-th{background:#f1f5f9;font-weight:700;text-transform:uppercase;color:var(--muted);}
+table{width:100%;border-collapse:collapse; font-size: 0.8rem;}
+th,td{padding:0.7rem;text-align:left;border-bottom:1px solid #e2e8f0;}
+th{background:#f1f5f9;font-weight:700;text-transform:uppercase;color:var(--muted); white-space: nowrap;}
 tr:hover{background:#f8fafc;}
 
 .top-performers{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
@@ -103,11 +102,15 @@ function calculateMetrics(e) {
   const m = loadMultipliers();
   const power = Number(e.power) || 0;
   const points = Number(e.points) || 0;
+  const rawEff = power > 0 ? points / power : 0;
+  
   const act = Math.min((Number(e.lava||0) + Number(e.challenge||0) + Number(e.donations||0)) * (2.5/3), 2.5);
   const part = Math.min((Number(e.dv||0))*(2.5/3) + (Number(e.esb||0))*(2.5/3) + ((Number(e.esi_mon||0) + Number(e.esi_thu||0)))*(2.5/6), 2.5);
-  const total = (power > 0 ? points / power : 0) + act + part + (power > 0 ? (Number(e.throne||0) / power) * 3 : 0) + ((Number(e.quest)||0) * m.M_QUEST);
+  const throneEff = power > 0 ? (Number(e.throne||0) / power) * 3 : 0;
   
-  return { ...e, total, picks: computePicks(e) };
+  const total = rawEff + act + part + throneEff + ((Number(e.quest)||0) * m.M_QUEST);
+  
+  return { ...e, rawEff, activityPct: act, partPct: part, throneEfficiency: throneEff, total, picks: computePicks(e) };
 }
 
 function calculateOverallMetrics(playerEntries) {
@@ -116,16 +119,21 @@ function calculateOverallMetrics(playerEntries) {
     const w3 = metrics.find(x => x.week === 'week 3') || metrics[metrics.length-1];
     const w1Points = Number(metrics.find(x => x.week === 'week 1')?.points) || 0;
     const totalPoints = metrics.reduce((sum, x) => sum + (Number(x.points)||0), 0);
+    
     const overallRawEff = w3.power > 0 ? (totalPoints - w1Points) / w3.power : 0;
     const totalAct = Math.min(metrics.reduce((s, x) => s + (x.activityPct||0), 0), 7.5);
     const totalPart = Math.min(metrics.reduce((s, x) => s + (x.partPct||0), 0), 7.5);
     const throneEff = w3.power > 0 ? (Number(w3.throne||0) / w3.power) * 3 : 0;
+    
     const finalScore = overallRawEff + (w1Points * m.M_WEEK1) + totalAct + totalPart + throneEff;
 
     return {
         name: playerEntries[0].name,
         power: w3.power,
         points: totalPoints,
+        rawEff: overallRawEff,
+        activityPct: totalAct,
+        partPct: totalPart,
         total: finalScore,
         picks: metrics.reduce((sum, x) => sum + x.picks, 0),
         lastWeek: w3.week
@@ -156,7 +164,7 @@ function updateDisplay() {
     : (Number(b[currentSortKey]) || 0) - (Number(a[currentSortKey]) || 0);
 
   if (view === '__total') {
-    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Player</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('total')">Score</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
+    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">End Power</th><th class="sortable" onclick="setSort('points')">Total Pts</th><th class="sortable" onclick="setSort('rawEff')">Overall Eff</th><th>Act</th><th>Part</th><th class="sortable" onclick="setSort('total')">Score</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
     
     const grouped = {};
     data.forEach(d => { grouped[d.name] = grouped[d.name] || []; grouped[d.name].push(d); });
@@ -170,13 +178,17 @@ function updateDisplay() {
           <td>${i+1}</td>
           <td><strong>${p.name}</strong></td>
           <td>${(Number(p.power)||0).toLocaleString()}</td>
+          <td>${(Number(p.points)||0).toLocaleString()}</td>
+          <td>${p.rawEff.toFixed(5)}</td>
+          <td>${p.activityPct.toFixed(1)}</td>
+          <td>${p.partPct.toFixed(1)}</td>
           <td><strong>${p.total.toFixed(3)}</strong></td>
           <td>${pickTag}</td>
           <td><button class="edit-btn" onclick="editPlayer('${p.name}', '${p.lastWeek}')">Edit</button></td>
         </tr>`;
       });
   } else {
-    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Player</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('total')">Wk Score</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
+    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('points')">Points</th><th class="sortable" onclick="setSort('rawEff')">Eff</th><th>Act%</th><th>Part%</th><th class="sortable" onclick="setSort('total')">Total</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
 
     data.filter(d => d.week === view).map(calculateMetrics)
       .filter(d => d.name.toLowerCase().includes(search))
@@ -187,6 +199,10 @@ function updateDisplay() {
           <td>${i+1}</td>
           <td><strong>${d.name}</strong></td>
           <td>${(Number(d.power)||0).toLocaleString()}</td>
+          <td>${(Number(d.points)||0).toLocaleString()}</td>
+          <td>${d.rawEff.toFixed(5)}</td>
+          <td>${(d.activityPct * 40).toFixed(0)}%</td>
+          <td>${(d.partPct * 40).toFixed(0)}%</td>
           <td>${d.total.toFixed(3)}</td>
           <td>${pickTag}</td>
           <td><button class="edit-btn" onclick="editPlayer('${d.name}', '${d.week}')">Edit</button></td>
@@ -199,7 +215,7 @@ function updateTop3() {
   const grouped = {};
   loadData().forEach(d => { grouped[d.name] = grouped[d.name] || []; grouped[d.name].push(d); });
   const top = Object.values(grouped).map(calculateOverallMetrics).sort((a,b) => b.total - a.total).slice(0,3);
-  top3List.innerHTML = top.map((p,i) => `<li>${p.name}: ${p.total.toFixed(3)}</li>`).join('');
+  top3List.innerHTML = top.map((p,i) => `<li>${p.name}: <span style="color:var(--accent)">${p.total.toFixed(3)}</span></li>`).join('');
 }
 
 weekSelect.innerHTML = ['__total', ...WEEKS].map(w => `<option value="${w}">${w === '__total' ? 'Full Season Summary' : w.toUpperCase()}</option>`).join('');
