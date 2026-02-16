@@ -32,7 +32,7 @@
     th{background:#f8fafc; padding:12px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
     td{padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:0.85rem;}
     .hero-100{color:var(--success); font-weight:900; border: 1px solid var(--success); padding: 2px 5px; border-radius: 4px; background: #ecfdf5;}
-    .btn-edit{padding:6px 12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size: 0.75rem;}
+    .btn-edit{padding:6px 12px; background:var(--accent); color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer;}
     .btn-view{padding:6px 12px; background:#f1f5f9; color:var(--text); border:1px solid #cbd5e1; border-radius:6px; font-weight:600; cursor:pointer;}
     #configPanel{display:none; background:white; padding:20px; border-radius:12px; margin-bottom:20px; border:2px solid var(--accent);}
     .config-grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;}
@@ -130,30 +130,29 @@
         const latest = [...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || {};
         const w1 = playerEntries.find(d => d.week === 'week 1') || {};
         const w3 = playerEntries.find(d => d.week === 'week 3') || {};
-        
-        // MIRROR WEEK 3 THRONE FOR OVERALL
-        const throneMirror = (parseFloat(w3.throne)||0);
+        const totalThroneKills = playerEntries.reduce((s,d)=>s+(parseFloat(d.throne)||0), 0);
         const totalQuests = playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0);
 
         if(week === 'overall') {
             const p = parseFloat(latest.power)||0;
             const eff = p > 0 ? ((parseFloat(w3.points)||0) - (parseFloat(w1.points)||0)) / p : 0;
             html = `<div class="card"><label>Current Power</label><span>${formatPower(p)}</span></div>
-                    <div class="card"><label>Throne Score (W3)</label><span>${throneMirror.toLocaleString()}</span></div>
+                    <div class="card"><label>Overall Throne Score</label><span>${totalThroneKills.toLocaleString()}</span></div>
                     <div class="card"><label>Eff (W3-W1)</label><span>${eff.toFixed(2)}</span></div>
                     <div class="card"><label>Total Quests</label><span>${totalQuests.toLocaleString()}</span></div>
-                    <div class="card"><label>Throne Eff</label><span>${(p > 0 ? throneMirror/p : 0).toFixed(4)}</span></div>
-                    <div class="card"><label>Throne Score</label><span>${(p > 0 ? (throneMirror/p * m.M_THRONE) : 0).toFixed(2)}</span></div>`;
+                    <div class="card"><label>Throne Eff</label><span>${(p > 0 ? totalThroneKills/p : 0).toFixed(4)}</span></div>
+                    <div class="card"><label>Throne Score</label><span>${(p > 0 ? (totalThroneKills/p * m.M_THRONE) : 0).toFixed(2)}</span></div>`;
         } else {
             const e = playerEntries.find(d => d.week === week) || {};
             const p = parseFloat(e.power)||0;
             const eff = p > 0 ? (parseFloat(e.points)||0)/p : 0;
+            const q = (parseFloat(e.quest)||0);
             const tk = (parseFloat(e.throne)||0);
 
             html = `<div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
                     <div class="card"><label>Points</label><span>${(parseFloat(e.points)||0).toLocaleString()}</span></div>
                     <div class="card"><label>Eff</label><span>${eff.toFixed(2)}</span></div>
-                    <div class="card"><label>Quests</label><span>${(parseFloat(e.quest)||0).toLocaleString()}</span></div>`;
+                    <div class="card"><label>Quests</label><span>${q.toLocaleString()}</span></div>`;
             if(week === 'week 2') html += `<div class="card" style="grid-column: span 2"><label>Hunt</label><span>${(parseFloat(e.hunt)||0).toLocaleString()}</span></div>`;
             if(week === 'week 3') html += `<div class="card" style="grid-column: span 2"><label>Throne Score</label><span>${tk.toLocaleString()}</span></div>`;
         }
@@ -200,15 +199,15 @@
               part = ((e.dv?1:0)*(2.5/3)) + ((e.esb?1:0)*(2.5/3)) + ((e.esi_mon?1:0)*(2.5/6)) + ((e.esi_thu?1:0)*(2.5/6));
           }
           
-          const throneW3 = (parseFloat(w3.throne)||0);
-          const tEff = p > 0 ? (throneW3/p * m.M_THRONE) : 0;
+          const totalKills = playerEntries.reduce((s,d)=>s+(parseFloat(d.throne)||0), 0);
+          const tEff = p > 0 ? (totalKills/p * m.M_THRONE) : 0;
           const w1Bonus = (parseFloat(w1.points) || 0) * m.M_WEEK1;
 
           const totalScore = eff + act + part + tEff + ((playerEntries.reduce((s,d)=>s+(parseFloat(d.hunt)||0),0))*m.M_HUNT) + ((playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0))*m.M_QUEST) + w1Bonus;
           const pSum = (view==='overall') ? playerEntries.reduce((s,d)=>s+(d.p100?100:0)+(d.p40?40:0)+(d.p20?20:0)+(d.p5?5:0),0) : ((e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0));
 
           if(eff > 0) { totalEffSum += eff; effCount++; }
-          results.push({ name, p, pts, eff, act, part, tEff, total: totalScore, pickDisplay: pSum, has100: playerEntries.some(d => d.p100 == 1), latestW: e.week });
+          results.push({ name, p, pts, eff, act, part, tEff, total: totalScore, pickDisplay: pSum, has100: playerEntries.some(d => d.p100 == 1) });
         });
 
         document.getElementById('stat_avg').textContent = effCount > 0 ? (totalEffSum/effCount).toFixed(2) : "0.00";
@@ -238,7 +237,7 @@
             <td style="font-weight:900; background:#f8fafc">${r.total.toFixed(2)}</td>
             <td>
               <button class="btn-view" onclick="openProfile('${r.name.replace(/'/g,"\\'")}')">View</button>
-              <button class="btn-edit" onclick="localStorage.setItem('editTargetName','${r.name}');localStorage.setItem('editTargetWeek','${r.latestW}');window.location.href='form.html'">Edit</button>
+              <button class="btn-edit" onclick="goEdit('${r.name.replace(/'/g,"\\'")}')">Edit</button>
             </td>`;
           tbody.appendChild(tr);
         });
@@ -273,6 +272,7 @@
         });
       }
       window.closeModal = () => document.getElementById('profileModal').style.display="none";
+      window.goEdit = (name) => { localStorage.setItem('editTargetName', name); window.location.href = 'form.html'; };
       document.getElementById('weekSelect').onchange = render;
       document.getElementById('dashSearch').oninput = render;
       render();
