@@ -14,12 +14,11 @@ nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent
 main{max-width:1400px;margin:1.5rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 320px;gap:1.5rem;}
 .dashboard-section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);overflow-x:auto;}
 .controls{display:flex;gap:1rem;margin-bottom:1.5rem;align-items:center;}
-input, select{padding:0.6rem;border:1px solid #e2e8f0;border-radius:6px;}
+input, select{padding:0.6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;}
 th.sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
 th.sortable:hover { background: #e2e8f0 !important; color: #1e40af; }
 .edit-btn { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700;}
-/* RESTORED HIGHLIGHT */
-.highlight-picks { background-color: #dcfce7; color: #166534; font-weight: 700; padding: 4px 8px; border-radius: 4px; display: inline-block;}
+.highlight-picks { background-color: #dcfce7; color: #166534; font-weight: 700; padding: 4px 8px; border-radius: 4px; display: inline-block; border: 1px solid #86efac;}
 table{width:100%;border-collapse:collapse; font-size: 0.8rem;}
 th,td{padding:0.7rem;text-align:left;border-bottom:1px solid #e2e8f0;}
 th{background:#f1f5f9;font-weight:700;text-transform:uppercase;color:var(--muted); white-space: nowrap;}
@@ -31,12 +30,13 @@ body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;}
 </head>
 <body>
 <header>
-  <h1>Player Dashboard</h1>
+  <h1>Alliance Dashboard</h1>
   <button id="darkToggle" style="background:none; border:1px solid white; color:white; cursor:pointer; padding:6px 12px; border-radius:6px;">Theme</button>
 </header>
 <nav>
   <a href="index.html">Dashboard</a>
-  <a href="form.html">Add Data</a>
+  <a href="trends.html">Trends</a>
+  <a href="form.html">Manage Data</a>
   <a href="config.html">Config</a>
 </nav>
 <main>
@@ -58,7 +58,7 @@ body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;}
 
 <script>
 let currentSortKey = 'total';
-const WEEKS = ['week 1', 'week 2', 'week 3'];
+const WEEKS = ['home week', 'week 1', 'week 2', 'week 3'];
 const MULTIPLIER_KEY = 'scoringMultipliers';
 const DEFAULTS = { M_WEEK1: 0.1, M_QUEST: 0.0000025, M_THRONE: 3.0, M_FROST: 0.00001 };
 
@@ -68,10 +68,7 @@ const loadMultipliers = () => {
     return saved ? { ...DEFAULTS, ...JSON.parse(saved) } : DEFAULTS;
 };
 
-const fmt = (num) => {
-    const n = parseFloat(num) || 0;
-    return n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-};
+const fmt = (num) => parseFloat(num || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 function calculateMetrics(e) {
   const m = loadMultipliers();
@@ -79,22 +76,16 @@ function calculateMetrics(e) {
   const points = parseFloat(e.points) || 0;
   
   const rawEff = power > 0 ? points / power : 0;
-  const act = Math.min((parseFloat(e.lava||0) + parseFloat(e.challenge||0) + parseFloat(e.donations||0)) * (2.5/3), 2.5);
-  const part = Math.min((parseFloat(e.dv||0))*(2.5/3) + (parseFloat(e.esb||0))*(2.5/3) + ((parseFloat(e.esi_mon||0) + parseFloat(e.esi_thu||0)))*(2.5/6), 2.5);
-  
-  const throneRaw = power > 0 ? (parseFloat(e.throne||0) / power) : 0;
-  const throneScore = throneRaw * (parseFloat(m.M_THRONE) || 0);
-  
-  // FROST CALCULATION
-  const frostVal = parseFloat(e.frost) || 0;
-  const frostScore = frostVal * (parseFloat(m.M_FROST) || 0);
-  
-  const questScore = (parseFloat(e.quest||0)) * (parseFloat(m.M_QUEST) || 0);
+  const act = Math.min((parseFloat(e.lava||0) + parseFloat(e.challenge||0) + parseFloat(e.donations||0)) * 0.833, 2.5);
+  const part = Math.min((parseFloat(e.dv||0)*0.833) + (parseFloat(e.esb||0)*0.833) + ((parseFloat(e.esi_mon||0) + parseFloat(e.esi_thu||0))*0.416), 2.5);
+  const throneScore = power > 0 ? (parseFloat(e.throne||0) / power) * m.M_THRONE : 0;
+  const frostScore = (parseFloat(e.frost) || 0) * m.M_FROST;
+  const questScore = (parseFloat(e.quest) || 0) * m.M_QUEST;
 
   const total = rawEff + act + part + throneScore + frostScore + questScore;
-  const picks = (e.p100 ? 100 : 0) + (e.p40 ? 40 : 0) + (e.p20 ? 20 : 0) + (e.p5 ? 5 : 0);
+  const picks = (Number(e.p100)||0) + (Number(e.p40)||0) + (Number(e.p20)||0) + (Number(e.p5)||0);
   
-  return { ...e, rawEff, activityPct: act, partPct: part, throneRaw, total, picks };
+  return { ...e, rawEff, activityPct: act, partPct: part, total, picks, isHero: picks > 0 };
 }
 
 function calculateOverallMetrics(playerEntries) {
@@ -104,31 +95,33 @@ function calculateOverallMetrics(playerEntries) {
     let hadHeroPick = false;
 
     playerEntries.forEach(e => {
-        const met = calculateMetrics(e);
         const w = e.week.toLowerCase();
         
-        if (w === 'week 1') week1Pts = parseFloat(e.points) || 0;
-        else otherPts += parseFloat(e.points) || 0;
+        // Sum picks from EVERYTHING (including Home Week)
+        const pCount = (Number(e.p100)||0) + (Number(e.p40)||0) + (Number(e.p20)||0) + (Number(e.p5)||0);
+        totalPicks += pCount;
+        if(pCount > 0) hadHeroPick = true;
 
-        if (w >= latestWeek) {
-            latestPower = parseFloat(e.power) || 0;
-            latestWeek = e.week;
-            latestThroneRaw = met.throneRaw;
+        // Sum Scores ONLY from W1-W3
+        if (w !== 'home week') {
+            const met = calculateMetrics(e);
+            if (w === 'week 1') week1Pts = parseFloat(e.points) || 0;
+            else otherPts += parseFloat(e.points) || 0;
+
+            if (w >= latestWeek) {
+                latestPower = parseFloat(e.power) || 0;
+                latestWeek = e.week;
+                latestThroneRaw = latestPower > 0 ? (parseFloat(e.throne)||0)/latestPower : 0;
+            }
+            totalAct += met.activityPct;
+            totalPart += met.partPct;
+            totalQuest += parseFloat(e.quest) || 0;
+            totalFrost += parseFloat(e.frost) || 0;
         }
-        if (e.p100) hadHeroPick = true;
-
-        totalAct += met.activityPct;
-        totalPart += met.partPct;
-        totalPicks += met.picks;
-        totalQuest += parseFloat(e.quest) || 0;
-        totalFrost += parseFloat(e.frost) || 0;
     });
 
     const overallEff = latestPower > 0 ? otherPts / latestPower : 0;
-    const finalScore = (week1Pts * (parseFloat(m.M_WEEK1) || 0)) + overallEff + totalAct + totalPart + 
-                       (latestThroneRaw * (parseFloat(m.M_THRONE) || 0)) + 
-                       (totalQuest * (parseFloat(m.M_QUEST) || 0)) +
-                       (totalFrost * (parseFloat(m.M_FROST) || 0));
+    const fScore = (week1Pts * m.M_WEEK1) + overallEff + totalAct + totalPart + (latestThroneRaw * m.M_THRONE) + (totalQuest * m.M_QUEST) + (totalFrost * m.M_FROST);
 
     return { 
         name: playerEntries[0].name, 
@@ -137,11 +130,10 @@ function calculateOverallMetrics(playerEntries) {
         rawEff: overallEff, 
         activityPct: totalAct, 
         partPct: totalPart, 
-        throneRaw: latestThroneRaw, 
-        total: finalScore, 
+        total: fScore, 
         picks: totalPicks, 
         lastWeek: latestWeek,
-        hadHeroPick: hadHeroPick
+        hadHeroPick: hadHeroPick 
     };
 }
 
@@ -149,20 +141,18 @@ function updateDisplay() {
   const view = weekSelect.value;
   const search = searchInput.value.toLowerCase();
   const data = loadData();
-  const header = document.getElementById('tableHeaderRow');
   const tbody = document.getElementById('dataTableBody');
+  const header = document.getElementById('tableHeaderRow');
   tbody.innerHTML = '';
 
-  const sortFn = (a, b) => (typeof a[currentSortKey] === 'string') ? a[currentSortKey].localeCompare(b[currentSortKey]) : (parseFloat(b[currentSortKey]) || 0) - (parseFloat(a[currentSortKey]) || 0);
-
-  header.innerHTML = `<th>#</th><th>Name</th><th>Power</th><th>Pts</th><th>Eff</th><th>Act</th><th>Part</th><th>Throne(R)</th><th>Score</th><th>Picks</th><th>Action</th>`;
+  header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('points')">Pts</th><th class="sortable" onclick="setSort('rawEff')">Eff</th><th>Act</th><th>Part</th><th class="sortable" onclick="setSort('total')">Score</th><th>Picks</th><th>Action</th>`;
 
   const source = view === '__total' ? 
     Object.values(data.reduce((acc, d) => { (acc[d.name] = acc[d.name] || []).push(d); return acc; }, {})).map(calculateOverallMetrics) :
     data.filter(d => d.week === view).map(calculateMetrics);
 
-  source.filter(p => p.name.toLowerCase().includes(search)).sort(sortFn).forEach((p, i) => {
-      const pickDisplay = (p.p100 || p.hadHeroPick) ? `<span class="highlight-picks">${p.picks}</span>` : p.picks;
+  source.filter(p => p.name.toLowerCase().includes(search)).sort((a,b) => (typeof a[currentSortKey] === 'string') ? a[currentSortKey].localeCompare(b[currentSortKey]) : (b[currentSortKey] - a[currentSortKey])).forEach((p, i) => {
+      const pickTag = p.hadHeroPick || p.isHero ? `<span class="highlight-picks">${p.picks}</span>` : p.picks;
       tbody.innerHTML += `<tr>
         <td>${i+1}</td>
         <td><strong>${p.name}</strong></td>
@@ -171,15 +161,14 @@ function updateDisplay() {
         <td>${fmt(p.rawEff)}</td>
         <td>${view === '__total' ? p.activityPct.toFixed(1) : (p.activityPct * 40).toFixed(0)+'%'}</td>
         <td>${view === '__total' ? p.partPct.toFixed(1) : (p.partPct * 40).toFixed(0)+'%'}</td>
-        <td>${fmt(p.throneRaw)}</td>
         <td><strong>${fmt(p.total)}</strong></td>
-        <td>${pickDisplay}</td>
+        <td>${pickTag}</td>
         <td><button class="edit-btn" onclick="localStorage.setItem('editTargetName','${p.name}');localStorage.setItem('editTargetWeek','${p.lastWeek||p.week}');window.location.href='form.html'">Edit</button></td>
       </tr>`;
   });
 }
 
-function setSort(key) { currentSortKey = key; updateDisplay(); }
+function setSort(k) { currentSortKey = k; updateDisplay(); }
 function updateTop3() {
   const grouped = loadData().reduce((acc, d) => { (acc[d.name] = acc[d.name] || []).push(d); return acc; }, {});
   const top = Object.values(grouped).map(calculateOverallMetrics).sort((a,b) => b.total - a.total).slice(0,3);
@@ -188,7 +177,7 @@ function updateTop3() {
 
 weekSelect.innerHTML = ['__total', ...WEEKS].map(w => `<option value="${w}">${w === '__total' ? 'Full Season Summary' : w.toUpperCase()}</option>`).join('');
 weekSelect.onchange = updateDisplay; searchInput.oninput = updateDisplay;
-darkToggle.onclick = () => document.body.classList.toggle('dark-mode');
+darkToggle.onclick = () => { document.body.classList.toggle('dark-mode'); };
 updateDisplay(); updateTop3();
 </script>
 </body>
