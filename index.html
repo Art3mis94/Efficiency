@@ -16,7 +16,6 @@ main{max-width:1400px;margin:1.5rem auto;padding:0 1rem;display:grid;grid-templa
 .controls{display:flex;gap:1rem;margin-bottom:1.5rem;align-items:center;}
 input, select{padding:0.6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;}
 
-/* SORTING & BUTTONS */
 th.sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
 th.sortable:hover { background: #e2e8f0 !important; color: #1e40af; }
 
@@ -26,7 +25,6 @@ th.sortable:hover { background: #e2e8f0 !important; color: #1e40af; }
 }
 .edit-btn:hover { background: #059669; }
 
-/* PICKS HIGHLIGHT */
 .highlight-picks {
   background-color: #dcfce7;
   color: #166534;
@@ -84,10 +82,10 @@ body.dark-mode .highlight-picks { background-color: #064e3b; color: #34d399; }
 <script>
 let currentSortKey = 'total';
 const WEEKS = ['week 1', 'week 2', 'week 3'];
-
-const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
 const MULTIPLIER_KEY = 'scoringMultipliers';
 const DEFAULTS = { M_WEEK1: 0.1, M_QUEST: 0.0000025 };
+
+const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
 
 function loadMultipliers() {
     const saved = localStorage.getItem(MULTIPLIER_KEY);
@@ -98,6 +96,7 @@ function computePicks(e) {
   return (e.p100 ? 100 : 0) + (e.p40 ? 40 : 0) + (e.p20 ? 20 : 0) + (e.p5 ? 5 : 0);
 }
 
+// Logic for a SINGLE week view
 function calculateMetrics(e) {
   const m = loadMultipliers();
   const power = Number(e.power) || 0;
@@ -113,30 +112,57 @@ function calculateMetrics(e) {
   return { ...e, rawEff, activityPct: act, partPct: part, throneEfficiency: throneEff, total, picks: computePicks(e) };
 }
 
+// Logic for the FULL SEASON SUMMARY view
 function calculateOverallMetrics(playerEntries) {
     const m = loadMultipliers();
-    const metrics = playerEntries.map(calculateMetrics);
-    const w3 = metrics.find(x => x.week === 'week 3') || metrics[metrics.length-1];
-    const w1Points = Number(metrics.find(x => x.week === 'week 1')?.points) || 0;
-    const totalPoints = metrics.reduce((sum, x) => sum + (Number(x.points)||0), 0);
-    
-    const overallRawEff = w3.power > 0 ? (totalPoints - w1Points) / w3.power : 0;
-    const totalAct = Math.min(metrics.reduce((s, x) => s + (x.activityPct||0), 0), 7.5);
-    const totalPart = Math.min(metrics.reduce((s, x) => s + (x.partPct||0), 0), 7.5);
-    const throneEff = w3.power > 0 ? (Number(w3.throne||0) / w3.power) * 3 : 0;
-    
-    const finalScore = overallRawEff + (w1Points * m.M_WEEK1) + totalAct + totalPart + throneEff;
+    const multiplierW1 = Number(m.M_WEEK1) || 0;
+    const multiplierQ = Number(m.M_QUEST) || 0;
+
+    let week1Points = 0;
+    let otherWeeksPoints = 0;
+    let totalAct = 0;
+    let totalPart = 0;
+    let totalPicks = 0;
+    let totalQuest = 0;
+    let latestPower = 0;
+    let latestWeek = 'week 1';
+
+    playerEntries.forEach(e => {
+        const metrics = calculateMetrics(e);
+        const wName = e.week.toLowerCase();
+
+        if (wName === 'week 1') {
+            week1Points = Number(e.points) || 0;
+        } else {
+            otherWeeksPoints += Number(e.points) || 0;
+        }
+
+        // Track the most recent stats
+        if (wName >= latestWeek) {
+            latestPower = Number(e.power) || 0;
+            latestWeek = e.week;
+        }
+
+        totalAct += metrics.activityPct;
+        totalPart += metrics.partPct;
+        totalPicks += metrics.picks;
+        totalQuest += Number(e.quest) || 0;
+    });
+
+    // Score = (W1 Pts * Config%) + (W2+W3 Pts / Latest Power) + Sum of Activities + (Sum of Quests * Multiplier)
+    const overallEff = latestPower > 0 ? otherWeeksPoints / latestPower : 0;
+    const finalScore = (week1Points * multiplierW1) + overallEff + totalAct + totalPart + (totalQuest * multiplierQ);
 
     return {
         name: playerEntries[0].name,
-        power: w3.power,
-        points: totalPoints,
-        rawEff: overallRawEff,
+        power: latestPower,
+        points: (week1Points + otherWeeksPoints),
+        rawEff: overallEff,
         activityPct: totalAct,
         partPct: totalPart,
         total: finalScore,
-        picks: metrics.reduce((sum, x) => sum + x.picks, 0),
-        lastWeek: w3.week
+        picks: totalPicks,
+        lastWeek: latestWeek
     };
 }
 
@@ -164,7 +190,7 @@ function updateDisplay() {
     : (Number(b[currentSortKey]) || 0) - (Number(a[currentSortKey]) || 0);
 
   if (view === '__total') {
-    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">End Power</th><th class="sortable" onclick="setSort('points')">Total Pts</th><th class="sortable" onclick="setSort('rawEff')">Overall Eff</th><th>Act</th><th>Part</th><th class="sortable" onclick="setSort('total')">Score</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
+    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">End Power</th><th class="sortable" onclick="setSort('points')">Total Pts</th><th class="sortable" onclick="setSort('rawEff')">W2/3 Eff</th><th>Act</th><th>Part</th><th class="sortable" onclick="setSort('total')">Score</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
     
     const grouped = {};
     data.forEach(d => { grouped[d.name] = grouped[d.name] || []; grouped[d.name].push(d); });
