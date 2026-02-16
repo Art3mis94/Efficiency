@@ -18,13 +18,14 @@ input, select{padding:0.6rem;border:1px solid #e2e8f0;border-radius:6px;}
 th.sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
 th.sortable:hover { background: #e2e8f0 !important; color: #1e40af; }
 .edit-btn { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700;}
+/* RESTORED HIGHLIGHT */
+.highlight-picks { background-color: #dcfce7; color: #166534; font-weight: 700; padding: 4px 8px; border-radius: 4px; display: inline-block;}
 table{width:100%;border-collapse:collapse; font-size: 0.8rem;}
 th,td{padding:0.7rem;text-align:left;border-bottom:1px solid #e2e8f0;}
 th{background:#f1f5f9;font-weight:700;text-transform:uppercase;color:var(--muted); white-space: nowrap;}
 tr:hover{background:#f8fafc;}
 .top-performers{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
 body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;}
-body.dark-mode header, body.dark-mode nav{background:#111827;}
 @media (max-width:1100px){main{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -67,7 +68,6 @@ const loadMultipliers = () => {
     return saved ? { ...DEFAULTS, ...JSON.parse(saved) } : DEFAULTS;
 };
 
-// Formatting Helper: 2dp max, no trailing .00
 const fmt = (num) => {
     const n = parseFloat(num) || 0;
     return n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -75,34 +75,23 @@ const fmt = (num) => {
 
 function calculateMetrics(e) {
   const m = loadMultipliers();
-  
   const power = parseFloat(e.power) || 0;
   const points = parseFloat(e.points) || 0;
-  const throneVal = parseFloat(e.throne) || 0;
-  const frostVal = parseFloat(e.frost) || 0;
-  const questVal = parseFloat(e.quest) || 0;
-
-  // Efficiency
-  const rawEff = power > 0 ? points / power : 0;
   
-  // Activity (capped at 2.5)
+  const rawEff = power > 0 ? points / power : 0;
   const act = Math.min((parseFloat(e.lava||0) + parseFloat(e.challenge||0) + parseFloat(e.donations||0)) * (2.5/3), 2.5);
-  // Participation (capped at 2.5)
   const part = Math.min((parseFloat(e.dv||0))*(2.5/3) + (parseFloat(e.esb||0))*(2.5/3) + ((parseFloat(e.esi_mon||0) + parseFloat(e.esi_thu||0)))*(2.5/6), 2.5);
   
-  // Throne Logic
-  const throneRaw = power > 0 ? (throneVal / power) : 0;
+  const throneRaw = power > 0 ? (parseFloat(e.throne||0) / power) : 0;
   const throneScore = throneRaw * (parseFloat(m.M_THRONE) || 0);
   
-  // Frost Logic (Crucial Fix)
+  // FROST CALCULATION
+  const frostVal = parseFloat(e.frost) || 0;
   const frostScore = frostVal * (parseFloat(m.M_FROST) || 0);
   
-  // Quest Logic
-  const questScore = questVal * (parseFloat(m.M_QUEST) || 0);
+  const questScore = (parseFloat(e.quest||0)) * (parseFloat(m.M_QUEST) || 0);
 
-  // The Grand Total
   const total = rawEff + act + part + throneScore + frostScore + questScore;
-  
   const picks = (e.p100 ? 100 : 0) + (e.p40 ? 40 : 0) + (e.p20 ? 20 : 0) + (e.p5 ? 5 : 0);
   
   return { ...e, rawEff, activityPct: act, partPct: part, throneRaw, total, picks };
@@ -110,8 +99,9 @@ function calculateMetrics(e) {
 
 function calculateOverallMetrics(playerEntries) {
     const m = loadMultipliers();
-    let week1Pts = 0, otherPts = 0, totalAct = 0, totalPart = 0, totalPicks = 0, totalQ = 0, totalF = 0;
+    let week1Pts = 0, otherPts = 0, totalAct = 0, totalPart = 0, totalPicks = 0, totalQuest = 0, totalFrost = 0;
     let latestPower = 0, latestThroneRaw = 0, latestWeek = 'week 1';
+    let hadHeroPick = false;
 
     playerEntries.forEach(e => {
         const met = calculateMetrics(e);
@@ -125,22 +115,20 @@ function calculateOverallMetrics(playerEntries) {
             latestWeek = e.week;
             latestThroneRaw = met.throneRaw;
         }
+        if (e.p100) hadHeroPick = true;
+
         totalAct += met.activityPct;
         totalPart += met.partPct;
         totalPicks += met.picks;
-        totalQ += parseFloat(e.quest) || 0;
-        totalF += parseFloat(e.frost) || 0; // Cumulative Frost
+        totalQuest += parseFloat(e.quest) || 0;
+        totalFrost += parseFloat(e.frost) || 0;
     });
 
     const overallEff = latestPower > 0 ? otherPts / latestPower : 0;
-    
-    // Final Multiplier application
-    const w1Bonus = week1Pts * (parseFloat(m.M_WEEK1) || 0);
-    const tScore = latestThroneRaw * (parseFloat(m.M_THRONE) || 0);
-    const qScore = totalQ * (parseFloat(m.M_QUEST) || 0);
-    const fScore = totalF * (parseFloat(m.M_FROST) || 0);
-
-    const finalScore = w1Bonus + overallEff + totalAct + totalPart + tScore + qScore + fScore;
+    const finalScore = (week1Pts * (parseFloat(m.M_WEEK1) || 0)) + overallEff + totalAct + totalPart + 
+                       (latestThroneRaw * (parseFloat(m.M_THRONE) || 0)) + 
+                       (totalQuest * (parseFloat(m.M_QUEST) || 0)) +
+                       (totalFrost * (parseFloat(m.M_FROST) || 0));
 
     return { 
         name: playerEntries[0].name, 
@@ -152,7 +140,8 @@ function calculateOverallMetrics(playerEntries) {
         throneRaw: latestThroneRaw, 
         total: finalScore, 
         picks: totalPicks, 
-        lastWeek: latestWeek 
+        lastWeek: latestWeek,
+        hadHeroPick: hadHeroPick
     };
 }
 
@@ -166,13 +155,14 @@ function updateDisplay() {
 
   const sortFn = (a, b) => (typeof a[currentSortKey] === 'string') ? a[currentSortKey].localeCompare(b[currentSortKey]) : (parseFloat(b[currentSortKey]) || 0) - (parseFloat(a[currentSortKey]) || 0);
 
-  header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('points')">Pts</th><th class="sortable" onclick="setSort('rawEff')">Eff</th><th>Act</th><th>Part</th><th class="sortable" onclick="setSort('throneRaw')">Throne(R)</th><th class="sortable" onclick="setSort('total')">Score</th><th>Picks</th><th>Action</th>`;
+  header.innerHTML = `<th>#</th><th>Name</th><th>Power</th><th>Pts</th><th>Eff</th><th>Act</th><th>Part</th><th>Throne(R)</th><th>Score</th><th>Picks</th><th>Action</th>`;
 
   const source = view === '__total' ? 
     Object.values(data.reduce((acc, d) => { (acc[d.name] = acc[d.name] || []).push(d); return acc; }, {})).map(calculateOverallMetrics) :
     data.filter(d => d.week === view).map(calculateMetrics);
 
   source.filter(p => p.name.toLowerCase().includes(search)).sort(sortFn).forEach((p, i) => {
+      const pickDisplay = (p.p100 || p.hadHeroPick) ? `<span class="highlight-picks">${p.picks}</span>` : p.picks;
       tbody.innerHTML += `<tr>
         <td>${i+1}</td>
         <td><strong>${p.name}</strong></td>
@@ -183,7 +173,7 @@ function updateDisplay() {
         <td>${view === '__total' ? p.partPct.toFixed(1) : (p.partPct * 40).toFixed(0)+'%'}</td>
         <td>${fmt(p.throneRaw)}</td>
         <td><strong>${fmt(p.total)}</strong></td>
-        <td>${p.picks}</td>
+        <td>${pickDisplay}</td>
         <td><button class="edit-btn" onclick="localStorage.setItem('editTargetName','${p.name}');localStorage.setItem('editTargetWeek','${p.lastWeek||p.week}');window.location.href='form.html'">Edit</button></td>
       </tr>`;
   });
