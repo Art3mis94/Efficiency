@@ -14,29 +14,24 @@
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
     .container{padding:1.5rem; width:100%; box-sizing:border-box;}
-    
     .config-panel{display:none; background:white; padding:20px; border-radius:12px; margin-bottom:20px; border:2px solid var(--accent); box-shadow:0 4px 12px rgba(0,0,0,0.1);}
     .config-grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin-bottom:15px;}
     .config-grid div label{display:block; font-size:0.7rem; font-weight:700; color:var(--muted); margin-bottom:5px;}
     .config-grid input{width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;}
-
     .top-row{display:grid; grid-template-columns: 1fr 2fr; gap:20px; margin-bottom:20px;}
     .stat-cards{display:grid; grid-template-columns: 1fr 1fr; gap:15px;}
     .card{background:white; padding:15px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-left:4px solid var(--accent);}
     .card label{display:block; font-size:0.7rem; color:var(--muted); text-transform:uppercase; font-weight:700;}
     .card span{font-size:1.4rem; font-weight:800;}
-    
     .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);}
     .modal-content{background:white; margin:2% auto; padding:25px; width:90%; max-width:950px; border-radius:16px; position:relative; max-height: 90vh; overflow-y: auto;}
     .close{position:absolute; right:20px; top:15px; font-size:28px; cursor:pointer;}
-
     .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
     table{width:100%; border-collapse:collapse; min-width:1100px;}
     th{background:#f8fafc; padding:12px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
     td{padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:0.85rem;}
     .btn-edit{padding:6px 12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:700; cursor:pointer;}
     .btn-view{padding:6px 12px; background:#f1f5f9; color:var(--text); border:1px solid #cbd5e1; border-radius:6px; font-weight:600; cursor:pointer;}
-    .controls{display:flex; gap:15px; margin-bottom:15px; align-items:center;}
   </style>
 </head>
 <body>
@@ -46,18 +41,16 @@
     <button onclick="toggleConfig()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:8px 12px; border-radius:6px; cursor:pointer;">⚙ Config</button>
   </header>
   
-  <nav>
-    <a href="index.html">Dashboard</a>
-    <a href="form.html">Manage Data</a>
-  </nav>
+  <nav><a href="index.html">Dashboard</a><a href="form.html">Manage Data</a></nav>
 
   <div class="container">
     <div id="configPanel" class="config-panel">
       <h3 style="margin-top:0">Scoring Multipliers</h3>
       <div class="config-grid">
-        <div><label>Throne Multiplier</label><input type="number" id="m_throne" step="0.1"></div>
-        <div><label>Hunt Multiplier</label><input type="number" id="m_hunt" step="0.000001"></div>
-        <div><label>Quest Multiplier</label><input type="number" id="m_quest" step="0.000001"></div>
+        <div><label>W1 Eff Multi</label><input type="number" id="m_week1" step="0.000001"></div>
+        <div><label>Throne Multi</label><input type="number" id="m_throne" step="0.1"></div>
+        <div><label>Hunt Multi</label><input type="number" id="m_hunt" step="0.000001"></div>
+        <div><label>Quest Multi</label><input type="number" id="m_quest" step="0.000001"></div>
       </div>
       <button onclick="saveConfig()" class="btn-edit">Apply & Reload</button>
     </div>
@@ -73,7 +66,7 @@
       </div>
     </div>
 
-    <div class="controls">
+    <div style="display:flex; gap:15px; margin-bottom:15px; align-items:center;">
       <select id="weekSelect" style="font-weight:700; border:2px solid var(--accent); padding:8px; border-radius:8px;">
         <option value="overall">OVERALL</option>
         <option value="home week">HOME WEEK</option>
@@ -105,7 +98,7 @@
           <select id="modalWeekSelect" onchange="updateModalStats()" style="width:100%; padding: 10px; border-radius: 8px; margin-bottom:15px; border:2px solid var(--accent); font-weight:700;"></select>
           <div id="modalStatsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"></div>
         </div>
-        <div style="flex:1.5; background:#f8fafc; padding:20px; border-radius:12px; min-width: 300px;">
+        <div style="flex:1.5; background:#f8fafc; padding:20px; border-radius:12px;">
            <canvas id="playerChart" width="400" height="250"></canvas>
         </div>
       </div>
@@ -117,13 +110,14 @@
       let myChart = null;
       const WEEKS_ORDER = ['home week', 'week 1', 'week 2', 'week 3'];
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
-      const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_HUNT":0.00001,"M_QUEST":0.0000025}');
+      const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.000001,"M_THRONE":3.0,"M_HUNT":0.00001,"M_QUEST":0.0000025}');
       const formatPower = (n) => n ? (n/1000).toFixed(1)+"Bn" : "--";
 
       window.toggleConfig = () => {
         const p = document.getElementById('configPanel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
         const m = getMults();
+        document.getElementById('m_week1').value = m.M_WEEK1 || 0.000001;
         document.getElementById('m_throne').value = m.M_THRONE;
         document.getElementById('m_hunt').value = m.M_HUNT;
         document.getElementById('m_quest').value = m.M_QUEST;
@@ -131,6 +125,7 @@
 
       window.saveConfig = () => {
         localStorage.setItem('scoringMultipliers', JSON.stringify({
+          M_WEEK1: parseFloat(document.getElementById('m_week1').value),
           M_THRONE: parseFloat(document.getElementById('m_throne').value),
           M_HUNT: parseFloat(document.getElementById('m_hunt').value),
           M_QUEST: parseFloat(document.getElementById('m_quest').value)
@@ -141,44 +136,34 @@
       window.updateModalStats = () => {
         const data = loadData();
         const week = document.getElementById('modalWeekSelect').value;
-        const playerEntries = data.filter(d => d.name === window.activePlayer);
+        const pEntries = data.filter(d => d.name === window.activePlayer);
         const m = getMults();
         let html = '';
 
-        const w1 = playerEntries.find(d => d.week === 'week 1') || {};
-        const w2 = playerEntries.find(d => d.week === 'week 2') || {};
-        const w3 = playerEntries.find(d => d.week === 'week 3') || {};
+        const w1 = pEntries.find(d => d.week === 'week 1') || {};
+        const w2 = pEntries.find(d => d.week === 'week 2') || {};
+        const w3 = pEntries.find(d => d.week === 'week 3') || {};
 
         if(week === 'overall') {
             const p = parseFloat(w3.power)||1;
-            const eff = ( (parseFloat(w3.points)||0) - (parseFloat(w1.points)||0) ) / p;
-            const tEff = ((parseFloat(w3.throne)||0)/p) * m.M_THRONE;
-            html = `<div class="card"><label>Points (W3-W1)</label><span>${( (parseFloat(w3.points)||0)-(parseFloat(w1.points)||0) ).toLocaleString()}</span></div>
+            const eff = ((parseFloat(w3.points)||0)-(parseFloat(w1.points)||0))/p;
+            html = `<div class="card"><label>Points (W3-W1)</label><span>${((parseFloat(w3.points)||0)-(parseFloat(w1.points)||0)).toLocaleString()}</span></div>
                     <div class="card"><label>Current Power</label><span>${formatPower(p)}</span></div>
                     <div class="card"><label>Efficiency</label><span>${eff.toFixed(2)}</span></div>
-                    <div class="card"><label>Total Quests</label><span>${playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0).toLocaleString()}</span></div>
+                    <div class="card"><label>Current Quest</label><span>${(parseFloat(w3.quest)||0).toLocaleString()}</span></div>
                     <div class="card"><label>Throne Score</label><span>${(parseFloat(w3.throne)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Throne Eff</label><span>${tEff.toFixed(2)}</span></div>`;
-        } else if(week === 'week 3') {
-            const p = parseFloat(w3.power)||1;
-            const tEff = ((parseFloat(w3.throne)||0)/p) * m.M_THRONE;
-            html = `<div class="card"><label>Points</label><span>${(parseFloat(w3.points)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
-                    <div class="card"><label>Efficiency</label><span>${((parseFloat(w3.points)||0)/p).toFixed(2)}</span></div>
-                    <div class="card"><label>Quests</label><span>${(parseFloat(w3.quest)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Throne Score</label><span>${(parseFloat(w3.throne)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Throne Eff</label><span>${tEff.toFixed(2)}</span></div>`;
-        } else if(week === 'week 2') {
-            const p = parseFloat(w2.power)||1;
-            html = `<div class="card"><label>Points</label><span>${(parseFloat(w2.points)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
-                    <div class="card"><label>Efficiency</label><span>${((parseFloat(w2.points)||0)/p).toFixed(2)}</span></div>
-                    <div class="card"><label>Quests</label><span>${(parseFloat(w2.quest)||0).toLocaleString()}</span></div>`;
-        } else if(week === 'week 1') {
-            const p = parseFloat(w1.power)||1;
-            html = `<div class="card"><label>Points</label><span>${(parseFloat(w1.points)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
-                    <div class="card"><label>Quests</label><span>${(parseFloat(w1.quest)||0).toLocaleString()}</span></div>`;
+                    <div class="card"><label>Throne Eff</label><span>${(p > 0 ? (parseFloat(w3.throne)||0)/p * m.M_THRONE : 0).toFixed(2)}</span></div>`;
+        } else {
+            const e = pEntries.find(d => d.week === week) || {};
+            const p = parseFloat(e.power)||1;
+            html = `<div class="card"><label>Points</label><span>${(parseFloat(e.points)||0).toLocaleString()}</span></div>
+                    <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>`;
+            if(week !== 'week 1') html += `<div class="card"><label>Efficiency</label><span>${((parseFloat(e.points)||0)/p).toFixed(2)}</span></div>`;
+            html += `<div class="card"><label>Quests</label><span>${(parseFloat(e.quest)||0).toLocaleString()}</span></div>`;
+            if(week === 'week 3') {
+                html += `<div class="card"><label>Throne Score</label><span>${(parseFloat(e.throne)||0).toLocaleString()}</span></div>
+                        <div class="card"><label>Throne Eff</label><span>${(p > 0 ? (parseFloat(e.throne)||0)/p * m.M_THRONE : 0).toFixed(2)}</span></div>`;
+            }
         }
         document.getElementById('modalStatsGrid').innerHTML = html;
       };
@@ -186,7 +171,6 @@
       window.openProfile = (name) => {
         window.activePlayer = name;
         document.getElementById('modalName').textContent = name;
-        // Filter out Home Week from overlay select
         document.getElementById('modalWeekSelect').innerHTML = ['overall','week 1','week 2','week 3'].map(w => `<option value="${w}">${w.toUpperCase()}</option>`).join('');
         document.getElementById('profileModal').style.display = "block";
         updateModalStats();
@@ -206,23 +190,25 @@
           const entries = data.filter(d => d.name === name);
           const w1 = entries.find(d => d.week === 'week 1') || {};
           const w3 = entries.find(d => d.week === 'week 3') || {};
-          const current = view === 'overall' ? w3 : entries.find(d => d.week === view) || {};
+          const cur = view === 'overall' ? w3 : entries.find(d => d.week === view) || {};
 
-          const p = parseFloat(current.power)||0;
-          const eff = (view === 'overall') ? (p > 0 ? ( (parseFloat(w3.points)||0) - (parseFloat(w1.points)||0) ) / p : 0) : (p > 0 ? (parseFloat(current.points)||0)/p : 0);
+          const p = parseFloat(cur.power)||0;
+          const eff = (view === 'overall') ? (p > 0 ? ((parseFloat(w3.points)||0)-(parseFloat(w1.points)||0))/p : 0) : (p > 0 ? (parseFloat(cur.points)||0)/p : 0);
           
-          const act = ((current.lava?1:0)+(current.challenge?1:0)+(current.donations?1:0)) * (2.5/3);
-          const part = ((current.dv?1:0)*(2.5/3)) + ((current.esb?1:0)*(2.5/3));
+          // Activity & Part sum across ALL entries for "Overall", otherwise current week
+          const acts = view === 'overall' ? entries : [cur];
+          const actVal = acts.reduce((s,e) => s + (((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0))*(2.5/3)), 0);
+          const partVal = acts.reduce((s,e) => s + (((e.dv?1:0)+(e.esb?1:0))*(2.5/3) + ((e.esi_mon?1:0)+(e.esi_thu?1:0))*(2.5/6)), 0);
           
           const tEff = p > 0 ? ((parseFloat(w3.throne)||0)/p * m.M_THRONE) : 0;
-          
-          // Overall summation logic
-          const huntScore = entries.reduce((s,d)=>s+(parseFloat(d.hunt)||0),0) * m.M_HUNT;
-          const questScore = entries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0) * m.M_QUEST;
-          const totalScore = eff + act + part + tEff + huntScore + questScore;
+          const w1Bonus = (parseFloat(w1.points)||0) * (m.M_WEEK1 || 0.000001);
+          const qScore = (parseFloat(cur.quest)||0) * m.M_QUEST;
+          const hScore = entries.reduce((s,d)=>s+(parseFloat(d.hunt)||0),0) * m.M_HUNT;
+
+          const total = eff + actVal + partVal + tEff + w1Bonus + qScore + hScore;
 
           if(eff > 0) { totalEffSum += eff; count++; }
-          results.push({ name, p, pts: (parseFloat(current.points)||0), eff, act, part, tEff, total: totalScore, week: current.week || view });
+          results.push({ name, p, pts: (parseFloat(cur.points)||0), eff, act: actVal, part: partVal, tEff, total, week: cur.week || view });
         });
 
         const sorted = results.sort((a,b)=>b.total - a.total);
@@ -245,20 +231,9 @@
             </td>`;
           tbody.appendChild(tr);
         });
-
-        document.getElementById('topThreeList').innerHTML = sorted.slice(0,3).map((p,i)=>`
-          <div style="flex:1; background:#f1f5f9; padding:10px; border-radius:8px; text-align:center; border:2px solid ${i===0?'#f59e0b':i===1?'#94a3b8':'#b45309'}">
-            <div style="font-size:0.6rem; font-weight:700;">#${i+1} ${p.name}</div>
-            <div style="font-weight:700;">${p.total.toFixed(2)}</div>
-          </div>`).join('');
       }
 
-      window.editPlayer = (name, week) => {
-        localStorage.setItem('editTargetName', name);
-        localStorage.setItem('editTargetWeek', week);
-        window.location.href = 'form.html';
-      };
-
+      window.editPlayer = (n, w) => { localStorage.setItem('editTargetName', n); localStorage.setItem('editTargetWeek', w); window.location.href = 'form.html'; };
       function drawTrendChart(name) {
         const entries = loadData().filter(d => d.name === name);
         const labels = ['Week 1', 'Week 2', 'Week 3'];
@@ -271,7 +246,6 @@
           type: 'line', data: { labels, datasets: [{ label:'Eff', data: values, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.1)', fill:true, tension:0.3 }] }
         });
       }
-
       window.closeModal = () => document.getElementById('profileModal').style.display="none";
       document.getElementById('weekSelect').onchange = render;
       document.getElementById('dashSearch').oninput = render;
