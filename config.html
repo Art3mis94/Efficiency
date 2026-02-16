@@ -1,63 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Multiplier Configuration</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;}
-body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
-header{background:#1e40af;color:#fff;padding:1rem 1.5rem;}
-nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
-nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
-main{max-width:800px;margin:2rem auto;padding:0 1rem;}
-.config-section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
-.multiplier-group{margin-bottom:1.2rem;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;}
-label{display:block;margin-bottom:0.5rem;font-weight:600;}
-input[type="number"]{width:100%;padding:0.6rem;border:1px solid #ccc;border-radius:4px;}
-.save-btn{background:#10b981;color:#fff;padding:0.75rem;border:none;border-radius:6px;cursor:pointer;font-weight:600;width:100%;}
-</style>
+  <meta charset="UTF-8">
+  <title>Global Configuration</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;}
+    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
+    header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
+    nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
+    nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
+    main{max-width:600px;margin:3rem auto;padding:0 1rem;}
+    .card{background:var(--card);padding:2rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
+    .field{margin-bottom:1.5rem;}
+    label{display:block;margin-bottom:0.5rem;font-weight:600;color:#475569;}
+    input{width:100%;padding:0.75rem;border:1px solid #e2e8f0;border-radius:8px;font-size:1rem;}
+    .btn{width:100%;padding:1rem;background:#10b981;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:1rem;}
+    .btn:hover{background:#059669;}
+    .note{font-size:0.85rem;color:#64748b;margin-top:0.5rem;}
+  </style>
 </head>
 <body>
-<header><h1>Multiplier Configuration</h1></header>
-<nav><a href="index.html">Dashboard</a><a href="form.html">Add Data</a><a href="config.html">Config</a></nav>
+<header><h1>System Settings</h1></header>
+<nav>
+  <a href="index.html">Dashboard</a>
+  <a href="trends.html">Trends</a>
+  <a href="form.html">Manage Data</a>
+  <a href="config.html">Config</a>
+</nav>
+
 <main>
-  <div class="config-section">
-    <h2>Adjust Weights 📊</h2>
-    <div class="multiplier-group"><label>Week 1 Score Bonus (%)</label><input type="number" id="M_WEEK1_input" step="any"></div>
-    <div class="multiplier-group"><label>Throne Multiplier</label><input type="number" id="M_THRONE" step="any"></div>
-    <div class="multiplier-group"><label>Quest Multiplier</label><input type="number" id="M_QUEST" step="any"></div>
-    <div class="multiplier-group"><label>Frost Multiplier</label><input type="number" id="M_FROST" step="0.000000000001"></div>
-    <button id="saveBtn" class="save-btn">Save Multipliers</button>
+  <div class="card">
+    <h3>Scoring Multipliers</h3>
+    <p class="note">Adjust how much each stat contributes to the final score.</p>
+    <hr style="border:0; border-top:1px solid #eee; margin:1.5rem 0;">
+    
+    <div class="field">
+      <label>Week 1 Carryover (M_WEEK1)</label>
+      <input type="number" id="M_WEEK1" step="0.01">
+    </div>
+
+    <div class="field">
+      <label>Throne Kills Multiplier (M_THRONE)</label>
+      <input type="number" id="M_THRONE" step="0.1">
+    </div>
+
+    <div class="field">
+      <label>Ultimate Hunt Multiplier (M_HUNT)</label>
+      <input type="number" id="M_HUNT" step="0.0000001">
+    </div>
+
+    <div class="field">
+      <label>Quest Score Multiplier (M_QUEST)</label>
+      <input type="number" id="M_QUEST" step="0.0000001">
+    </div>
+
+    <button class="btn" onclick="saveConfigs()">Save Configuration</button>
   </div>
 </main>
+
 <script>
-const MULTIPLIER_KEY = 'scoringMultipliers';
-const DEFAULTS = { M_WEEK1: 0.1, M_QUEST: 0.0000025, M_THRONE: 3.0, M_FROST: 0.00001 };
+  const MULT_KEY = 'scoringMultipliers';
+  const DEFAULTS = { 
+    M_WEEK1: 0.1, 
+    M_QUEST: 0.0000025, 
+    M_THRONE: 3.0, 
+    M_HUNT: 0.00001 
+  };
 
-function init() {
-    const saved = localStorage.getItem(MULTIPLIER_KEY);
-    const m = saved ? { ...DEFAULTS, ...JSON.parse(saved) } : DEFAULTS;
-    
-    // We do NOT use .toFixed() here so the precision is preserved
-    document.getElementById('M_WEEK1_input').value = m.M_WEEK1 * 100;
-    document.getElementById('M_THRONE').value = m.M_THRONE;
-    document.getElementById('M_QUEST').value = m.M_QUEST;
-    document.getElementById('M_FROST').value = m.M_FROST;
-}
+  function loadConfigs() {
+    const saved = JSON.parse(localStorage.getItem(MULT_KEY) || JSON.stringify(DEFAULTS));
+    Object.keys(DEFAULTS).forEach(key => {
+      document.getElementById(key).value = saved[key] || DEFAULTS[key];
+    });
+  }
 
-document.getElementById('saveBtn').onclick = () => {
-    const data = {
-        M_WEEK1: parseFloat(document.getElementById('M_WEEK1_input').value) / 100 || 0,
-        M_THRONE: parseFloat(document.getElementById('M_THRONE').value) || 0,
-        M_QUEST: parseFloat(document.getElementById('M_QUEST').value) || 0,
-        M_FROST: parseFloat(document.getElementById('M_FROST').value) || 0
-    };
-    localStorage.setItem(MULTIPLIER_KEY, JSON.stringify(data));
-    alert('Multipliers Saved Exactly!');
-    init();
-};
-window.onload = init;
+  function saveConfigs() {
+    const newConfigs = {};
+    Object.keys(DEFAULTS).forEach(key => {
+      newConfigs[key] = parseFloat(document.getElementById(key).value);
+    });
+    localStorage.setItem(MULT_KEY, JSON.stringify(newConfigs));
+    alert("Configuration Saved! Dashboard scores will now reflect these changes.");
+  }
+
+  loadConfigs();
 </script>
 </body>
 </html>
