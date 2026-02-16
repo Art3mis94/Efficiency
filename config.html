@@ -4,47 +4,24 @@
 <meta charset="UTF-8">
 <title>Multiplier Configuration</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;}
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s;}
-header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08);}
-header h1{margin:0;font-size:1.25rem;font-weight:600;}
+body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
+header{background:#1e40af;color:#fff;padding:1rem 1.5rem;}
 nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
 nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
-nav a:hover{opacity:.95;transform:translateY(-1px);}
 main{max-width:800px;margin:2rem auto;padding:0 1rem;}
 .config-section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
-h2{margin-bottom:1.5rem;font-size:1.3rem;color:var(--accent);}
 .multiplier-group{margin-bottom:1.5rem;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;}
-.multiplier-group label{display:block;margin-bottom:0.5rem;font-weight:600;color:var(--text);}
-.multiplier-group input[type="number"]{
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-.save-btn{
-    background:#10b981;
-    color:#fff;
-    padding:0.75rem 1.5rem;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-    font-weight:600;
-    display:block;
-    width: 100%;
-    margin-top: 1.5rem;
-}
+.multiplier-group label{display:block;margin-bottom:0.5rem;font-weight:600;}
+input[type="number"]{width:100%;padding:0.6rem;border:1px solid #ccc;border-radius:4px;}
+.save-btn{background:#10b981;color:#fff;padding:0.75rem;border:none;border-radius:6px;cursor:pointer;font-weight:600;width:100%;margin-top:1rem;}
 .save-btn:hover{background:#059669;}
 </style>
 </head>
 <body>
-<header>
-  <h1>Multiplier Configuration</h1>
-</header>
+<header><h1>Multiplier Configuration</h1></header>
 <nav>
   <a href="index.html">Dashboard</a>
   <a href="form.html">Add Data</a>
@@ -55,30 +32,18 @@ h2{margin-bottom:1.5rem;font-size:1.3rem;color:var(--accent);}
     <h2>Adjust Scoring Weights 📊</h2>
 
     <div class="multiplier-group">
-        <label for="M_WEEK1_input">Week 1 Score Bonus (% of Week 1 Total Score):</label>
-        <input type="number" id="M_WEEK1_input" min="0" step="any">
-        <div style="font-size:0.85rem;color:var(--muted);margin-top:5px;">Enter percentage (e.g., 10 for 10%).</div>
+        <label>Week 1 Score Bonus (%)</label>
+        <input type="number" id="M_WEEK1_input" step="any">
     </div>
     
     <div class="multiplier-group">
-        <label for="M_THRONE">Throne Multiplier (e.g., 3.0):</label>
+        <label>Throne Multiplier</label>
         <input type="number" id="M_THRONE" step="0.1">
-        <div style="font-size:0.85rem;color:var(--muted);margin-top:5px;">Applied to (Throne / Power) for the latest week.</div>
     </div>
 
     <div class="multiplier-group">
-        <label for="M_QUEST">Quest Multiplier (e.g., 0.0000025):</label>
+        <label>Quest Multiplier</label>
         <input type="number" id="M_QUEST" step="any">
-    </div>
-
-    <div class="multiplier-group">
-        <label for="M_HUNT">Ultimate Hunting Multiplier (e.g., 0.000005):</label>
-        <input type="number" id="M_HUNT" step="any">
-    </div>
-    
-    <div class="multiplier-group">
-        <label for="M_FROST">Frost Comparison Multiplier:</label>
-        <input type="number" id="M_FROST" step="any">
     </div>
 
     <button id="saveBtn" class="save-btn">Save Multipliers</button>
@@ -88,50 +53,59 @@ h2{margin-bottom:1.5rem;font-size:1.3rem;color:var(--accent);}
 <script>
 const MULTIPLIER_KEY = 'scoringMultipliers';
 
-// Updated defaults to include M_THRONE
+// Hardcoded defaults
 const DEFAULTS = {
     M_WEEK1: 0.1, 
     M_QUEST: 0.0000025,
-    M_HUNT: 0.000005, 
-    M_FROST: 0.00001,
     M_THRONE: 3.0
 };
 
+// LOAD FUNCTION
 function loadMultipliers() {
     const saved = localStorage.getItem(MULTIPLIER_KEY);
-    return saved ? JSON.parse(saved) : DEFAULTS;
+    if (!saved) return DEFAULTS;
+    
+    // Merge saved data with defaults to ensure no keys are missing
+    return { ...DEFAULTS, ...JSON.parse(saved) };
 }
 
+// INITIALIZE UI
 function initializeUI() {
-    const multipliers = loadMultipliers();
+    const m = loadMultipliers();
     
-    // Week 1 Multiplier (Convert decimal to % for display)
-    document.getElementById('M_WEEK1_input').value = (multipliers.M_WEEK1 * 100);
+    // Convert decimal 0.1 to 10 for the input field
+    document.getElementById('M_WEEK1_input').value = (m.M_WEEK1 * 100).toFixed(2);
+    document.getElementById('M_THRONE').value = m.M_THRONE;
+    document.getElementById('M_QUEST').value = m.M_QUEST;
     
-    // Set other values directly
-    document.getElementById('M_THRONE').value = multipliers.M_THRONE || DEFAULTS.M_THRONE;
-    document.getElementById('M_QUEST').value = multipliers.M_QUEST;
-    document.getElementById('M_HUNT').value = multipliers.M_HUNT;
-    document.getElementById('M_FROST').value = multipliers.M_FROST;
+    console.log("UI Initialized with:", m);
 }
 
+// SAVE FUNCTION
 function saveMultipliers() {
-    const week1Pct = Number(document.getElementById('M_WEEK1_input').value) || 0;
+    try {
+        const week1Val = parseFloat(document.getElementById('M_WEEK1_input').value) || 0;
+        
+        const newMultipliers = {
+            M_WEEK1: week1Val / 100, // Save as decimal
+            M_THRONE: parseFloat(document.getElementById('M_THRONE').value) || 0,
+            M_QUEST: parseFloat(document.getElementById('M_QUEST').value) || 0
+        };
 
-    const newMultipliers = {
-        M_WEEK1: week1Pct / 100, // Convert % back to decimal for storage
-        M_THRONE: Number(document.getElementById('M_THRONE').value) || 0,
-        M_QUEST: Number(document.getElementById('M_QUEST').value) || 0,
-        M_HUNT: Number(document.getElementById('M_HUNT').value) || 0,
-        M_FROST: Number(document.getElementById('M_FROST').value) || 0,
-    };
-
-    localStorage.setItem(MULTIPLIER_KEY, JSON.stringify(newMultipliers));
-    alert('Multipliers saved! Your dashboard will now use these values.');
+        localStorage.setItem(MULTIPLIER_KEY, JSON.stringify(newMultipliers));
+        
+        alert('Settings Saved Locally!');
+        console.log("Saved to LocalStorage:", newMultipliers);
+        
+        // Refresh UI to confirm values
+        initializeUI();
+    } catch (err) {
+        alert("Error saving: " + err);
+    }
 }
 
-document.getElementById('saveBtn').onclick = saveMultipliers;
-initializeUI();
+document.getElementById('saveBtn').addEventListener('click', saveMultipliers);
+window.onload = initializeUI;
 </script>
 </body>
 </html>
