@@ -28,7 +28,7 @@
     .rank-item.third{border:2px solid var(--bronze); background:#fff7ed;}
 
     .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);}
-    .modal-content{background:white; margin:2% auto; padding:25px; width:90%; max-width:900px; border-radius:16px; position:relative; min-height: 500px;}
+    .modal-content{background:white; margin:2% auto; padding:25px; width:90%; max-width:900px; border-radius:16px; position:relative;}
     .close{position:absolute; right:20px; top:15px; font-size:28px; cursor:pointer;}
     
     .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
@@ -61,10 +61,10 @@
     <div id="configPanel">
       <h3 style="margin-top:0">Scoring Multipliers</h3>
       <div class="config-grid">
-        <div><label>Week 1</label><input type="number" id="m_week1" step="0.01"></div>
-        <div><label>Throne</label><input type="number" id="m_throne" step="0.1"></div>
-        <div><label>UH</label><input type="number" id="m_hunt" step="0.000001"></div>
-        <div><label>Quest</label><input type="number" id="m_quest" step="0.000001"></div>
+        <div><label>W1 Eff Multi</label><input type="number" id="m_week1" step="0.000001"></div>
+        <div><label>Throne Multi</label><input type="number" id="m_throne" step="0.1"></div>
+        <div><label>UH Multi</label><input type="number" id="m_hunt" step="0.000001"></div>
+        <div><label>Quest Multi</label><input type="number" id="m_quest" step="0.000001"></div>
       </div>
       <button onclick="saveConfig()" class="btn-edit" style="margin-top:10px; background:var(--success)">Apply Multipliers</button>
     </div>
@@ -121,38 +121,11 @@
   <script>
     (function(){
       let myChart = null;
-      const WEEKS_ORDER = ['overall', 'week 1', 'week 2', 'week 3'];
+      const WEEKS_ORDER = ['week 1', 'week 2', 'week 3'];
 
       const formatPower = (num) => (num && num !== 0) ? (num / 1000).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "Bn" : "--";
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
-      const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":1.0,"M_THRONE":3.0,"M_HUNT":0.00001,"M_QUEST":0.0000025}');
-
-      window.toggleConfig = () => {
-        const p = document.getElementById('configPanel');
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
-        const m = getMults();
-        ['week1','throne','hunt','quest'].forEach(k => document.getElementById('m_'+k).value = m['M_'+k.toUpperCase()]);
-      };
-
-      window.saveConfig = () => {
-        const newM = {
-          M_WEEK1: parseFloat(document.getElementById('m_week1').value),
-          M_THRONE: parseFloat(document.getElementById('m_throne').value),
-          M_HUNT: parseFloat(document.getElementById('m_hunt').value),
-          M_QUEST: parseFloat(document.getElementById('m_quest').value)
-        };
-        localStorage.setItem('scoringMultipliers', JSON.stringify(newM));
-        location.reload();
-      };
-
-      window.openProfile = (name) => {
-        window.activePlayer = name;
-        document.getElementById('modalName').textContent = name;
-        document.getElementById('modalWeekSelect').innerHTML = WEEKS_ORDER.map(w => `<option value="${w}">${w.toUpperCase()}</option>`).join('');
-        document.getElementById('profileModal').style.display = "block";
-        updateModalStats();
-        drawTrendChart(name);
-      };
+      const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.000001,"M_THRONE":3.0,"M_HUNT":0.00001,"M_QUEST":0.0000025}');
 
       window.updateModalStats = () => {
         const data = loadData();
@@ -164,54 +137,30 @@
         if(week === 'overall') {
             const e = [...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || {};
             const p = parseFloat(e.power)||0;
-            const pts = playerEntries.reduce((s,d)=>s+(parseFloat(d.points)||0),0);
-            const w1pts = playerEntries.find(d => d.week === 'week 1')?.points || 0;
-            const eff = p > 0 ? (pts - w1pts)/p : 0;
-            html = `<div class="card"><label>Current Power</label><span>${formatPower(p)}</span></div>
-                    <div class="card"><label>Total Points</label><span>${pts.toLocaleString()}</span></div>
-                    <div class="card"><label>Adj. Efficiency</label><span>${eff.toFixed(2)}</span></div>
-                    <div class="card"><label>Quest Score</label><span>${(playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0) * m.M_QUEST).toFixed(2)}</span></div>
-                    <div class="card" style="grid-column: span 2"><label>Throne Score</label><span>${(playerEntries.reduce((s,d)=>s+(parseFloat(d.throne)||0),0) * m.M_THRONE / (p||1)).toFixed(2)}</span></div>`;
-        } else if(week === 'week 1') {
-            const e = playerEntries.find(d => d.week === 'week 1') || {};
-            html = `<div class="card"><label>Power</label><span>${formatPower(e.power)}</span></div>
+            const w1 = playerEntries.find(d => d.week === 'week 1') || {};
+            const w3 = playerEntries.find(d => d.week === 'week 3') || {};
+            const eff = p > 0 ? ( (parseFloat(w3.points)||0) - (parseFloat(w1.points)||0) ) / p : 0;
+            
+            html = `<div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
                     <div class="card"><label>Points</label><span>${(parseFloat(e.points)||0).toLocaleString()}</span></div>
-                    <div class="card" style="grid-column: span 2"><label>Quest</label><span>${e.quest || 0}</span></div>`;
-        } else if(week === 'week 2') {
-            const e = playerEntries.find(d => d.week === 'week 2') || {};
-            const eff = (parseFloat(e.power)>0) ? (parseFloat(e.points)/parseFloat(e.power)) : 0;
-            html = `<div class="card"><label>Power</label><span>${formatPower(e.power)}</span></div>
+                    <div class="card"><label>Eff</label><span>${eff.toFixed(2)}</span></div>
+                    <div class="card"><label>Quests</label><span>${(playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0)).toLocaleString()}</span></div>
+                    <div class="card"><label>Throne Eff</label><span>${(p > 0 ? (parseFloat(e.throne)||0)/p : 0).toFixed(4)}</span></div>
+                    <div class="card"><label>Throne Score</label><span>${(p > 0 ? (parseFloat(e.throne)||0)/p * m.M_THRONE : 0).toFixed(2)}</span></div>`;
+        } else {
+            const e = playerEntries.find(d => d.week === week) || {};
+            const p = parseFloat(e.power)||0;
+            const eff = p > 0 ? (parseFloat(e.points)||0)/p : 0;
+            
+            html = `<div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
                     <div class="card"><label>Points</label><span>${(parseFloat(e.points)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Efficiency</label><span>${eff.toFixed(2)}</span></div>
-                    <div class="card"><label>Quest</label><span>${e.quest || 0}</span></div>
-                    <div class="card" style="grid-column: span 2"><label>Hunt</label><span>${e.hunt || 0}</span></div>`;
-        } else if(week === 'week 3') {
-            const e = playerEntries.find(d => d.week === 'week 3') || {};
-            const eff = (parseFloat(e.power)>0) ? (parseFloat(e.points)/parseFloat(e.power)) : 0;
-            html = `<div class="card"><label>Power</label><span>${formatPower(e.power)}</span></div>
-                    <div class="card"><label>Points</label><span>${(parseFloat(e.points)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Efficiency</label><span>${eff.toFixed(2)}</span></div>
-                    <div class="card"><label>Quest</label><span>${e.quest || 0}</span></div>
-                    <div class="card" style="grid-column: span 2"><label>Throne Score</label><span>${((parseFloat(e.throne)||0)*m.M_THRONE/(parseFloat(e.power)||1)).toFixed(2)}</span></div>`;
+                    <div class="card"><label>Eff</label><span>${eff.toFixed(2)}</span></div>
+                    <div class="card"><label>Quests</label><span>${e.quest || 0}</span></div>`;
+            if(week === 'week 2') html += `<div class="card" style="grid-column: span 2"><label>Hunt</label><span>${e.hunt || 0}</span></div>`;
+            if(week === 'week 3') html += `<div class="card" style="grid-column: span 2"><label>Throne Score</label><span>${(p > 0 ? (parseFloat(e.throne)||0)/p * m.M_THRONE : 0).toFixed(2)}</span></div>`;
         }
         document.getElementById('modalStatsGrid').innerHTML = html;
       };
-
-      function drawTrendChart(name) {
-        const data = loadData().filter(d => d.name === name);
-        const labels = ['Week 1', 'Week 2', 'Week 3'];
-        const values = labels.map(l => {
-          const e = data.find(d => d.week.toLowerCase() === l.toLowerCase()) || {};
-          return e.power > 0 ? (e.points / e.power) : 0;
-        });
-        if(myChart) myChart.destroy();
-        myChart = new Chart(document.getElementById('playerChart'), {
-          type: 'line', data: { labels, datasets: [{ label:'Efficiency', data: values, borderColor:'#3b82f6', tension:0.3, fill:true, backgroundColor:'rgba(59, 130, 246, 0.1)' }] }
-        });
-      }
-
-      window.closeModal = () => document.getElementById('profileModal').style.display="none";
-      window.goEdit = (name) => { localStorage.setItem('editTargetName', name); window.location.href = 'form.html'; };
 
       function render() {
         const data = loadData();
@@ -227,26 +176,26 @@
           const playerEntries = data.filter(d => d.name === name);
           const hasGlobal100 = playerEntries.some(d => d.p100 == 1);
           
-          let e;
-          if(view === 'overall') {
-            e = [...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || { name };
-          } else {
-            e = playerEntries.find(d => d.week === view) || { name };
-          }
+          const latestEntry = [...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || { name };
+          const e = view === 'overall' ? latestEntry : (playerEntries.find(d => d.week === view) || { name });
 
           const p = parseFloat(e.power)||0;
           const pts = parseFloat(e.points)||0;
           
-          // Efficiency Logic: (Total - W1) / Power
-          const w1pts = playerEntries.find(w => w.week === 'week 1')?.points || 0;
-          const totalPtsForEff = playerEntries.reduce((s,d)=>s+(parseFloat(d.points)||0), 0);
-          const eff = (view === 'overall') ? (p > 0 ? (totalPtsForEff - w1pts)/p : 0) : (p > 0 ? pts/p : 0);
+          // Efficiency: (W3 - W1) / Power
+          const w1 = playerEntries.find(w => w.week === 'week 1') || {};
+          const w3 = playerEntries.find(w => w.week === 'week 3') || {};
+          const eff = (view === 'overall') ? (p > 0 ? ((parseFloat(w3.points)||0) - (parseFloat(w1.points)||0))/p : 0) : (p > 0 ? (parseFloat(e.points)||0)/p : 0);
           
-          // Sync logic
-          const act = ((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0)) * (1/3); // Donations listed twice in prompt, assuming 3 items
-          const part = ((e.dv?1:0)*(1/3)) + ((e.esb?1:0)*(1/3)) + ((e.esi_mon?1:0)*(1/6)) + ((e.esi_thu?1:0)*(1/6));
+          // Activity (Worth 2.5 max)
+          const act = ((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0)) * (2.5 / 3);
+          // Participation (Worth 2.5 max)
+          const part = ((e.dv?1:0)*(2.5/3)) + ((e.esb?1:0)*(2.5/3)) + ((e.esi_mon?1:0)*(2.5/6)) + ((e.esi_thu?1:0)*(2.5/6));
+          
           const tEff = p > 0 ? (parseFloat(e.throne)||0)/p * m.M_THRONE : 0;
-          const w1Bonus = (playerEntries.some(d => d.week === 'week 1')) ? m.M_WEEK1 : 0;
+          
+          // UNCAPPED Week 1 Bonus: W1 Points * Multiplier
+          const w1Bonus = (parseFloat(w1.points) || 0) * m.M_WEEK1;
 
           const totalScore = eff + act + part + tEff + ((parseFloat(e.hunt)||0)*m.M_HUNT) + ((parseFloat(e.quest)||0)*m.M_QUEST) + w1Bonus;
           const pSum = (view==='overall') ? playerEntries.reduce((s,d)=>s+(d.p100?100:0)+(d.p40?40:0)+(d.p20?20:0)+(d.p5?5:0),0) : ((e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0));
@@ -287,6 +236,46 @@
           tbody.appendChild(tr);
         });
       }
+
+      // Initializing and helper functions
+      window.toggleConfig = () => {
+        const p = document.getElementById('configPanel');
+        p.style.display = p.style.display === 'block' ? 'none' : 'block';
+        const m = getMults();
+        ['week1','throne','hunt','quest'].forEach(k => document.getElementById('m_'+k).value = m['M_'+k.toUpperCase()]);
+      };
+      window.saveConfig = () => {
+        const newM = {
+          M_WEEK1: parseFloat(document.getElementById('m_week1').value),
+          M_THRONE: parseFloat(document.getElementById('m_throne').value),
+          M_HUNT: parseFloat(document.getElementById('m_hunt').value),
+          M_QUEST: parseFloat(document.getElementById('m_quest').value)
+        };
+        localStorage.setItem('scoringMultipliers', JSON.stringify(newM));
+        location.reload();
+      };
+      window.openProfile = (name) => {
+        window.activePlayer = name;
+        document.getElementById('modalName').textContent = name;
+        document.getElementById('modalWeekSelect').innerHTML = ['overall', ...WEEKS_ORDER].map(w => `<option value="${w}">${w.toUpperCase()}</option>`).join('');
+        document.getElementById('profileModal').style.display = "block";
+        updateModalStats();
+        drawTrendChart(name);
+      };
+      function drawTrendChart(name) {
+        const data = loadData().filter(d => d.name === name);
+        const labels = ['Week 1', 'Week 2', 'Week 3'];
+        const values = labels.map(l => {
+          const e = data.find(d => d.week.toLowerCase() === l.toLowerCase()) || {};
+          return e.power > 0 ? (parseFloat(e.points) / parseFloat(e.power)) : 0;
+        });
+        if(myChart) myChart.destroy();
+        myChart = new Chart(document.getElementById('playerChart'), {
+          type: 'line', data: { labels, datasets: [{ label:'Efficiency', data: values, borderColor:'#3b82f6', tension:0.3, fill:true, backgroundColor:'rgba(59, 130, 246, 0.1)' }] }
+        });
+      }
+      window.closeModal = () => document.getElementById('profileModal').style.display="none";
+      window.goEdit = (name) => { localStorage.setItem('editTargetName', name); window.location.href = 'form.html'; };
       document.getElementById('weekSelect').onchange = render;
       document.getElementById('dashSearch').oninput = render;
       render();
