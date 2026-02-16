@@ -8,18 +8,27 @@
   <style>
     :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;--success:#10b981;--danger:#ef4444;}
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s;}
+    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s; height: 100vh;}
     header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
-    .main-wrap{max-width:1200px;margin:1.5rem auto;padding:0 1rem;display:grid;gap:1.5rem;grid-template-columns:1fr 1.5fr;}
-    .section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04);}
+    
+    /* Layout Control */
+    .main-wrap{max-width:1200px;margin:1.5rem auto;padding:0 1rem;display:grid;gap:1.5rem;grid-template-columns:350px 1fr; align-items: start;}
+    .section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04); position: relative;}
+    
+    /* Prevents snapping/jumping */
+    .edit-container { min-height: 700px; display: flex; flex-direction: column; }
+    
     .input{width:100%;padding:.6rem;border-radius:8px;border:1px solid #e2e8f0;font-size:0.95rem;outline:none;}
-    .players-list{margin-top:10px;padding:0;list-style:none;max-height:450px;overflow-y:auto;border-radius:8px;border:1px solid #e2e8f0;}
-    .players-list li{padding:.75rem;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;justify-content:space-between;}
+    
+    /* Scrollable Directory */
+    .players-list{margin-top:10px;padding:0;list-style:none; height: 500px; overflow-y: auto; border-radius:8px; border:1px solid #e2e8f0; background: #fff;}
+    .players-list li{padding:.75rem;border-bottom:1px solid #f1f5f9;cursor:pointer;}
     .players-list li:hover{background:#f1f5f9;}
     .players-list li.selected{background:#eff6ff;border-left:4px solid var(--accent);font-weight:600;}
     .players-list li.hidden{display:none;}
+    
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
     .checkbox-group{display:flex;gap:1rem;flex-wrap:wrap;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-top:5px;}
     .week-options{display:flex;gap:5px;margin-bottom:1rem;}
@@ -28,8 +37,9 @@
     .btn{padding:.7rem 1.5rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;}
     .btn.save{background:var(--success)}
     .btn.delete{background:var(--danger)}
-    #metricPreview{margin-top:1.5rem;padding:1.2rem;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;}
+    #metricPreview{margin-top:auto; padding:1.2rem;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;}
     body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;}
+    @media (max-width: 900px) { .main-wrap { grid-template-columns: 1fr; } .edit-container { min-height: auto; } }
   </style>
 </head>
 <body>
@@ -45,14 +55,14 @@
     <section class="section">
       <h3>Player Directory</h3>
       <div style="display:flex; gap:5px; margin-bottom:15px;">
-        <input id="playerNameInput" placeholder="Add new name..." class="input">
+        <input id="playerNameInput" placeholder="New player..." class="input">
         <button id="addPlayerBtn" class="btn save">Add</button>
       </div>
       <input type="text" id="playerSearch" placeholder="🔍 Search players..." class="input">
       <ul class="players-list" id="playersList"></ul>
     </section>
 
-    <section class="section">
+    <section class="section edit-container">
       <h2 id="editHeader">Select a Player</h2>
       <div id="weekOptions" class="week-options">
         <button type="button" data-week="home week" class="week-btn">Home</button>
@@ -99,14 +109,14 @@
 
       <div style="display:flex; gap:10px; margin-top:1.5rem; flex-wrap:wrap;">
         <button class="btn save" id="statsSaveBtn" style="flex:2">Save Entry (Enter)</button>
-        <button class="btn delete" id="playerDeleteBtn">Delete Player</button>
-        <button class="btn" id="resetBtn" style="background:#64748b">Season Reset</button>
+        <button class="btn delete" id="playerDeleteBtn">Delete</button>
+        <button class="btn" id="resetBtn" style="background:#64748b">Reset</button>
       </div>
 
       <div style="margin-top:2rem; padding-top:1rem; border-top:1px dashed #cbd5e1; display:flex; gap:10px;">
-        <button class="btn" onclick="exportToCSV()" style="background:#475569; flex:1">Export CSV</button>
+        <button class="btn" onclick="exportToCSV()" style="background:#475569; flex:1">Export</button>
         <label class="btn" style="background:#475569; flex:1; text-align:center; cursor:pointer;">
-          Import CSV <input type="file" hidden onchange="importFromCSV(this)">
+          Import <input type="file" hidden onchange="importFromCSV(this)">
         </label>
       </div>
     </section>
@@ -194,7 +204,6 @@
         Array.from(document.getElementById('playersList').children).forEach(li => li.classList.toggle('hidden', !li.textContent.toLowerCase().includes(s)));
       }
 
-      // Input Events
       document.getElementById('playerSearch').oninput = filterList;
       document.getElementById('inputContainer').oninput = computeAll;
       document.getElementById('statsSaveBtn').onclick = performSave;
@@ -218,14 +227,13 @@
       };
 
       document.getElementById('playerDeleteBtn').onclick = () => {
-        if(!currentPlayer || !confirm(`Permanently delete ${currentPlayer}?`)) return;
+        if(!currentPlayer || !confirm(`Delete ${currentPlayer}?`)) return;
         saveData(loadData().filter(d => d.name !== currentPlayer));
         currentPlayer = null; renderList();
-        document.getElementById('editHeader').textContent = "Select a Player";
       };
 
       document.getElementById('resetBtn').onclick = () => {
-        if(!confirm("Clear all scores but keep the player list?")) return;
+        if(!confirm("Clear all scores?")) return;
         saveData(loadData().map(d => ({name: d.name, week: d.week})));
         if(currentPlayer) selectPlayer(currentPlayer);
       };
@@ -234,7 +242,7 @@
         const data = loadData();
         if(!data.length) return;
         const csv = [Object.keys(data[0]).join(",")].concat(data.map(o => Object.values(o).join(","))).join("\n");
-        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download='alliance_stats.csv'; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download='stats_backup.csv'; a.click();
       };
 
       window.importFromCSV = (input) => {
@@ -246,7 +254,7 @@
             const v = l.split(','); 
             return headers.reduce((obj, h, i) => { obj[h.trim()] = v[i]; return obj; }, {});
           });
-          saveData(data); renderList(); alert("Import Successful");
+          saveData(data); renderList();
         };
         reader.readAsText(input.files[0]);
       };
