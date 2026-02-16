@@ -6,40 +6,37 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;--success:#10b981;--danger:#ef4444;}
+    :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--success:#10b981;--danger:#ef4444;--dark-panel:#1e293b;}
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s; height: 100vh;}
+    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s;}
     header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
     
-    /* Layout Control */
-    .main-wrap{max-width:1200px;margin:1.5rem auto;padding:0 1rem;display:grid;gap:1.5rem;grid-template-columns:350px 1fr; align-items: start;}
-    .section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04); position: relative;}
+    /* Layout with Results Sidebar */
+    .main-wrap{max-width:1400px;margin:1.5rem auto;padding:0 1rem;display:grid;gap:1.5rem;grid-template-columns:300px 1fr 320px; align-items: start;}
+    .section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04);}
     
-    /* Prevents snapping/jumping */
-    .edit-container { min-height: 700px; display: flex; flex-direction: column; }
-    
-    .input{width:100%;padding:.6rem;border-radius:8px;border:1px solid #e2e8f0;font-size:0.95rem;outline:none;}
-    
-    /* Scrollable Directory */
-    .players-list{margin-top:10px;padding:0;list-style:none; height: 500px; overflow-y: auto; border-radius:8px; border:1px solid #e2e8f0; background: #fff;}
+    .players-list{margin-top:10px;padding:0;list-style:none; height: 500px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:8px;}
     .players-list li{padding:.75rem;border-bottom:1px solid #f1f5f9;cursor:pointer;}
-    .players-list li:hover{background:#f1f5f9;}
     .players-list li.selected{background:#eff6ff;border-left:4px solid var(--accent);font-weight:600;}
-    .players-list li.hidden{display:none;}
-    
+    .input{width:100%;padding:.6rem;border-radius:8px;border:1px solid #e2e8f0;font-size:0.95rem;outline:none;}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
     .checkbox-group{display:flex;gap:1rem;flex-wrap:wrap;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-top:5px;}
-    .week-options{display:flex;gap:5px;margin-bottom:1rem;}
-    .week-options button{flex:1;padding:10px;border:1px solid var(--accent);background:none;color:var(--accent);border-radius:8px;cursor:pointer;font-weight:700;}
-    .week-options button.selected{background:var(--accent);color:white;}
-    .btn{padding:.7rem 1.5rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;}
-    .btn.save{background:var(--success)}
-    .btn.delete{background:var(--danger)}
-    #metricPreview{margin-top:auto; padding:1.2rem;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;}
-    body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;}
-    @media (max-width: 900px) { .main-wrap { grid-template-columns: 1fr; } .edit-container { min-height: auto; } }
+    
+    /* Live Results Sidebar Styling */
+    .results-sidebar{background:var(--dark-panel); color:white; padding:1.5rem; border-radius:12px; position: sticky; top: 1.5rem;}
+    .res-item{margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid #334155;}
+    .res-item label{font-size:0.75rem; color:#94a3b8; display:block; text-transform:uppercase;}
+    .res-item span{font-size:1.25rem; font-weight:700; color:var(--accent);}
+    .rank-badge{background:var(--accent); text-align:center; padding:1rem; border-radius:8px; margin-top:1rem;}
+    .rank-val{font-size:2.5rem; font-weight:800; display:block;}
+
+    .btn{padding:.7rem 1.5rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;width:100%;margin-top:10px;}
+    .week-btn{padding:10px; border:1px solid var(--accent); background:none; color:var(--accent); border-radius:8px; cursor:pointer; flex:1;}
+    .week-btn.selected{background:var(--accent); color:white;}
+    
+    @media (max-width: 1100px) { .main-wrap { grid-template-columns: 1fr; } .results-sidebar { position: static; } }
   </style>
 </head>
 <body>
@@ -53,22 +50,22 @@
 
   <main class="main-wrap">
     <section class="section">
-      <h3>Player Directory</h3>
-      <div style="display:flex; gap:5px; margin-bottom:15px;">
-        <input id="playerNameInput" placeholder="New player..." class="input">
-        <button id="addPlayerBtn" class="btn save">Add</button>
-      </div>
-      <input type="text" id="playerSearch" placeholder="🔍 Search players..." class="input">
+      <h3>Directory</h3>
+      <input type="text" id="playerSearch" placeholder="🔍 Search..." class="input" style="margin-bottom:10px;">
       <ul class="players-list" id="playersList"></ul>
+      <div style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
+        <input id="playerNameInput" placeholder="New player name..." class="input" style="margin-bottom:5px;">
+        <button id="addPlayerBtn" class="btn" style="background:var(--success)">Add Player</button>
+      </div>
     </section>
 
-    <section class="section edit-container">
+    <section class="section">
       <h2 id="editHeader">Select a Player</h2>
-      <div id="weekOptions" class="week-options">
-        <button type="button" data-week="home week" class="week-btn">Home</button>
-        <button type="button" data-week="week 1" class="week-btn selected">Week 1</button>
-        <button type="button" data-week="week 2" class="week-btn">Week 2</button>
-        <button type="button" data-week="week 3" class="week-btn">Week 3</button>
+      <div id="weekOptions" style="display:flex; gap:5px; margin-bottom:1.5rem;">
+        <button data-week="home week" class="week-btn">Home</button>
+        <button data-week="week 1" class="week-btn selected">W1</button>
+        <button data-week="week 2" class="week-btn">W2</button>
+        <button data-week="week 3" class="week-btn">W3</button>
       </div>
 
       <div class="grid-2" id="inputContainer">
@@ -79,47 +76,49 @@
         <div><label>Ultimate Hunt</label><input id="f_hunt" type="number" class="input"></div>
         
         <div style="grid-column: span 2">
-          <label>Activity Checklist</label>
+          <label>Checklist</label>
           <div class="checkbox-group">
             <label><input type="checkbox" id="chk_lava"> Lava</label>
             <label><input type="checkbox" id="chk_challenge"> Challenge</label>
             <label><input type="checkbox" id="chk_donations"> Dono</label>
             <label><input type="checkbox" id="chk_dv"> DV</label>
             <label><input type="checkbox" id="chk_esb"> ESB</label>
-            <label><input type="checkbox" id="esi_mon"> ESI Mon</label>
-            <label><input type="checkbox" id="esi_thu"> ESI Thu</label>
+            <label><input type="checkbox" id="esi_mon"> ESI M</label>
+            <label><input type="checkbox" id="esi_thu"> ESI T</label>
           </div>
         </div>
 
         <div style="grid-column: span 2">
-          <label>Hero Picks (Weighted)</label>
+          <label>Hero Picks</label>
           <div class="checkbox-group" style="background:#fff7ed">
-            <label><input type="checkbox" id="pick_100"> 100 Pick</label>
-            <label><input type="checkbox" id="pick_40"> 40 Pick</label>
-            <label><input type="checkbox" id="pick_20"> 20 Pick</label>
-            <label><input type="checkbox" id="pick_5"> 5 Pick</label>
+            <label><input type="checkbox" id="pick_100"> 100</label>
+            <label><input type="checkbox" id="pick_40"> 40</label>
+            <label><input type="checkbox" id="pick_20"> 20</label>
+            <label><input type="checkbox" id="pick_5"> 5</label>
           </div>
         </div>
       </div>
-
-      <div id="metricPreview">
-        <strong>Live Score Preview:</strong> <span id="p_total">0.00</span> | 
-        <strong>Efficiency:</strong> <span id="p_eff">0.00</span>
-      </div>
-
-      <div style="display:flex; gap:10px; margin-top:1.5rem; flex-wrap:wrap;">
-        <button class="btn save" id="statsSaveBtn" style="flex:2">Save Entry (Enter)</button>
-        <button class="btn delete" id="playerDeleteBtn">Delete</button>
-        <button class="btn" id="resetBtn" style="background:#64748b">Reset</button>
-      </div>
-
-      <div style="margin-top:2rem; padding-top:1rem; border-top:1px dashed #cbd5e1; display:flex; gap:10px;">
-        <button class="btn" onclick="exportToCSV()" style="background:#475569; flex:1">Export</button>
-        <label class="btn" style="background:#475569; flex:1; text-align:center; cursor:pointer;">
-          Import <input type="file" hidden onchange="importFromCSV(this)">
-        </label>
+      
+      <button class="btn" id="statsSaveBtn" style="background:var(--success); margin-top:20px; font-size:1.1rem;">Save Data (Enter)</button>
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button class="btn" id="resetBtn" style="background:#64748b">Clear Scores</button>
+        <button class="btn" id="playerDeleteBtn" style="background:var(--danger)">Delete Player</button>
       </div>
     </section>
+
+    <aside class="results-sidebar">
+      <h3>Live Analysis</h3>
+      <div class="res-item"><label>Efficiency Score</label><span id="res_eff">0.0000</span></div>
+      <div class="res-item"><label>Hunt Score</label><span id="res_hunt">0.00</span></div>
+      <div class="res-item"><label>Throne Score</label><span id="res_throne">0.00</span></div>
+      <div class="res-item"><label>Activity Pts</label><span id="res_act">0.00</span></div>
+      
+      <div class="rank-badge">
+        <label style="color:white; opacity:0.8;">Weekly Rank</label>
+        <span class="rank-val" id="res_rank">#--</span>
+        <label style="color:white; margin-top:5px; display:block;">Score: <strong id="res_total">0.00</strong></label>
+      </div>
+    </aside>
   </main>
 
   <script>
@@ -131,38 +130,55 @@
       const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
       const loadMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.1,"M_QUEST":0.0000025,"M_THRONE":3.0,"M_HUNT":0.00001}');
 
-      function computeAll() {
-        if(!currentPlayer || currentWeek === 'home week') {
-            document.getElementById('p_total').textContent = "0.00 (Home)";
-            return;
-        }
+      function calculateLiveMetrics() {
+        if(!currentPlayer || currentWeek === 'home week') return resetSidebar();
         const m = loadMults();
         const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
         const getC = (id) => document.getElementById(id).checked ? 1 : 0;
 
-        const p = getV('f_power'), pts = getV('f_points');
-        const eff = p > 0 ? pts / p : 0;
+        const power = getV('f_power') || 1;
+        const pts = getV('f_points');
+        
+        const eff = pts / power;
         const act = Math.min((getC('chk_lava') + getC('chk_challenge') + getC('chk_donations')) * 0.833, 2.5);
         const part = Math.min((getC('chk_dv')*0.833) + (getC('chk_esb')*0.833) + ((getC('esi_mon')+getC('esi_thu'))*0.416), 2.5);
-        const tScore = p > 0 ? (getV('f_throne')/p) * m.M_THRONE : 0;
+        const throne = (getV('f_throne')/power) * m.M_THRONE;
+        const hunt = getV('f_hunt') * (m.M_HUNT || 0);
+        const quest = getV('f_quest') * m.M_QUEST;
         
-        const total = eff + act + part + tScore + (getV('f_hunt')*(m.M_HUNT||0)) + (getV('f_quest')*m.M_QUEST);
+        const total = eff + act + part + throne + hunt + quest;
 
-        document.getElementById('p_total').textContent = total.toFixed(2);
-        document.getElementById('p_eff').textContent = eff.toFixed(2);
+        document.getElementById('res_eff').textContent = eff.toFixed(4);
+        document.getElementById('res_hunt').textContent = hunt.toFixed(2);
+        document.getElementById('res_throne').textContent = throne.toFixed(2);
+        document.getElementById('res_act').textContent = (act + part).toFixed(2);
+        document.getElementById('res_total').textContent = total.toFixed(2);
+
+        // Rank Calculation against existing data for THIS week
+        const allData = loadData().filter(d => d.week === currentWeek && d.name !== currentPlayer);
+        // Note: This is a simplified comparison against other players' current saved scores
+        const betterThan = allData.filter(d => {
+            const p = parseFloat(d.power) || 1;
+            const otherScore = (parseFloat(d.points)/p) + 2.5 + ((parseFloat(d.hunt)||0)*m.M_HUNT); // Approximation
+            return otherScore > total;
+        }).length;
+        
+        document.getElementById('res_rank').textContent = `#${betterThan + 1}`;
+      }
+
+      function resetSidebar() {
+        ['res_eff','res_hunt','res_throne','res_act','res_total'].forEach(id => document.getElementById(id).textContent = '0.00');
+        document.getElementById('res_rank').textContent = '#--';
       }
 
       window.selectPlayer = function(name){
         currentPlayer = name; 
-        document.getElementById('editHeader').textContent = `Editing: ${name}`;
+        document.getElementById('editHeader').textContent = name;
         const entry = loadData().find(d => d.name === name && d.week === currentWeek) || {};
-        
         ['power','points','throne','quest','hunt'].forEach(f => document.getElementById('f_'+f).value = entry[f] || '');
         ['lava','challenge','donations','dv','esb','esi_mon','esi_thu'].forEach(c => document.getElementById('chk_'+c).checked = (entry[c] == 1));
         ['100','40','20','5'].forEach(p => document.getElementById('pick_'+p).checked = (entry['p'+p] == 1));
-        
-        renderList();
-        computeAll();
+        renderList(); calculateLiveMetrics();
       };
 
       function performSave(){
@@ -171,92 +187,53 @@
         const idx = data.findIndex(d => d.name === currentPlayer && d.week === currentWeek);
         const state = {
           name: currentPlayer, week: currentWeek,
-          power: document.getElementById('f_power').value, 
-          points: document.getElementById('f_points').value,
-          throne: document.getElementById('f_throne').value, 
-          quest: document.getElementById('f_quest').value,
+          power: document.getElementById('f_power').value, points: document.getElementById('f_points').value,
+          throne: document.getElementById('f_throne').value, quest: document.getElementById('f_quest').value,
           hunt: document.getElementById('f_hunt').value,
-          lava: document.getElementById('chk_lava').checked?1:0, 
-          challenge: document.getElementById('chk_challenge').checked?1:0,
-          donations: document.getElementById('chk_donations').checked?1:0, 
-          dv: document.getElementById('chk_dv').checked?1:0,
-          esb: document.getElementById('chk_esb').checked?1:0, 
-          esi_mon: document.getElementById('esi_mon').checked?1:0,
-          esi_thu: document.getElementById('esi_thu').checked?1:0, 
-          p100: document.getElementById('pick_100').checked?1:0,
-          p40: document.getElementById('pick_40').checked?1:0, 
-          p20: document.getElementById('pick_20').checked?1:0, 
-          p5: document.getElementById('pick_5').checked?1:0
+          lava: document.getElementById('chk_lava').checked?1:0, challenge: document.getElementById('chk_challenge').checked?1:0,
+          donations: document.getElementById('chk_donations').checked?1:0, dv: document.getElementById('chk_dv').checked?1:0,
+          esb: document.getElementById('chk_esb').checked?1:0, esi_mon: document.getElementById('esi_mon').checked?1:0,
+          esi_thu: document.getElementById('esi_thu').checked?1:0, p100: document.getElementById('pick_100').checked?1:0,
+          p40: document.getElementById('pick_40').checked?1:0, p20: document.getElementById('pick_20').checked?1:0, p5: document.getElementById('pick_5').checked?1:0
         };
         if(idx >= 0) data[idx] = state; else data.push(state);
         saveData(data);
-        const b = document.getElementById('statsSaveBtn'); b.textContent = "SAVED ✓"; setTimeout(()=>b.textContent="Save Entry (Enter)", 800);
+        const b = document.getElementById('statsSaveBtn'); b.textContent = "SAVED ✓"; setTimeout(()=>b.textContent="Save Data (Enter)", 800);
       }
 
       function renderList(){
         const names = [...new Set(loadData().map(d => d.name))].sort();
         document.getElementById('playersList').innerHTML = names.map(n => `<li class="${n===currentPlayer?'selected':''}" onclick="selectPlayer('${n.replace(/'/g,"\\'")}')">${n}</li>`).join('');
-        filterList();
       }
 
-      function filterList(){
-        const s = document.getElementById('playerSearch').value.toLowerCase();
-        Array.from(document.getElementById('playersList').children).forEach(li => li.classList.toggle('hidden', !li.textContent.toLowerCase().includes(s)));
-      }
+      document.getElementById('playerSearch').oninput = (e) => {
+        const s = e.target.value.toLowerCase();
+        Array.from(document.getElementById('playersList').children).forEach(li => li.style.display = li.textContent.toLowerCase().includes(s) ? '' : 'none');
+      };
 
-      document.getElementById('playerSearch').oninput = filterList;
-      document.getElementById('inputContainer').oninput = computeAll;
+      document.getElementById('inputContainer').oninput = calculateLiveMetrics;
       document.getElementById('statsSaveBtn').onclick = performSave;
       document.addEventListener('keydown', (e) => { if(e.key === 'Enter' && currentPlayer) performSave(); });
-
-      document.getElementById('addPlayerBtn').onclick = () => {
-        const n = document.getElementById('playerNameInput').value.trim();
-        if(!n) return;
-        let d = loadData(); 
-        WEEKS.forEach(w => d.push({name: n, week: w}));
-        saveData(d); renderList(); selectPlayer(n);
-        document.getElementById('playerNameInput').value = "";
-      };
 
       document.getElementById('weekOptions').onclick = (e) => {
         if(!e.target.dataset.week) return;
         document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('selected'));
-        e.target.classList.add('selected'); 
-        currentWeek = e.target.dataset.week;
+        e.target.classList.add('selected'); currentWeek = e.target.dataset.week;
         if(currentPlayer) selectPlayer(currentPlayer);
+      };
+
+      document.getElementById('addPlayerBtn').onclick = () => {
+        const n = document.getElementById('playerNameInput').value.trim();
+        if(!n) return;
+        let d = loadData(); WEEKS.forEach(w => d.push({name: n, week: w}));
+        saveData(d); renderList(); selectPlayer(n);
+        document.getElementById('playerNameInput').value = "";
       };
 
       document.getElementById('playerDeleteBtn').onclick = () => {
         if(!currentPlayer || !confirm(`Delete ${currentPlayer}?`)) return;
         saveData(loadData().filter(d => d.name !== currentPlayer));
-        currentPlayer = null; renderList();
-      };
-
-      document.getElementById('resetBtn').onclick = () => {
-        if(!confirm("Clear all scores?")) return;
-        saveData(loadData().map(d => ({name: d.name, week: d.week})));
-        if(currentPlayer) selectPlayer(currentPlayer);
-      };
-
-      window.exportToCSV = () => {
-        const data = loadData();
-        if(!data.length) return;
-        const csv = [Object.keys(data[0]).join(",")].concat(data.map(o => Object.values(o).join(","))).join("\n");
-        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download='stats_backup.csv'; a.click();
-      };
-
-      window.importFromCSV = (input) => {
-        const reader = new FileReader(); 
-        reader.onload = () => {
-          const lines = reader.result.split('\n').filter(l => l.trim());
-          const headers = lines[0].split(',');
-          const data = lines.slice(1).map(l => {
-            const v = l.split(','); 
-            return headers.reduce((obj, h, i) => { obj[h.trim()] = v[i]; return obj; }, {});
-          });
-          saveData(data); renderList();
-        };
-        reader.readAsText(input.files[0]);
+        currentPlayer = null; renderList(); resetSidebar();
       };
 
       renderList();
