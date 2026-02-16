@@ -131,26 +131,30 @@
         const w1 = playerEntries.find(d => d.week === 'week 1') || {};
         const w3 = playerEntries.find(d => d.week === 'week 3') || {};
         const totalThroneKills = playerEntries.reduce((s,d)=>s+(parseFloat(d.throne)||0), 0);
+        const totalQuests = playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0);
 
         if(week === 'overall') {
             const p = parseFloat(latest.power)||0;
             const eff = p > 0 ? ((parseFloat(w3.points)||0) - (parseFloat(w1.points)||0)) / p : 0;
             html = `<div class="card"><label>Current Power</label><span>${formatPower(p)}</span></div>
-                    <div class="card"><label>Total Kills</label><span>${totalThroneKills.toLocaleString()}</span></div>
+                    <div class="card"><label>Overall Throne Score</label><span>${totalThroneKills.toLocaleString()}</span></div>
                     <div class="card"><label>Eff (W3-W1)</label><span>${eff.toFixed(2)}</span></div>
-                    <div class="card"><label>Total Quests</label><span>${(playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0)).toLocaleString()}</span></div>
+                    <div class="card"><label>Total Quests</label><span>${totalQuests.toLocaleString()}</span></div>
                     <div class="card"><label>Throne Eff</label><span>${(p > 0 ? totalThroneKills/p : 0).toFixed(4)}</span></div>
                     <div class="card"><label>Throne Score</label><span>${(p > 0 ? (totalThroneKills/p * m.M_THRONE) : 0).toFixed(2)}</span></div>`;
         } else {
             const e = playerEntries.find(d => d.week === week) || {};
             const p = parseFloat(e.power)||0;
             const eff = p > 0 ? (parseFloat(e.points)||0)/p : 0;
+            const q = (parseFloat(e.quest)||0);
+            const tk = (parseFloat(e.throne)||0);
+
             html = `<div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
                     <div class="card"><label>Points</label><span>${(parseFloat(e.points)||0).toLocaleString()}</span></div>
                     <div class="card"><label>Eff</label><span>${eff.toFixed(2)}</span></div>
-                    <div class="card"><label>Quests</label><span>${e.quest || 0}</span></div>`;
-            if(week === 'week 2') html += `<div class="card" style="grid-column: span 2"><label>Hunt</label><span>${e.hunt || 0}</span></div>`;
-            if(week === 'week 3') html += `<div class="card" style="grid-column: span 2"><label>Throne Kills</label><span>${e.throne || 0}</span></div>`;
+                    <div class="card"><label>Quests</label><span>${q.toLocaleString()}</span></div>`;
+            if(week === 'week 2') html += `<div class="card" style="grid-column: span 2"><label>Hunt</label><span>${(parseFloat(e.hunt)||0).toLocaleString()}</span></div>`;
+            if(week === 'week 3') html += `<div class="card" style="grid-column: span 2"><label>Throne Score</label><span>${tk.toLocaleString()}</span></div>`;
         }
         document.getElementById('modalStatsGrid').innerHTML = html;
       };
@@ -188,16 +192,8 @@
           
           let act, part;
           if (view === 'overall') {
-              const doneLava = playerEntries.some(d => d.lava);
-              const doneChal = playerEntries.some(d => d.challenge);
-              const doneDono = playerEntries.some(d => d.donations);
-              act = ((doneLava?1:0)+(doneChal?1:0)+(doneDono?1:0)) * (2.5 / 3);
-
-              const doneDV = playerEntries.some(d => d.dv);
-              const doneESB = playerEntries.some(d => d.esb);
-              const doneESI_M = playerEntries.some(d => d.esi_mon);
-              const doneESI_T = playerEntries.some(d => d.esi_thu);
-              part = ((doneDV?1:0)*(2.5/3)) + ((doneESB?1:0)*(2.5/3)) + ((doneESI_M?1:0)*(2.5/6)) + ((doneESI_T?1:0)*(2.5/6));
+              act = ((playerEntries.some(d => d.lava)?1:0)+(playerEntries.some(d => d.challenge)?1:0)+(playerEntries.some(d => d.donations)?1:0)) * (2.5 / 3);
+              part = ((playerEntries.some(d => d.dv)?1:0)*(2.5/3)) + ((playerEntries.some(d => d.esb)?1:0)*(2.5/3)) + ((playerEntries.some(d => d.esi_mon)?1:0)*(2.5/6)) + ((playerEntries.some(d => d.esi_thu)?1:0)*(2.5/6));
           } else {
               act = ((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0)) * (2.5 / 3);
               part = ((e.dv?1:0)*(2.5/3)) + ((e.esb?1:0)*(2.5/3)) + ((e.esi_mon?1:0)*(2.5/6)) + ((e.esi_thu?1:0)*(2.5/6));
