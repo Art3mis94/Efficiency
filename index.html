@@ -83,7 +83,7 @@ body.dark-mode .highlight-picks { background-color: #064e3b; color: #34d399; }
 let currentSortKey = 'total';
 const WEEKS = ['week 1', 'week 2', 'week 3'];
 const MULTIPLIER_KEY = 'scoringMultipliers';
-const DEFAULTS = { M_WEEK1: 0.1, M_QUEST: 0.0000025 };
+const DEFAULTS = { M_WEEK1: 0.1, M_QUEST: 0.0000025, M_THRONE: 3.0 };
 
 const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
 
@@ -96,7 +96,6 @@ function computePicks(e) {
   return (e.p100 ? 100 : 0) + (e.p40 ? 40 : 0) + (e.p20 ? 20 : 0) + (e.p5 ? 5 : 0);
 }
 
-// Logic for a SINGLE week view
 function calculateMetrics(e) {
   const m = loadMultipliers();
   const power = Number(e.power) || 0;
@@ -105,14 +104,16 @@ function calculateMetrics(e) {
   
   const act = Math.min((Number(e.lava||0) + Number(e.challenge||0) + Number(e.donations||0)) * (2.5/3), 2.5);
   const part = Math.min((Number(e.dv||0))*(2.5/3) + (Number(e.esb||0))*(2.5/3) + ((Number(e.esi_mon||0) + Number(e.esi_thu||0)))*(2.5/6), 2.5);
-  const throneEff = power > 0 ? (Number(e.throne||0) / power) * 3 : 0;
   
-  const total = rawEff + act + part + throneEff + ((Number(e.quest)||0) * m.M_QUEST);
+  // Throne Raw vs Throne Weighted
+  const throneRaw = power > 0 ? (Number(e.throne||0) / power) : 0;
+  const throneWeighted = throneRaw * (Number(m.M_THRONE) || DEFAULTS.M_THRONE);
   
-  return { ...e, rawEff, activityPct: act, partPct: part, throneEfficiency: throneEff, total, picks: computePicks(e) };
+  const total = rawEff + act + part + throneWeighted + ((Number(e.quest)||0) * (Number(m.M_QUEST) || DEFAULTS.M_QUEST));
+  
+  return { ...e, rawEff, activityPct: act, partPct: part, throneRaw, throneWeighted, total, picks: computePicks(e) };
 }
 
-// Logic for the FULL SEASON SUMMARY view
 function calculateOverallMetrics(playerEntries) {
     const m = loadMultipliers();
     const multiplierW1 = Number(m.M_WEEK1) || 0;
@@ -125,6 +126,8 @@ function calculateOverallMetrics(playerEntries) {
     let totalPicks = 0;
     let totalQuest = 0;
     let latestPower = 0;
+    let latestThroneRaw = 0;
+    let latestThroneWeighted = 0;
     let latestWeek = 'week 1';
 
     playerEntries.forEach(e => {
@@ -137,10 +140,11 @@ function calculateOverallMetrics(playerEntries) {
             otherWeeksPoints += Number(e.points) || 0;
         }
 
-        // Track the most recent stats
         if (wName >= latestWeek) {
             latestPower = Number(e.power) || 0;
             latestWeek = e.week;
+            latestThroneRaw = metrics.throneRaw;
+            latestThroneWeighted = metrics.throneWeighted;
         }
 
         totalAct += metrics.activityPct;
@@ -149,9 +153,8 @@ function calculateOverallMetrics(playerEntries) {
         totalQuest += Number(e.quest) || 0;
     });
 
-    // Score = (W1 Pts * Config%) + (W2+W3 Pts / Latest Power) + Sum of Activities + (Sum of Quests * Multiplier)
     const overallEff = latestPower > 0 ? otherWeeksPoints / latestPower : 0;
-    const finalScore = (week1Points * multiplierW1) + overallEff + totalAct + totalPart + (totalQuest * multiplierQ);
+    const finalScore = (week1Points * multiplierW1) + overallEff + totalAct + totalPart + latestThroneWeighted + (totalQuest * multiplierQ);
 
     return {
         name: playerEntries[0].name,
@@ -160,6 +163,8 @@ function calculateOverallMetrics(playerEntries) {
         rawEff: overallEff,
         activityPct: totalAct,
         partPct: totalPart,
+        throneRaw: latestThroneRaw,
+        throneWeighted: latestThroneWeighted,
         total: finalScore,
         picks: totalPicks,
         lastWeek: latestWeek
@@ -190,7 +195,7 @@ function updateDisplay() {
     : (Number(b[currentSortKey]) || 0) - (Number(a[currentSortKey]) || 0);
 
   if (view === '__total') {
-    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">End Power</th><th class="sortable" onclick="setSort('points')">Total Pts</th><th class="sortable" onclick="setSort('rawEff')">W2/3 Eff</th><th>Act</th><th>Part</th><th class="sortable" onclick="setSort('total')">Score</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
+    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">End Power</th><th class="sortable" onclick="setSort('points')">Total Pts</th><th class="sortable" onclick="setSort('rawEff')">W2/3 Eff</th><th>Act</th><th>Part</th><th class="sortable" title="Before Multiplier" onclick="setSort('throneRaw')">Throne(R)</th><th class="sortable" onclick="setSort('total')">Score</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
     
     const grouped = {};
     data.forEach(d => { grouped[d.name] = grouped[d.name] || []; grouped[d.name].push(d); });
@@ -208,13 +213,14 @@ function updateDisplay() {
           <td>${p.rawEff.toFixed(5)}</td>
           <td>${p.activityPct.toFixed(1)}</td>
           <td>${p.partPct.toFixed(1)}</td>
+          <td>${p.throneRaw.toFixed(5)}</td>
           <td><strong>${p.total.toFixed(3)}</strong></td>
           <td>${pickTag}</td>
           <td><button class="edit-btn" onclick="editPlayer('${p.name}', '${p.lastWeek}')">Edit</button></td>
         </tr>`;
       });
   } else {
-    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('points')">Points</th><th class="sortable" onclick="setSort('rawEff')">Eff</th><th>Act%</th><th>Part%</th><th class="sortable" onclick="setSort('total')">Total</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
+    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('points')">Points</th><th class="sortable" onclick="setSort('rawEff')">Eff</th><th>Act%</th><th>Part%</th><th class="sortable" title="Before Multiplier" onclick="setSort('throneRaw')">Throne(R)</th><th class="sortable" onclick="setSort('total')">Total</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
 
     data.filter(d => d.week === view).map(calculateMetrics)
       .filter(d => d.name.toLowerCase().includes(search))
@@ -229,6 +235,7 @@ function updateDisplay() {
           <td>${d.rawEff.toFixed(5)}</td>
           <td>${(d.activityPct * 40).toFixed(0)}%</td>
           <td>${(d.partPct * 40).toFixed(0)}%</td>
+          <td>${d.throneRaw.toFixed(5)}</td>
           <td>${d.total.toFixed(3)}</td>
           <td>${pickTag}</td>
           <td><button class="edit-btn" onclick="editPlayer('${d.name}', '${d.week}')">Edit</button></td>
