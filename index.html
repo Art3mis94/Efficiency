@@ -14,39 +14,32 @@
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
     .container{padding:1.5rem; width:100%; box-sizing:border-box;}
-    
     .top-row{display:grid; grid-template-columns: 1fr 2fr; gap:20px; margin-bottom:20px;}
     .stat-cards{display:grid; grid-template-columns: 1fr 1fr; gap:15px;}
     .card{background:white; padding:15px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-left:4px solid var(--accent);}
     .card label{display:block; font-size:0.7rem; color:var(--muted); text-transform:uppercase; font-weight:700;}
     .card span{font-size:1.4rem; font-weight:800;}
-    
     .rank-list{display:flex; gap:10px; margin-top:5px;}
     .rank-item{flex:1; background:#f1f5f9; padding:10px; border-radius:8px; text-align:center; border:1px solid #e2e8f0;}
     .rank-item.first{border:2px solid var(--gold); background:#fffbeb;}
     .rank-item.second{border:2px solid var(--silver); background:#f8fafc;}
     .rank-item.third{border:2px solid var(--bronze); background:#fff7ed;}
-
     .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);}
     .modal-content{background:white; margin:2% auto; padding:25px; width:90%; max-width:900px; border-radius:16px; position:relative; max-height: 90vh; overflow-y: auto;}
     .close{position:absolute; right:20px; top:15px; font-size:28px; cursor:pointer;}
-    
     .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
     table{width:100%; border-collapse:collapse; min-width:1100px;}
     th{background:#f8fafc; padding:12px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
     td{padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:0.85rem;}
-    
     .hero-100{color:var(--success); font-weight:900; border: 1px solid var(--success); padding: 2px 5px; border-radius: 4px; background: #ecfdf5;}
     .btn-edit{padding:6px 12px; background:var(--accent); color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer;}
     .btn-view{padding:6px 12px; background:#f1f5f9; color:var(--text); border:1px solid #cbd5e1; border-radius:6px; font-weight:600; cursor:pointer;}
-    
     #configPanel{display:none; background:white; padding:20px; border-radius:12px; margin-bottom:20px; border:2px solid var(--accent);}
     .config-grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;}
     .controls{display:flex; gap:15px; margin-bottom:15px; align-items:center;}
   </style>
 </head>
 <body>
-
   <header>
     <div style="width:100px"></div>
     <h1>Alliance Dashboard</h1>
@@ -123,7 +116,6 @@
     (function(){
       let myChart = null;
       const WEEKS_ORDER = ['week 1', 'week 2', 'week 3'];
-
       const formatPower = (num) => (num && num !== 0) ? (num / 1000).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "Bn" : "--";
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.000001,"M_THRONE":3.0,"M_HUNT":0.00001,"M_QUEST":0.0000025}');
@@ -138,16 +130,17 @@
         const latest = [...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || {};
         const w1 = playerEntries.find(d => d.week === 'week 1') || {};
         const w3 = playerEntries.find(d => d.week === 'week 3') || {};
+        const totalThroneKills = playerEntries.reduce((s,d)=>s+(parseFloat(d.throne)||0), 0);
 
         if(week === 'overall') {
             const p = parseFloat(latest.power)||0;
             const eff = p > 0 ? ((parseFloat(w3.points)||0) - (parseFloat(w1.points)||0)) / p : 0;
-            html = `<div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
-                    <div class="card"><label>Latest Points</label><span>${(parseFloat(latest.points)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Eff</label><span>${eff.toFixed(2)}</span></div>
-                    <div class="card"><label>Quests</label><span>${(playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0)).toLocaleString()}</span></div>
-                    <div class="card"><label>Throne Eff</label><span>${(p > 0 ? (parseFloat(latest.throne)||0)/p : 0).toFixed(4)}</span></div>
-                    <div class="card"><label>Throne Score</label><span>${(p > 0 ? (parseFloat(latest.throne)||0)/p * m.M_THRONE : 0).toFixed(2)}</span></div>`;
+            html = `<div class="card"><label>Current Power</label><span>${formatPower(p)}</span></div>
+                    <div class="card"><label>Total Kills</label><span>${totalThroneKills.toLocaleString()}</span></div>
+                    <div class="card"><label>Eff (W3-W1)</label><span>${eff.toFixed(2)}</span></div>
+                    <div class="card"><label>Total Quests</label><span>${(playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0)).toLocaleString()}</span></div>
+                    <div class="card"><label>Throne Eff</label><span>${(p > 0 ? totalThroneKills/p : 0).toFixed(4)}</span></div>
+                    <div class="card"><label>Throne Score</label><span>${(p > 0 ? (totalThroneKills/p * m.M_THRONE) : 0).toFixed(2)}</span></div>`;
         } else {
             const e = playerEntries.find(d => d.week === week) || {};
             const p = parseFloat(e.power)||0;
@@ -157,7 +150,7 @@
                     <div class="card"><label>Eff</label><span>${eff.toFixed(2)}</span></div>
                     <div class="card"><label>Quests</label><span>${e.quest || 0}</span></div>`;
             if(week === 'week 2') html += `<div class="card" style="grid-column: span 2"><label>Hunt</label><span>${e.hunt || 0}</span></div>`;
-            if(week === 'week 3') html += `<div class="card" style="grid-column: span 2"><label>Throne Score</label><span>${(p > 0 ? (parseFloat(e.throne)||0)/p * m.M_THRONE : 0).toFixed(2)}</span></div>`;
+            if(week === 'week 3') html += `<div class="card" style="grid-column: span 2"><label>Throne Kills</label><span>${e.throne || 0}</span></div>`;
         }
         document.getElementById('modalStatsGrid').innerHTML = html;
       };
@@ -183,34 +176,42 @@
 
         allNames.forEach(name => {
           const playerEntries = data.filter(d => d.name === name);
-          const hasGlobal100 = playerEntries.some(d => d.p100 == 1);
-          
           const latestEntry = [...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || { name };
           const e = view === 'overall' ? latestEntry : (playerEntries.find(d => d.week === view) || { name });
 
           const p = parseFloat(e.power)||0;
-          const pts = parseFloat(e.points)||0; // Displayed points are per the selected week (or latest in overall)
-          
+          const pts = parseFloat(e.points)||0; 
           const w1 = playerEntries.find(w => w.week === 'week 1') || {};
           const w3 = playerEntries.find(w => w.week === 'week 3') || {};
           
-          // Logic: (W3 - W1) / Power
           const eff = (view === 'overall') ? (p > 0 ? ((parseFloat(w3.points)||0) - (parseFloat(w1.points)||0))/p : 0) : (p > 0 ? (parseFloat(e.points)||0)/p : 0);
           
-          // Activity: 3 items = max 2.5 pts
-          const act = ((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0)) * (2.5 / 3);
-          // Participation: max 2.5 pts (1/6, 1/6, 1/3, 1/3 weights)
-          const part = ((e.dv?1:0)*(2.5/3)) + ((e.esb?1:0)*(2.5/3)) + ((e.esi_mon?1:0)*(2.5/6)) + ((e.esi_thu?1:0)*(2.5/6));
+          let act, part;
+          if (view === 'overall') {
+              const doneLava = playerEntries.some(d => d.lava);
+              const doneChal = playerEntries.some(d => d.challenge);
+              const doneDono = playerEntries.some(d => d.donations);
+              act = ((doneLava?1:0)+(doneChal?1:0)+(doneDono?1:0)) * (2.5 / 3);
+
+              const doneDV = playerEntries.some(d => d.dv);
+              const doneESB = playerEntries.some(d => d.esb);
+              const doneESI_M = playerEntries.some(d => d.esi_mon);
+              const doneESI_T = playerEntries.some(d => d.esi_thu);
+              part = ((doneDV?1:0)*(2.5/3)) + ((doneESB?1:0)*(2.5/3)) + ((doneESI_M?1:0)*(2.5/6)) + ((doneESI_T?1:0)*(2.5/6));
+          } else {
+              act = ((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0)) * (2.5 / 3);
+              part = ((e.dv?1:0)*(2.5/3)) + ((e.esb?1:0)*(2.5/3)) + ((e.esi_mon?1:0)*(2.5/6)) + ((e.esi_thu?1:0)*(2.5/6));
+          }
           
-          const tEff = p > 0 ? (parseFloat(e.throne)||0)/p * m.M_THRONE : 0;
+          const totalKills = playerEntries.reduce((s,d)=>s+(parseFloat(d.throne)||0), 0);
+          const tEff = p > 0 ? (totalKills/p * m.M_THRONE) : 0;
           const w1Bonus = (parseFloat(w1.points) || 0) * m.M_WEEK1;
 
-          const totalScore = eff + act + part + tEff + ((parseFloat(e.hunt)||0)*m.M_HUNT) + ((parseFloat(e.quest)||0)*m.M_QUEST) + w1Bonus;
-          
+          const totalScore = eff + act + part + tEff + ((playerEntries.reduce((s,d)=>s+(parseFloat(d.hunt)||0),0))*m.M_HUNT) + ((playerEntries.reduce((s,d)=>s+(parseFloat(d.quest)||0),0))*m.M_QUEST) + w1Bonus;
           const pSum = (view==='overall') ? playerEntries.reduce((s,d)=>s+(d.p100?100:0)+(d.p40?40:0)+(d.p20?20:0)+(d.p5?5:0),0) : ((e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0));
 
           if(eff > 0) { totalEffSum += eff; effCount++; }
-          results.push({ name, p, pts, eff, act, part, tEff, total: totalScore, pickDisplay: pSum, has100: hasGlobal100 });
+          results.push({ name, p, pts, eff, act, part, tEff, total: totalScore, pickDisplay: pSum, has100: playerEntries.some(d => d.p100 == 1) });
         });
 
         document.getElementById('stat_avg').textContent = effCount > 0 ? (totalEffSum/effCount).toFixed(2) : "0.00";
