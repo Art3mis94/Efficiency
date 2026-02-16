@@ -92,7 +92,7 @@ function loadMultipliers() {
     return saved ? JSON.parse(saved) : DEFAULTS;
 }
 
-// Helper to format numbers to 2 decimal places, removing .00
+// Formatting Helper: Max 2 decimal places, removes trailing .00
 const fmt = (num) => {
     return Number(num).toLocaleString(undefined, {
         minimumFractionDigits: 0,
@@ -217,7 +217,7 @@ function updateDisplay() {
           <td><strong>${p.name}</strong></td>
           <td>${(Number(p.power)||0).toLocaleString()}</td>
           <td>${(Number(p.points)||0).toLocaleString()}</td>
-          <td>${p.rawEff.toFixed(5)}</td>
+          <td>${fmt(p.rawEff)}</td>
           <td>${p.activityPct.toFixed(1)}</td>
           <td>${p.partPct.toFixed(1)}</td>
           <td>${fmt(p.throneRaw)}</td>
@@ -239,7 +239,7 @@ function updateDisplay() {
           <td><strong>${d.name}</strong></td>
           <td>${(Number(d.power)||0).toLocaleString()}</td>
           <td>${(Number(d.points)||0).toLocaleString()}</td>
-          <td>${d.rawEff.toFixed(5)}</td>
+          <td>${fmt(d.rawEff)}</td>
           <td>${(d.activityPct * 40).toFixed(0)}%</td>
           <td>${(d.partPct * 40).toFixed(0)}%</td>
           <td>${fmt(d.throneRaw)}</td>
