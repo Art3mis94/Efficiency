@@ -16,7 +16,8 @@
     .main-wrap{max-width:1450px;margin:1.5rem auto;padding:0 1rem;display:grid;gap:1.5rem;grid-template-columns:300px 1fr 320px; align-items: start;}
     .section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04);}
     
-    .players-list{margin-top:10px;padding:0;list-style:none; height: 450px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:8px;}
+    /* Locked Page Size / Scrollable List */
+    .players-list{margin-top:10px;padding:0;list-style:none; height: 450px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:8px; background:#fff;}
     .players-list li{padding:.75rem;border-bottom:1px solid #f1f5f9;cursor:pointer; transition: 0.2s;}
     .players-list li.selected{background:#eff6ff;border-left:4px solid var(--accent);font-weight:600;}
     .players-list li:hover{background:#f1f5f9;}
@@ -56,12 +57,12 @@
 
   <main class="main-wrap">
     <section class="section">
-      <h3>Directory</h3>
+      <h3>Player Directory</h3>
       <input type="text" id="playerSearch" placeholder="🔍 Search players..." class="input" style="margin-bottom:10px;">
       <ul class="players-list" id="playersList"></ul>
       
       <div style="margin-top:15px; padding-top:10px;">
-        <input id="playerNameInput" placeholder="Add new name..." class="input" style="margin-bottom:5px;">
+        <input id="playerNameInput" placeholder="Add new player name..." class="input" style="margin-bottom:5px;">
         <button id="addPlayerBtn" class="btn" style="background:var(--success)">Add Player</button>
       </div>
 
@@ -116,14 +117,14 @@
       
       <div style="display:flex; gap:10px; margin-top:20px;">
         <button class="btn" id="statsSaveBtn" style="background:var(--success); flex:2; font-size:1.1rem;">Save Data (Enter)</button>
-        <button class="btn" id="playerDeleteBtn" style="background:var(--danger); flex:1;">Delete Individual</button>
+        <button class="btn" id="playerDeleteBtn" style="background:var(--danger); flex:1;">Delete Item</button>
       </div>
 
       <div class="global-reset-zone">
-        <label style="font-size:0.75rem; font-weight:800; color:#b91c1c; display:block; margin-bottom:10px; text-transform:uppercase;">Global Seasonal Reset</label>
+        <label style="font-size:0.75rem; font-weight:800; color:#b91c1c; display:block; margin-bottom:10px; text-transform:uppercase;">Global Reset Options</label>
         <div style="display:flex; gap:10px;">
-          <button class="btn" onclick="clearAllData()" style="background:#ef4444; margin-top:0; font-size:0.8rem;">Reset All Scores (Keep Names)</button>
-          <button class="btn" onclick="deleteAllPlayers()" style="background:#000; margin-top:0; font-size:0.8rem;">Delete All Players (Wipe)</button>
+          <button class="btn" onclick="clearAllData()" style="background:#ef4444; margin-top:0; font-size:0.8rem;">Clear All Scores (Keep Names)</button>
+          <button class="btn" onclick="deleteAllPlayers()" style="background:#000; margin-top:0; font-size:0.8rem;">Full Wipe (Delete Players)</button>
         </div>
       </div>
     </section>
@@ -136,9 +137,9 @@
       <div class="res-item"><label>Activity Pts</label><span id="res_act">0.00</span></div>
       
       <div class="rank-badge">
-        <label style="color:white; opacity:0.8; font-size: 0.7rem;">ESTIMATED RANK</label>
+        <label style="color:white; opacity:0.8; font-size: 0.7rem;">ESTIMATED WEEKLY RANK</label>
         <span class="rank-val" id="res_rank">#--</span>
-        <label style="color:white; margin-top:5px; display:block;">Score: <strong id="res_total">0.00</strong></label>
+        <label style="color:white; margin-top:5px; display:block;">Total Score: <strong id="res_total">0.00</strong></label>
       </div>
     </aside>
   </main>
@@ -152,9 +153,9 @@
       const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
       const loadMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.1,"M_QUEST":0.0000025,"M_THRONE":3.0,"M_HUNT":0.00001}');
 
-      // --- Global Reset Functions ---
+      // --- Global Actions ---
       window.clearAllData = () => {
-        if(!confirm("This will set all points, power, and hunts to zero for EVERY week, but keep your player names. Proceed?")) return;
+        if(!confirm("Are you sure? This sets all scores to zero for everyone, but keeps the player names.")) return;
         const data = loadData().map(d => ({
           name: d.name, week: d.week,
           power:"", points:"", throne:"", quest:"", hunt:"",
@@ -163,47 +164,56 @@
         }));
         saveData(data);
         if(currentPlayer) selectPlayer(currentPlayer);
-        alert("All scores cleared.");
+        alert("All scores reset.");
       };
 
       window.deleteAllPlayers = () => {
-        if(!confirm("NUCLEAR OPTION: This deletes every player and all data. Are you sure?")) return;
+        if(!confirm("WARNING: This will delete ALL players and ALL data. Are you sure?")) return;
         localStorage.removeItem('formData');
-        currentPlayer = null;
-        renderList(); resetSidebar();
+        currentPlayer = null; renderList(); resetSidebar();
         document.getElementById('editHeader').textContent = "Select a Player";
       };
 
-      // --- CSV Handlers ---
+      // --- Robust CSV Logic ---
       window.exportToCSV = () => {
         const data = loadData();
         if(!data.length) return alert("No data to export.");
-        const headers = Object.keys(data[0]).join(",");
-        const rows = data.map(obj => Object.values(obj).join(","));
-        const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + rows.join("\n");
+        const headers = Object.keys(data[0]);
+        const csvRows = [headers.join(",")];
+        for (const row of data) {
+          const values = headers.map(header => `"${row[header] === undefined ? "" : row[header]}"`);
+          csvRows.push(values.join(","));
+        }
+        const blob = new Blob([csvRows.join("\n")], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", `alliance_backup_${new Date().toISOString().slice(0,10)}.csv`);
-        document.body.appendChild(link);
+        link.href = URL.createObjectURL(blob);
+        link.download = `alliance_data_${new Date().toISOString().slice(0,10)}.csv`;
         link.click();
-        document.body.removeChild(link);
       };
 
       window.importFromCSV = (input) => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          const [header, ...rows] = e.target.result.split("\n").filter(r => r.trim());
-          const headers = header.split(",");
-          const data = rows.map(r => {
-            const vals = r.split(",");
-            return headers.reduce((o, h, i) => { o[h.trim()] = vals[i].trim(); return o; }, {});
-          });
-          saveData(data); renderList(); alert("Import Complete!");
+          try {
+            const lines = e.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
+            const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+            const data = lines.slice(1).map(line => {
+              const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
+              const obj = {};
+              headers.forEach((h, i) => {
+                let val = values[i] ? values[i].trim().replace(/^"|"$/g, '') : "";
+                obj[h] = val;
+              });
+              return obj;
+            });
+            if (!data[0].name) throw new Error();
+            saveData(data); renderList(); location.reload();
+          } catch (err) { alert("Invalid CSV. Ensure 'name' column exists."); }
         };
         reader.readAsText(input.files[0]);
       };
 
-      // --- Core Logic ---
+      // --- Calculations ---
       function calculateLiveMetrics() {
         if(!currentPlayer || currentWeek === 'home week') return resetSidebar();
         const m = loadMults();
@@ -217,7 +227,6 @@
         const throne = (getV('f_throne')/power) * m.M_THRONE;
         const hunt = getV('f_hunt') * (m.M_HUNT || 0);
         const quest = getV('f_quest') * m.M_QUEST;
-        
         const total = eff + act + part + throne + hunt + quest;
 
         document.getElementById('res_eff').textContent = eff.toFixed(4);
@@ -226,7 +235,6 @@
         document.getElementById('res_act').textContent = (act + part).toFixed(2);
         document.getElementById('res_total').textContent = total.toFixed(2);
 
-        // Simple weekly rank logic
         const allThisWeek = loadData().filter(d => d.week === currentWeek && d.name !== currentPlayer);
         const better = allThisWeek.filter(d => {
             const p = parseFloat(d.power) || 1;
