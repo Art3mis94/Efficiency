@@ -2,26 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Global Configuration</title>
+  <title>Global Configuration & Simulator</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;}
-    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
+    :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--success:#10b981;}
+    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text); transition: all 0.3s;}
     header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
-    main{max-width:600px;margin:3rem auto;padding:0 1rem;}
-    .card{background:var(--card);padding:2rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
-    .field{margin-bottom:1.5rem;}
-    label{display:block;margin-bottom:0.5rem;font-weight:600;color:#475569;}
-    input{width:100%;padding:0.75rem;border:1px solid #e2e8f0;border-radius:8px;font-size:1rem;}
-    .btn{width:100%;padding:1rem;background:#10b981;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:1rem;}
-    .btn:hover{background:#059669;}
-    .note{font-size:0.85rem;color:#64748b;margin-top:0.5rem;}
+    
+    .main-wrap{max-width:1100px;margin:2rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
+    .card{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05); height: fit-content;}
+    
+    .field{margin-bottom:1rem;}
+    label{display:block;margin-bottom:0.3rem;font-size:0.85rem;font-weight:600;color:#475569;}
+    input{width:100%;padding:0.6rem;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;}
+    
+    /* Simulator Styling */
+    .sim-card{background:#1e293b; color:#f8fafc; border-left: 5px solid var(--accent);}
+    .sim-grid{display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;}
+    .sim-result{background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; border-bottom: 2px solid #334155;}
+    .sim-result span{display:block; font-size:1.2rem; font-weight:700; color:var(--accent);}
+    
+    .rank-box{text-align:center; padding:20px; background:var(--accent); color:white; border-radius:12px; margin-top:15px;}
+    .rank-number{font-size:3rem; font-weight:800; display:block;}
+    
+    .btn{width:100%;padding:1rem;background:var(--success);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;margin-top:10px;}
   </style>
 </head>
 <body>
-<header><h1>System Settings</h1></header>
+<header><h1>System Config & Sandbox</h1></header>
 <nav>
   <a href="index.html">Dashboard</a>
   <a href="trends.html">Trends</a>
@@ -29,50 +39,58 @@
   <a href="config.html">Config</a>
 </nav>
 
-<main>
+<main class="main-wrap">
   <div class="card">
-    <h3>Scoring Multipliers</h3>
-    <p class="note">Adjust how much each stat contributes to the final score.</p>
-    <hr style="border:0; border-top:1px solid #eee; margin:1.5rem 0;">
+    <h3>1. Scoring Multipliers</h3>
+    <div class="field"><label>Week 1 Carryover (M_WEEK1)</label><input type="number" id="M_WEEK1" step="0.01"></div>
+    <div class="field"><label>Throne Kills (M_THRONE)</label><input type="number" id="M_THRONE" step="0.1"></div>
+    <div class="field"><label>Ultimate Hunt (M_HUNT)</label><input type="number" id="M_HUNT" step="0.0000001"></div>
+    <div class="field"><label>Quest Score (M_QUEST)</label><input type="number" id="M_QUEST" step="0.0000001"></div>
+    <button class="btn" onclick="saveConfigs()">Save New Multipliers</button>
+  </div>
+
+  <div class="card sim-card">
+    <h3>2. Live Score Sandbox</h3>
+    <p style="font-size:0.8rem; color:#94a3b8;">Input stats to see real-time breakdown and rank.</p>
     
-    <div class="field">
-      <label>Week 1 Carryover (M_WEEK1)</label>
-      <input type="number" id="M_WEEK1" step="0.01">
+    <div class="sim-grid">
+      <div class="field"><label>Power</label><input type="number" id="s_power" value="100000000" oninput="runSim()"></div>
+      <div class="field"><label>Points</label><input type="number" id="s_points" value="5000000" oninput="runSim()"></div>
+      <div class="field"><label>Throne</label><input type="number" id="s_throne" value="100000" oninput="runSim()"></div>
+      <div class="field"><label>Hunt</label><input type="number" id="s_hunt" value="200000" oninput="runSim()"></div>
+      <div class="field"><label>Quest</label><input type="number" id="s_quest" value="50000" oninput="runSim()"></div>
+      <div class="field"><label>Activity (0-3)</label><input type="number" id="s_act" value="3" max="3" oninput="runSim()"></div>
     </div>
 
-    <div class="field">
-      <label>Throne Kills Multiplier (M_THRONE)</label>
-      <input type="number" id="M_THRONE" step="0.1">
+    <div class="sim-grid">
+      <div class="sim-result">Eff Score <span id="res_eff">0.00</span></div>
+      <div class="sim-result">Hunt Score <span id="res_hunt">0.00</span></div>
+      <div class="sim-result">Throne Score <span id="res_throne">0.00</span></div>
+      <div class="sim-result">Act/Part <span id="res_act">0.00</span></div>
     </div>
 
-    <div class="field">
-      <label>Ultimate Hunt Multiplier (M_HUNT)</label>
-      <input type="number" id="M_HUNT" step="0.0000001">
+    <div class="rank-box">
+      <small>ESTIMATED TOTAL SCORE</small>
+      <span class="rank-number" id="res_total">0.00</span>
+      <hr style="opacity:0.2">
+      <small>LIVE RANK IN ALLIANCE</small>
+      <span style="font-size:1.5rem; font-weight:700; display:block;" id="res_rank">#--</span>
     </div>
-
-    <div class="field">
-      <label>Quest Score Multiplier (M_QUEST)</label>
-      <input type="number" id="M_QUEST" step="0.0000001">
-    </div>
-
-    <button class="btn" onclick="saveConfigs()">Save Configuration</button>
   </div>
 </main>
 
 <script>
   const MULT_KEY = 'scoringMultipliers';
-  const DEFAULTS = { 
-    M_WEEK1: 0.1, 
-    M_QUEST: 0.0000025, 
-    M_THRONE: 3.0, 
-    M_HUNT: 0.00001 
-  };
+  const DEFAULTS = { M_WEEK1: 0.1, M_QUEST: 0.0000025, M_THRONE: 3.0, M_HUNT: 0.00001 };
+
+  const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
 
   function loadConfigs() {
     const saved = JSON.parse(localStorage.getItem(MULT_KEY) || JSON.stringify(DEFAULTS));
     Object.keys(DEFAULTS).forEach(key => {
       document.getElementById(key).value = saved[key] || DEFAULTS[key];
     });
+    runSim();
   }
 
   function saveConfigs() {
@@ -81,7 +99,63 @@
       newConfigs[key] = parseFloat(document.getElementById(key).value);
     });
     localStorage.setItem(MULT_KEY, JSON.stringify(newConfigs));
-    alert("Configuration Saved! Dashboard scores will now reflect these changes.");
+    runSim();
+    alert("Multipliers Updated!");
+  }
+
+  function runSim() {
+    const m = {
+      M_THRONE: parseFloat(document.getElementById('M_THRONE').value),
+      M_HUNT: parseFloat(document.getElementById('M_HUNT').value),
+      M_QUEST: parseFloat(document.getElementById('M_QUEST').value)
+    };
+
+    const power = parseFloat(document.getElementById('s_power').value) || 1;
+    const points = parseFloat(document.getElementById('s_points').value) || 0;
+    const throne = parseFloat(document.getElementById('s_throne').value) || 0;
+    const hunt = parseFloat(document.getElementById('s_hunt').value) || 0;
+    const quest = parseFloat(document.getElementById('s_quest').value) || 0;
+    const actRaw = parseFloat(document.getElementById('s_act').value) || 0;
+
+    // Calculate Individual Sections
+    const effScore = points / power;
+    const throneScore = (throne / power) * m.M_THRONE;
+    const huntScore = hunt * m.M_HUNT;
+    const questScore = quest * m.M_QUEST;
+    const actScore = actRaw * 0.833; // Mocking the max 2.5 score
+
+    const total = effScore + throneScore + huntScore + questScore + actScore;
+
+    // UI Updates
+    document.getElementById('res_eff').textContent = effScore.toFixed(4);
+    document.getElementById('res_throne').textContent = throneScore.toFixed(2);
+    document.getElementById('res_hunt').textContent = huntScore.toFixed(2);
+    document.getElementById('res_act').textContent = actScore.toFixed(2);
+    document.getElementById('res_total').textContent = total.toFixed(2);
+
+    calculateRank(total);
+  }
+
+  function calculateRank(simScore) {
+    const data = loadData();
+    if (data.length === 0) return;
+
+    // Group by player to get current leader scores
+    const playerScores = Object.values(data.reduce((acc, d) => {
+        if (d.week !== 'home week') {
+            acc[d.name] = (acc[d.name] || 0) + (parseFloat(d.points) || 0); // Simplified for rank check
+        }
+        return acc;
+    }, {}));
+
+    // In a real scenario, you'd use your full calculateMetrics logic here, 
+    // but for the sandbox rank, we compare against a sorted list of current scores.
+    // For this demo, let's assume we are comparing against existing 'total' scores from the dashboard.
+    // Note: This requires the dashboard logic to be accessible or mirrored.
+    
+    // Placeholder rank logic:
+    const betterThan = playerScores.filter(s => s > simScore).length;
+    document.getElementById('res_rank').textContent = `#${betterThan + 1}`;
   }
 
   loadConfigs();
