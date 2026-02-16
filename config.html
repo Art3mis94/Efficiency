@@ -5,7 +5,7 @@
 <title>Multiplier Configuration</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;}
+:root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;}
 *{box-sizing:border-box}
 body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
 header{background:#1e40af;color:#fff;padding:1rem 1.5rem;}
@@ -28,40 +28,31 @@ input[type="number"]{width:100%;padding:0.6rem;border:1px solid #ccc;border-radi
     <div class="multiplier-group"><label>Week 1 Score Bonus (%)</label><input type="number" id="M_WEEK1_input" step="any"></div>
     <div class="multiplier-group"><label>Throne Multiplier</label><input type="number" id="M_THRONE" step="any"></div>
     <div class="multiplier-group"><label>Quest Multiplier</label><input type="number" id="M_QUEST" step="any"></div>
-    <div class="multiplier-group"><label>Frost Multiplier</label><input type="number" id="M_FROST" step="any"></div>
     <button id="saveBtn" class="save-btn">Save Multipliers</button>
   </div>
 </main>
 <script>
 const MULTIPLIER_KEY = 'scoringMultipliers';
-const DEFAULTS = { M_WEEK1: 0.1, M_QUEST: 0.0000025, M_THRONE: 3.0, M_FROST: 0.00001 };
-
-function load() {
-    const saved = localStorage.getItem(MULTIPLIER_KEY);
-    return saved ? { ...DEFAULTS, ...JSON.parse(saved) } : DEFAULTS;
-}
+const DEFAULTS = { M_WEEK1: 0.1, M_QUEST: 0.0000025, M_THRONE: 3.0 };
 
 function init() {
-    const m = load();
+    const saved = localStorage.getItem(MULTIPLIER_KEY);
+    const m = saved ? { ...DEFAULTS, ...JSON.parse(saved) } : DEFAULTS;
     document.getElementById('M_WEEK1_input').value = m.M_WEEK1 * 100;
     document.getElementById('M_THRONE').value = m.M_THRONE;
     document.getElementById('M_QUEST').value = m.M_QUEST;
-    document.getElementById('M_FROST').value = m.M_FROST;
 }
 
-function save() {
+document.getElementById('saveBtn').onclick = () => {
     const data = {
         M_WEEK1: parseFloat(document.getElementById('M_WEEK1_input').value) / 100 || 0,
         M_THRONE: parseFloat(document.getElementById('M_THRONE').value) || 0,
-        M_QUEST: parseFloat(document.getElementById('M_QUEST').value) || 0,
-        M_FROST: parseFloat(document.getElementById('M_FROST').value) || 0
+        M_QUEST: parseFloat(document.getElementById('M_QUEST').value) || 0
     };
     localStorage.setItem(MULTIPLIER_KEY, JSON.stringify(data));
-    alert('Multipliers Saved Successfully!');
+    alert('Multipliers Saved!');
     init();
-}
-
-document.getElementById('saveBtn').onclick = save;
+};
 window.onload = init;
 </script>
 </body>
