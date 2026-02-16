@@ -160,26 +160,32 @@
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
 
-      function computeMetrics(o = {}) {
-        const m = loadMultipliers();
-        const p = parseFloat(o.power) || 0;
-        const pts = parseFloat(o.points) || 0;
-        
-        const rawEff = p > 0 ? pts / p : 0;
-        const act = Math.min(((Number(o.lava)||0) + (Number(o.challenge)||0) + (Number(o.donations)||0)) * (2.5/3), 2.5);
-        const part = Math.min(((Number(o.dv)||0)*(2.5/3)) + ((Number(o.esb)||0)*(2.5/3)) + (((Number(o.esi_mon)||0) + (Number(o.esi_thu)||0))*(2.5/6)), 2.5);
-        
-        const throneScore = p > 0 ? (parseFloat(o.throne||0) / p) * m.M_THRONE : 0;
-        
-        // DYNAMIC FROST CALCULATION
-        const frostVal = parseFloat(o.frost) || 0;
-        const frostScore = frostVal * m.M_FROST;
-        
-        const questScore = (parseFloat(o.quest) || 0) * m.M_QUEST;
-        const total = rawEff + act + part + throneScore + frostScore + questScore;
+function computeMetrics(o = {}) {
+  // 1. Pull the actual multiplier you set in Config
+  const savedM = JSON.parse(localStorage.getItem('scoringMultipliers') || '{}');
+  const frostMult = parseFloat(savedM.M_FROST) || 0.00001; // Falls back to default if empty
+  
+  const p = parseFloat(o.power) || 0;
+  const pts = parseFloat(o.points) || 0;
+  
+  const rawEff = p > 0 ? pts / p : 0;
+  const act = Math.min(((Number(o.lava)||0) + (Number(o.challenge)||0) + (Number(o.donations||0))) * (2.5/3), 2.5);
+  const part = Math.min(((Number(o.dv)||0)*(2.5/3)) + ((Number(o.esb)||0)*(2.5/3)) + (((Number(o.esi_mon)||0) + (Number(o.esi_thu||0)))*(2.5/6)), 2.5);
+  
+  const throneScore = p > 0 ? (parseFloat(o.throne||0) / p) * (parseFloat(savedM.M_THRONE) || 3.0) : 0;
+  
+  // 2. USE THE FROST MULTIPLIER FROM CONFIG
+  const frostVal = parseFloat(o.frost) || 0; 
+  const frostScore = frostVal * frostMult;
+  
+  const questScore = (parseFloat(o.quest) || 0) * (parseFloat(savedM.M_QUEST) || 0.0000025);
+  
+  // 3. Sum it all up
+  const total = rawEff + act + part + throneScore + frostScore + questScore;
 
-        return { ...o, total, frostScore };
-      }
+  return { ...o, total, frostScore };
+}
+
 
       function updatePreview() {
         if (!currentPlayer) return;
