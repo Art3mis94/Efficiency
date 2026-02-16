@@ -1,90 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Global Configuration</title>
+  <meta charset="utf-8" />
+  <title>Manage Alliance Data</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;}
-    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
-    header{background:#1e40af;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
-    nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
-    nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
-    main{max-width:600px;margin:3rem auto;padding:0 1rem;}
-    .card{background:var(--card);padding:2rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
-    .field{margin-bottom:1.5rem;}
-    label{display:block;margin-bottom:0.5rem;font-weight:600;color:#475569;}
-    input{width:100%;padding:0.75rem;border:1px solid #e2e8f0;border-radius:8px;font-size:1rem;}
-    .btn{width:100%;padding:1rem;background:#10b981;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:1rem;}
-    .btn:hover{background:#059669;}
-    .note{font-size:0.85rem;color:#64748b;margin-top:0.5rem;}
+    :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--white:#ffffff;--muted:#64748b;--dark:#1e40af;}
+    body{margin:0;font-family:Inter,sans-serif;background:var(--bg);display:flex;height:100vh;}
+    .sidebar{width:280px;background:white;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;}
+    .sidebar-header{padding:20px;border-bottom:1px solid #f1f5f9;}
+    .player-list{flex:1;overflow-y:auto;list-style:none;padding:0;margin:0;}
+    .player-list li{padding:12px 20px;cursor:pointer;border-bottom:1px solid #f8fafc;font-weight:600;}
+    .player-list li:hover{background:#f1f5f9;}
+    .player-list li.active{background:var(--accent);color:white;}
+    .main-content{flex:1;overflow-y:auto;padding:40px;background:var(--bg);}
+    .form-card{background:white;padding:30px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.05);max-width:800px;margin:auto;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+    .full{grid-column:span 2;}
+    label{display:block;font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+    input[type=number], input[type=text], select{width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;box-sizing:border-box;}
+    .checkbox-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f8fafc;padding:15px;border-radius:8px;}
+    .check-item{display:flex;align-items:center;gap:10px;font-size:0.85rem;}
+    .btn-save{width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:1rem;}
+    nav-back{margin-bottom:20px;display:block;}
   </style>
 </head>
 <body>
-<header><h1>System Settings</h1></header>
-<nav>
-  <a href="index.html">Dashboard</a>
-  <a href="trends.html">Trends</a>
-  <a href="form.html">Manage Data</a>
-  <a href="config.html">Config</a>
-</nav>
 
-<main>
-  <div class="card">
-    <h3>Scoring Multipliers</h3>
-    <p class="note">Adjust how much each stat contributes to the final score.</p>
-    <hr style="border:0; border-top:1px solid #eee; margin:1.5rem 0;">
-    
-    <div class="field">
-      <label>Week 1 Carryover (M_WEEK1)</label>
-      <input type="number" id="M_WEEK1" step="0.01">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <a href="index.html" style="text-decoration:none; color:var(--accent); font-weight:800;">← Back to Dashboard</a>
+      <h3 style="margin:20px 0 10px 0;">Players</h3>
+      <div style="display:flex; gap:5px;">
+        <input type="text" id="newPlayerName" placeholder="Name..." style="flex:1;">
+        <button onclick="addPlayer()" style="background:var(--accent); color:white; border:none; border-radius:4px; padding:0 10px; cursor:pointer;">+</button>
+      </div>
     </div>
-
-    <div class="field">
-      <label>Throne Kills Multiplier (M_THRONE)</label>
-      <input type="number" id="M_THRONE" step="0.1">
-    </div>
-
-    <div class="field">
-      <label>Ultimate Hunt Multiplier (M_HUNT)</label>
-      <input type="number" id="M_HUNT" step="0.0000001">
-    </div>
-
-    <div class="field">
-      <label>Quest Score Multiplier (M_QUEST)</label>
-      <input type="number" id="M_QUEST" step="0.0000001">
-    </div>
-
-    <button class="btn" onclick="saveConfigs()">Save Configuration</button>
+    <ul class="player-list" id="playersList"></ul>
   </div>
-</main>
 
-<script>
-  const MULT_KEY = 'scoringMultipliers';
-  const DEFAULTS = { 
-    M_WEEK1: 0.1, 
-    M_QUEST: 0.0000025, 
-    M_THRONE: 3.0, 
-    M_HUNT: 0.00001 
-  };
+  <div class="main-content">
+    <div class="form-card">
+      <h2 id="formTitle">Select a player</h2>
+      <form id="dataForm">
+        <div class="grid">
+          <div>
+            <label>Select Week</label>
+            <select id="weekSelector" onchange="loadPlayerWeekData()">
+              <option value="week 1">Week 1</option>
+              <option value="week 2">Week 2</option>
+              <option value="week 3">Week 3</option>
+            </select>
+          </div>
+          <div><label>Power (e.g. 8121100)</label><input type="number" name="power" id="power"></div>
+          <div><label>Points</label><input type="number" name="points" id="points"></div>
+          <div><label>Quests</label><input type="number" name="quest" id="quest"></div>
+          <div><label>UH / Hunt</label><input type="number" name="hunt" id="hunt"></div>
+          <div><label>Throne Kills</label><input type="number" name="throne" id="throne"></div>
+        </div>
 
-  function loadConfigs() {
-    const saved = JSON.parse(localStorage.getItem(MULT_KEY) || JSON.stringify(DEFAULTS));
-    Object.keys(DEFAULTS).forEach(key => {
-      document.getElementById(key).value = saved[key] || DEFAULTS[key];
-    });
-  }
+        <div class="grid">
+          <div>
+            <label>Activity</label>
+            <div class="checkbox-group">
+              <div class="check-item"><input type="checkbox" name="lava" id="lava"> Lava</div>
+              <div class="check-item"><input type="checkbox" name="challenge" id="challenge"> Challenge</div>
+              <div class="check-item"><input type="checkbox" name="donations" id="donations"> Donations</div>
+            </div>
+          </div>
+          <div>
+            <label>Participation</label>
+            <div class="checkbox-group">
+              <div class="check-item"><input type="checkbox" name="dv" id="dv"> DV</div>
+              <div class="check-item"><input type="checkbox" name="esb" id="esb"> ESB</div>
+              <div class="check-item"><input type="checkbox" name="esi_mon" id="esi_mon"> ESI Tue</div>
+              <div class="check-item"><input type="checkbox" name="esi_thu" id="esi_thu"> ESI Thu</div>
+            </div>
+          </div>
+        </div>
 
-  function saveConfigs() {
-    const newConfigs = {};
-    Object.keys(DEFAULTS).forEach(key => {
-      newConfigs[key] = parseFloat(document.getElementById(key).value);
-    });
-    localStorage.setItem(MULT_KEY, JSON.stringify(newConfigs));
-    alert("Configuration Saved! Dashboard scores will now reflect these changes.");
-  }
+        <label>Hero Picks</label>
+        <div class="checkbox-group" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+          <div class="check-item"><input type="checkbox" name="p100" id="p100"> 100</div>
+          <div class="check-item"><input type="checkbox" name="p40" id="p40"> 40</div>
+          <div class="check-item"><input type="checkbox" name="p20" id="p20"> 20</div>
+          <div class="check-item"><input type="checkbox" name="p5" id="p5"> 5</div>
+        </div>
 
-  loadConfigs();
-</script>
+        <button type="submit" class="btn-save">Save Entry</button>
+      </form>
+      <button onclick="deletePlayer()" style="margin-top:20px; background:none; border:none; color:red; cursor:pointer; font-size:0.8rem;">Delete Player Roster</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const form = document.getElementById('dataForm');
+      const playerList = document.getElementById('playersList');
+      let players = JSON.parse(localStorage.getItem('players') || '[]');
+      let formData = JSON.parse(localStorage.getItem('formData') || '[]');
+      let selectedPlayer = null;
+
+      window.addEventListener('DOMContentLoaded', () => {
+        renderPlayerList();
+        const target = localStorage.getItem('editTargetName');
+        if (target) {
+          localStorage.removeItem('editTargetName');
+          const items = playerList.querySelectorAll('li');
+          items.forEach(li => {
+            if (li.textContent === target) selectPlayer(target, li);
+          });
+        }
+      });
+
+      function renderPlayerList() {
+        playerList.innerHTML = '';
+        players.sort().forEach(name => {
+          const li = document.createElement('li');
+          li.textContent = name;
+          li.onclick = () => selectPlayer(name, li);
+          if(selectedPlayer === name) li.classList.add('active');
+          playerList.appendChild(li);
+        });
+      }
+
+      function selectPlayer(name, element) {
+        selectedPlayer = name;
+        document.querySelectorAll('#playersList li').forEach(li => li.classList.remove('active'));
+        element.classList.add('active');
+        document.getElementById('formTitle').textContent = "Editing: " + name;
+        loadPlayerWeekData();
+      }
+
+      window.loadPlayerWeekData = function() {
+        if (!selectedPlayer) return;
+        const week = document.getElementById('weekSelector').value;
+        form.reset();
+        // Force clear hero picks to prevent leaks
+        ['p100', 'p40', 'p20', 'p5', 'lava', 'challenge', 'donations', 'dv', 'esb', 'esi_mon', 'esi_thu'].forEach(id => {
+          const el = document.getElementById(id);
+          if(el) el.checked = false;
+        });
+
+        const entry = formData.find(d => d.name === selectedPlayer && d.week === week);
+        if (entry) {
+          Object.keys(entry).forEach(key => {
+            const el = document.getElementById(key);
+            if (el) {
+              if (el.type === 'checkbox') el.checked = entry[key];
+              else el.value = entry[key];
+            }
+          });
+        }
+      };
+
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        if (!selectedPlayer) return alert('Select a player');
+        const week = document.getElementById('weekSelector').value;
+        const fd = new FormData(form);
+        const data = { name: selectedPlayer, week: week };
+        
+        fd.forEach((value, key) => { data[key] = value; });
+        ['lava', 'challenge', 'donations', 'dv', 'esb', 'esi_mon', 'esi_thu', 'p100', 'p40', 'p20', 'p5'].forEach(id => {
+          data[id] = document.getElementById(id).checked;
+        });
+
+        const index = formData.findIndex(d => d.name === selectedPlayer && d.week === week);
+        if (index > -1) formData[index] = data;
+        else formData.push(data);
+
+        localStorage.setItem('formData', JSON.stringify(formData));
+        alert('Saved!');
+      };
+
+      window.addPlayer = () => {
+        const name = document.getElementById('newPlayerName').value.trim();
+        if (name && !players.includes(name)) {
+          players.push(name);
+          localStorage.setItem('players', JSON.stringify(players));
+          renderPlayerList();
+          document.getElementById('newPlayerName').value = '';
+        }
+      };
+
+      window.deletePlayer = () => {
+        if(!selectedPlayer) return;
+        if(confirm("Delete all data for " + selectedPlayer + "?")){
+          players = players.filter(p => p !== selectedPlayer);
+          formData = formData.filter(f => f.name !== selectedPlayer);
+          localStorage.setItem('players', JSON.stringify(players));
+          localStorage.setItem('formData', JSON.stringify(formData));
+          location.reload();
+        }
+      };
+    })();
+  </script>
 </body>
 </html>
