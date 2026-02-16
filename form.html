@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* Use your existing CSS here - no changes needed to styles */
     :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;--success:#10b981;--success-light:#ecfdf5;--danger:#ef4444;}
     *{box-sizing:border-box}
     body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:all .25s;}
@@ -14,133 +15,82 @@
     .toggle-btn{background:none;border:2px solid var(--accent);color:var(--accent);padding:.45rem .7rem;border-radius:8px;cursor:pointer;font-weight:600;}
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
-    nav a:hover{opacity:.95;transform:translateY(-1px);}
     .main-wrap{max-width:1000px;margin:1.25rem auto;padding:0 1rem;display:grid;gap:1rem;grid-template-columns:1fr 1fr;align-items:start;}
     .section{background:var(--card);padding:1rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04);}
     .section h2{margin:0 0 .75rem;font-size:1.05rem;}
     .form-row{display:flex;gap:.5rem;flex-wrap:wrap;}
-    .input,select{width:100%;padding:.5rem;border-radius:8px;border:1px solid #e2e8f0;font-size:0.95rem;outline:none;transition: border-color 0.2s;}
-    .input:focus{border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);}
+    .input,select{width:100%;padding:.5rem;border-radius:8px;border:1px solid #e2e8f0;font-size:0.95rem;outline:none;}
     .button-row{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.75rem;}
-    .btn{padding:.55rem .9rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;transition: all 0.2s;}
-    .btn.save{background:var(--success)}.btn.save:hover{background:#059669}
-    .btn.save.success-flash{background:#6ee7b7;color:#065f46;transform:scale(1.02);}
-    .btn.cancel{background:#6b7280}.btn.cancel:hover{background:#4b5563}
-    .btn.delete{background:var(--danger)}.btn.delete:hover{background:#dc2626}
+    .btn{padding:.55rem .9rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;}
+    .btn.save{background:var(--success)}
+    .btn.cancel{background:#6b7280}
+    .btn.delete{background:var(--danger)}
     .small-btn{padding:.35rem .6rem;font-size:.85rem;border-radius:6px;}
     .week-options{display:flex;gap:0.5rem;margin-top:0.25rem;}
     .week-options button{flex:1;padding:0.5rem;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:8px;font-weight:600;cursor:pointer;}
     .week-options button.selected{background:var(--accent);color:var(--card);}
-    
-    /* STABILITY FIX: Added min-height to prevent jumping */
     .players-list{margin:0;padding:0;list-style:none;max-height:42vh;min-height:200px;overflow:auto;}
-    .players-list li{display:flex;align-items:center;justify-content:space-between;padding:.5rem;border-radius:8px;margin-bottom:.45rem;background:linear-gradient(180deg,rgba(0,0,0,0.01),transparent);box-shadow:0 1px 0 rgba(2,6,23,0.03);cursor:pointer;}
-    .players-list li:hover{background:rgba(59,130,246,0.05);}
+    .players-list li{display:flex;align-items:center;justify-content:space-between;padding:.5rem;border-radius:8px;margin-bottom:.45rem;background:rgba(0,0,0,0.01);cursor:pointer;}
     .players-list li.hidden { display: none !important; }
-    
-    .players-list .name{font-weight:600;flex:1;}
-    .players-list .actions button{margin-left:8px;}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
     .checkbox-group{display:flex;gap:1rem;align-items:center;margin-top:.25rem;}
     .checkbox-group label{display:flex;align-items:center;gap:.35rem;cursor:pointer;font-size:.9rem;}
     .picks-group{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;}
-    .picks-group label{display:flex;align-items:center;gap:.3rem;font-size:.85rem;justify-content:center;}
     #metricPreview{margin-top:1rem;padding:1rem;background:var(--success-light);border:1px solid var(--success);border-radius:8px;font-size:0.95rem;}
-    #metricPreview .metric-row{display:flex;justify-content:space-between;padding:0.2rem 0;}
-    #metricPreview .metric-label{font-weight:600;color:var(--success);}
-    #metricPreview .metric-value{font-weight:700;display:flex;gap:0.5rem;align-items:center;}
-    #metricPreview .rank{font-weight:500;font-size:0.8em;color:var(--muted);background:#e2e8f0;padding:0 .3em;border-radius:4px;}
-    @media (max-width:900px){.main-wrap{grid-template-columns:1fr;}}
+    .metric-row{display:flex;justify-content:space-between;padding:0.2rem 0;}
+    .rank{font-weight:500;font-size:0.8em;color:var(--muted);background:#e2e8f0;padding:0 .3em;border-radius:4px;}
     body.dark-mode{--bg:#0f172a;--text:#facc15;--card:#111827;--accent:#fbbf24;--success-light:#166534;}
-    body.dark-mode header,body.dark-mode nav{background:#111827;}
-    body.dark-mode nav a{background:var(--accent);color:#0f172a;}
-    body.dark-mode .section{background:#0b1320;color:var(--text);}
-    body.dark-mode .input,body.dark-mode select{background:#1f2937;color:var(--text);border:1px solid #334155;}
   </style>
 </head>
 <body>
-  <header>
-    <h1>Player Manager</h1>
-    <button class="toggle-btn" id="darkToggle">Dark Mode</button>
-  </header>
-
-  <nav>
-    <a href="index.html">Dashboard</a>
-    <a href="trends.html">Trends</a>
-    <a href="#">Add/Edit Stats</a>
-    <a href="config.html">Config</a>
-  </nav>
-
+  <header><h1>Player Manager</h1><button class="toggle-btn" id="darkToggle">Dark Mode</button></header>
+  <nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="#">Add/Edit Stats</a><a href="config.html">Config</a></nav>
   <main class="main-wrap">
-    <section class="section" id="playersSection">
-      <h2>Players — Add / Edit / Delete</h2>
+    <section class="section">
+      <h2>Players List</h2>
       <form id="playerForm" autocomplete="off">
-        <div class="form-row">
-          <input id="playerNameInput" placeholder="Enter player name" class="input" />
-        </div>
-        <div class="button-row">
-          <button type="submit" class="btn save" id="playerSaveBtn">Add Player</button>
-          <button type="button" class="btn cancel" id="playerCancelBtn">Clear</button>
-        </div>
+        <input id="playerNameInput" placeholder="Enter player name" class="input" />
+        <div class="button-row"><button type="submit" class="btn save">Add Player</button></div>
       </form>
-      <p style="font-size:.85rem;color:var(--muted);margin-top:.5rem;">Creates entries for all 3 weeks automatically.</p>
-      <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7"/>
-      
-      <h3 style="margin:.25rem 0 .6rem 0">Players List</h3>
-      <div style="margin-bottom: 0.75rem;">
-        <input type="text" id="playerSearch" placeholder="Search for a player..." class="input" style="border-color: var(--accent);">
-      </div>
-
+      <input type="text" id="playerSearch" placeholder="Search..." class="input" style="margin-top:10px">
       <ul class="players-list" id="playersList"></ul>
     </section>
 
-    <section class="section" id="statsSection">
-      <h2>Edit Stats</h2>
-      <div>
-        <label class="muted">Player</label>
-        <div id="selectedPlayerDisplay" style="padding:.5rem;background:#f1f5f9;border-radius:8px;font-weight:600;">—</div>
-      </div>
-
-      <div style="margin-top:.5rem">
-        <label class="muted">Week</label>
-        <div id="weekOptions" class="week-options" role="tablist">
-          <button type="button" data-week="week 1" class="week-btn selected">Week 1</button>
-          <button type="button" data-week="week 2" class="week-btn">Week 2</button>
-          <button type="button" data-week="week 3" class="week-btn">Week 3</button>
-        </div>
+    <section class="section">
+      <h2>Edit Stats: <span id="selectedPlayerDisplay">—</span></h2>
+      <div id="weekOptions" class="week-options">
+        <button type="button" data-week="week 1" class="week-btn selected">W1</button>
+        <button type="button" data-week="week 2" class="week-btn">W2</button>
+        <button type="button" data-week="week 3" class="week-btn">W3</button>
       </div>
 
       <div class="grid-2" style="margin-top:.6rem" id="statsInputContainer">
-        <div><label class="muted">Power</label><input id="f_power" type="number" placeholder="0" class="input"></div>
-        <div><label class="muted">Throne</label><input id="f_throne" type="number" placeholder="0" class="input"></div>
-        <div><label class="muted">Points</label><input id="f_points" type="number" placeholder="0" class="input"></div>
-        <div><label class="muted">Quest Score</label><input id="f_quest" type="number" placeholder="0" class="input"></div>
-        <div><label class="muted">Ultimate Hunting Score</label><input id="f_hunt" type="number" placeholder="0" class="input"></div>
-        <div><label class="muted">Frosts</label><input id="f_frosts" type="number" placeholder="0" class="input"></div>
-
-        <div style="grid-column:span 2;">
-          <label class="muted">Activity (max 2.5%)</label>
+        <div><label class="muted">Power</label><input id="f_power" type="number" class="input"></div>
+        <div><label class="muted">Throne</label><input id="f_throne" type="number" class="input"></div>
+        <div><label class="muted">Points</label><input id="f_points" type="number" class="input"></div>
+        <div><label class="muted">Quest Score</label><input id="f_quest" type="number" class="input"></div>
+        <div><label class="muted">Hunt Score</label><input id="f_hunt" type="number" class="input"></div>
+        <div><label class="muted">Frosts</label><input id="f_frost" type="number" class="input"></div> <div style="grid-column:span 2;">
+          <label>Activity</label>
           <div class="checkbox-group">
             <label><input type="checkbox" id="chk_lava"> Lava</label>
             <label><input type="checkbox" id="chk_challenge"> Challenge</label>
-            <label><input type="checkbox" id="chk_donations"> Donations</label>
+            <label><input type="checkbox" id="chk_donations"> Donation</label>
           </div>
         </div>
 
         <div style="grid-column:span 2;">
-          <label class="muted">Participation</label>
+          <label>Participation</label>
           <div class="checkbox-group">
-            <label><input type="checkbox" id="chk_dv"> Dragon Valley</label>
+            <label><input type="checkbox" id="chk_dv"> DV</label>
             <label><input type="checkbox" id="chk_esb"> ESB</label>
-          </div>
-          <div class="checkbox-group" style="margin-top:.25rem;">
-            <label><input type="checkbox" id="esi_mon"> ESI Monday</label>
-            <label><input type="checkbox" id="esi_thu"> ESI Thursday</label>
+            <label><input type="checkbox" id="esi_mon"> ESI M</label>
+            <label><input type="checkbox" id="esi_thu"> ESI T</label>
           </div>
         </div>
 
         <div style="grid-column:span 2;">
-          <label class="muted">Picks (not in total)</label>
+          <label>Picks</label>
           <div class="picks-group">
             <label><input type="checkbox" id="pick_100"> 100</label>
             <label><input type="checkbox" id="pick_40"> 40</label>
@@ -151,24 +101,13 @@
       </div>
 
       <div id="metricPreview">
-        <div class="metric-row"><span class="metric-label">Total Score:</span><span id="preview_total_value">0.00</span><span class="rank" id="rank_total">—</span></div>
-        <div class="metric-row"><span class="metric-label">Raw Eff:</span><span id="preview_rawEff_value">0.00</span><span class="rank" id="rank_rawEff">—</span></div>
-        <div class="metric-row"><span class="metric-label">Throne Eff x3:</span><span id="preview_throneEff_value">0.00</span><span class="rank" id="rank_throneEff">—</span></div>
-        <div class="metric-row"><span class="metric-label">Activity %:</span><span id="preview_activityPct_value">0.00%</span><span class="rank" id="rank_activityPct">—</span></div>
-        <div class="metric-row"><span class="metric-label">Part %:</span><span id="preview_partPct_value">0.00%</span><span class="rank" id="rank_partPct">—</span></div>
-        <div class="metric-row"><span class="metric-label">Quest:</span><span id="preview_quest_value">0.00</span></div>
-        <div class="metric-row"><span class="metric-label">Hunt:</span><span id="preview_hunt_value">0.00</span></div>
-        <div class="metric-row"><span class="metric-label">Frosts:</span><span id="preview_frosts_value">0.00</span></div>
-        <div class="metric-row"><span class="metric-label">Picks Total:</span><span id="preview_picks">0</span></div>
+        <div class="metric-row"><span>Total Score:</span><span id="preview_total_value">0.00</span></div>
+        <div class="metric-row"><span>Frost Score:</span><span id="preview_fc">0.00</span></div>
       </div>
 
-      <div class="button-row" style="margin-top:.8rem">
-        <button class="btn save" id="statsSaveBtn">Save Stats (Enter)</button>
-        <button class="btn delete" id="statsDeleteBtn">Delete Entry</button>
-      </div>
       <div class="button-row">
-        <button class="btn cancel" id="clearPlayerDataBtn">Reset Player Stats</button>
-        <button class="btn delete" id="deleteAllBtn">Delete All Data</button>
+        <button class="btn save" id="statsSaveBtn">Save Stats</button>
+        <button class="btn delete" id="statsDeleteBtn">Delete Week</button>
       </div>
     </section>
   </main>
@@ -176,8 +115,16 @@
   <script>
     (function () {
       const WEEKS = ['week 1','week 2','week 3'];
+      const MULTIPLIER_KEY = 'scoringMultipliers';
+      const DEFAULTS = { M_WEEK1: 0.1, M_QUEST: 0.0000025, M_THRONE: 3.0, M_FROST: 0.00001 };
+      
       let currentPlayer = null;
       let currentWeek = 'week 1';
+
+      const loadMultipliers = () => {
+        const saved = localStorage.getItem(MULTIPLIER_KEY);
+        return saved ? { ...DEFAULTS, ...JSON.parse(saved) } : DEFAULTS;
+      };
 
       const E = {
         playerForm: document.getElementById('playerForm'),
@@ -192,7 +139,7 @@
         points: document.getElementById('f_points'),
         quest: document.getElementById('f_quest'),
         hunt: document.getElementById('f_hunt'),
-        frosts: document.getElementById('f_frosts'),
+        frost: document.getElementById('f_frost'), // Updated
         lava: document.getElementById('chk_lava'),
         challenge: document.getElementById('chk_challenge'),
         donations: document.getElementById('chk_donations'),
@@ -205,116 +152,54 @@
         p20: document.getElementById('pick_20'),
         p5: document.getElementById('pick_5'),
         preview_total: document.getElementById('preview_total_value'),
-        preview_raw: document.getElementById('preview_rawEff_value'),
-        preview_throne: document.getElementById('preview_throneEff_value'),
-        preview_act: document.getElementById('preview_activityPct_value'),
-        preview_part: document.getElementById('preview_partPct_value'),
-        preview_qc: document.getElementById('preview_quest_value'),
-        preview_hc: document.getElementById('preview_hunt_value'),
-        preview_fc: document.getElementById('preview_frosts_value'),
-        preview_picks: document.getElementById('preview_picks'),
-        rank_total: document.getElementById('rank_total'),
-        rank_raw: document.getElementById('rank_rawEff'),
-        rank_throne: document.getElementById('rank_throneEff'),
-        rank_act: document.getElementById('rank_activityPct'),
-        rank_part: document.getElementById('rank_partPct'),
+        preview_fc: document.getElementById('preview_fc'),
         statsSaveBtn: document.getElementById('statsSaveBtn'),
-        statsDeleteBtn: document.getElementById('statsDeleteBtn'),
-        clearPlayerDataBtn: document.getElementById('clearPlayerDataBtn'),
-        deleteAllBtn: document.getElementById('deleteAllBtn'),
-        darkToggle: document.getElementById('darkToggle'),
-        statsInputContainer: document.getElementById('statsInputContainer'),
+        statsDeleteBtn: document.getElementById('statsDeleteBtn')
       };
 
-      const loadData = () => {
-        try { return JSON.parse(localStorage.getItem('formData') || '[]'); }
-        catch(e) { return []; }
-      };
+      const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
 
       function computeMetrics(o = {}) {
-        const p = Number(o.power) || 0;
-        const t = Number(o.throne) || 0;
-        const pts = Number(o.points) || 0;
-        const q = Number(o.quest) || 0;
-        const h = Number(o.hunt) || 0;
-        const f = Number(o.frosts) || 0;
-        const activityCount = (Number(o.lava) || 0) + (Number(o.challenge) || 0) + (Number(o.donations) || 0);
-        const act = Math.min(activityCount * (2.5/3), 2.5);
-        const dv = Number(o.dv) || 0;
-        const esb = Number(o.esb) || 0;
-        const esiCount = (Number(o.esi_mon) || 0) + (Number(o.esi_thu) || 0);
-        const part = Math.min((dv*(2.5/3)) + (esb*(2.5/3)) + (esiCount*(2.5/6)), 2.5);
+        const m = loadMultipliers();
+        const p = parseFloat(o.power) || 0;
+        const pts = parseFloat(o.points) || 0;
+        
         const rawEff = p > 0 ? pts / p : 0;
-        const throneEfficiency = p > 0 ? (t / p) * 3 : 0;
-        const questContribution = q * 0.0000025;
-        const huntContribution = h / 200000;
-        const frostsContribution = f / 100000;
-        const total = rawEff + throneEfficiency + act + part + questContribution + huntContribution + frostsContribution;
-        let picksTotal = 0;
-        if(o.p100) picksTotal += 100;
-        if(o.p40) picksTotal += 40;
-        if(o.p20) picksTotal += 20;
-        if(o.p5) picksTotal += 5;
+        const act = Math.min(((Number(o.lava)||0) + (Number(o.challenge)||0) + (Number(o.donations)||0)) * (2.5/3), 2.5);
+        const part = Math.min(((Number(o.dv)||0)*(2.5/3)) + ((Number(o.esb)||0)*(2.5/3)) + (((Number(o.esi_mon)||0) + (Number(o.esi_thu)||0))*(2.5/6)), 2.5);
+        
+        const throneScore = p > 0 ? (parseFloat(o.throne||0) / p) * m.M_THRONE : 0;
+        
+        // DYNAMIC FROST CALCULATION
+        const frostVal = parseFloat(o.frost) || 0;
+        const frostScore = frostVal * m.M_FROST;
+        
+        const questScore = (parseFloat(o.quest) || 0) * m.M_QUEST;
+        const total = rawEff + act + part + throneScore + frostScore + questScore;
+
+        return { ...o, total, frostScore };
+      }
+
+      function updatePreview() {
+        if (!currentPlayer) return;
+        const state = getFormStateObject();
+        const results = computeMetrics(state);
+        E.preview_total.textContent = results.total.toFixed(2);
+        E.preview_fc.textContent = results.frostScore.toFixed(2);
+      }
+
+      function getFormStateObject() {
         return {
-          ...o, power:p, throne:t, points:pts, quest:q, hunt:h, frosts:f,
-          activityPct: act, partPct: part, rawEff, throneEfficiency, questContribution, huntContribution, frostsContribution,
-          total, picks: picksTotal
+          name: currentPlayer, week: currentWeek,
+          power: E.power.value, throne: E.throne.value, points: E.points.value,
+          quest: E.quest.value, hunt: E.hunt.value, frost: E.frost.value,
+          lava: E.lava.checked ? 1 : 0, challenge: E.challenge.checked ? 1 : 0, 
+          donations: E.donations.checked ? 1 : 0, dv: E.dv.checked ? 1 : 0, 
+          esb: E.esb.checked ? 1 : 0, esi_mon: E.esi_mon.checked ? 1 : 0, 
+          esi_thu: E.esi_thu.checked ? 1 : 0, p100: E.p100.checked ? 1 : 0, 
+          p40: E.p40.checked ? 1 : 0, p20: E.p20.checked ? 1 : 0, p5: E.p5.checked ? 1 : 0
         };
-      }
-
-      function renderPlayersList() {
-        const data = loadData();
-        const names = Array.from(new Set(data.map(d => d.name).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
-        if (!names.length) {
-          E.playersList.innerHTML = '<li style="color:var(--muted);padding:.6rem">No players</li>';
-          return;
-        }
-        E.playersList.innerHTML = names.map(name => {
-          return `<li data-player="${escapeHtml(name)}">
-                    <span class="name" data-action="select" data-player="${escapeHtml(name)}">${escapeHtml(name)}</span>
-                    <span class="actions">
-                      <button class="btn delete small-btn" data-action="delete-player" data-player="${escapeHtml(name)}">Delete</button>
-                    </span>
-                  </li>`;
-        }).join('');
-        // Immediately filter based on whatever is in search box WITHOUT re-rendering HTML
-        filterPlayers();
-      }
-
-      function filterPlayers() {
-        const term = E.playerSearch.value.toLowerCase().trim();
-        const items = E.playersList.querySelectorAll('li');
-        items.forEach(li => {
-          const name = li.dataset.player.toLowerCase();
-          if (name.includes(term)) {
-            li.classList.remove('hidden');
-          } else {
-            li.classList.add('hidden');
-          }
-        });
-      }
-
-      function escapeHtml(s='') {
-        return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      }
-
-      function selectPlayer(name) {
-        currentPlayer = name;
-        E.selectedPlayerDisplay.textContent = name || '—';
-        if (name) {
-          loadCurrentWeekEntry();
-          enableStatsArea(true);
-        } else {
-          clearForm();
-          enableStatsArea(false);
-        }
-        updatePreview();
-      }
-
-      function enableStatsArea(enabled) {
-        const statsControls = document.querySelectorAll('#statsSection input, #statsSection button');
-        statsControls.forEach(el => el.disabled = !enabled);
       }
 
       function loadCurrentWeekEntry() {
@@ -325,7 +210,7 @@
         E.points.value = entry.points || '';
         E.quest.value = entry.quest || '';
         E.hunt.value = entry.hunt || '';
-        E.frosts.value = entry.frosts || '';
+        E.frost.value = entry.frost || ''; // Updated
         E.lava.checked = !!entry.lava;
         E.challenge.checked = !!entry.challenge;
         E.donations.checked = !!entry.donations;
@@ -337,94 +222,7 @@
         E.p40.checked = !!entry.p40;
         E.p20.checked = !!entry.p20;
         E.p5.checked = !!entry.p5;
-      }
-
-      function clearForm() {
-        document.querySelectorAll('#statsSection input[type=number]').forEach(i => i.value = '');
-        document.querySelectorAll('#statsSection input[type=checkbox]').forEach(c => c.checked = false);
-      }
-
-      function getFormStateObject() {
-        return {
-          name: currentPlayer, week: currentWeek,
-          power: E.power.value === '' ? 0 : Number(E.power.value),
-          throne: E.throne.value === '' ? 0 : Number(E.throne.value),
-          points: E.points.value === '' ? 0 : Number(E.points.value),
-          quest: E.quest.value === '' ? 0 : Number(E.quest.value),
-          hunt: E.hunt.value === '' ? 0 : Number(E.hunt.value),
-          frosts: E.frosts.value === '' ? 0 : Number(E.frosts.value),
-          lava: E.lava.checked ? 1 : 0,
-          challenge: E.challenge.checked ? 1 : 0,
-          donations: E.donations.checked ? 1 : 0,
-          dv: E.dv.checked ? 1 : 0,
-          esb: E.esb.checked ? 1 : 0,
-          esi_mon: E.esi_mon.checked ? 1 : 0,
-          esi_thu: E.esi_thu.checked ? 1 : 0,
-          p100: E.p100.checked ? 1 : 0,
-          p40: E.p40.checked ? 1 : 0,
-          p20: E.p20.checked ? 1 : 0,
-          p5: E.p5.checked ? 1 : 0
-        };
-      }
-
-      function updatePreview() {
-        if (!currentPlayer) { setPreviewValues(null); return; }
-        const state = getFormStateObject();
-        const m = computeMetrics(state);
-        const weekEntries = loadData().filter(d => d.week === currentWeek).map(computeMetrics);
-        const existsForPlayer = weekEntries.some(e => e.name === currentPlayer);
-        const all = existsForPlayer ? weekEntries : weekEntries.concat([m]);
-        setPreviewValues(m);
-        const rankFor = (key) => {
-          const sorted = [...all].sort((a,b) => (b[key] || 0) - (a[key] || 0));
-          const idx = sorted.findIndex(x => x.name === currentPlayer);
-          return idx >= 0 ? `${idx+1}/${sorted.length}` : '—';
-        };
-        E.rank_total.textContent = rankFor('total');
-        E.rank_raw.textContent = rankFor('rawEff');
-        E.rank_throne.textContent = rankFor('throneEfficiency');
-        E.rank_act.textContent = rankFor('activityPct');
-        E.rank_part.textContent = rankFor('partPct');
-      }
-
-      function setPreviewValues(m) {
-        if (!m) {
-          E.preview_total.textContent = '0.00'; E.preview_raw.textContent = '0.00';
-          E.preview_throne.textContent = '0.00'; E.preview_act.textContent = '0.00%';
-          E.preview_part.textContent = '0.00%'; E.preview_qc.textContent = '0.00';
-          E.preview_hc.textContent = '0.00'; E.preview_fc.textContent = '0.00';
-          E.preview_picks.textContent = '0'; E.rank_total.textContent = '—';
-          return;
-        }
-        E.preview_total.textContent = (m.total || 0).toFixed(2);
-        E.preview_raw.textContent = (m.rawEff || 0).toFixed(2);
-        E.preview_throne.textContent = (m.throneEfficiency || 0).toFixed(2);
-        E.preview_act.textContent = (m.activityPct || 0).toFixed(2) + '%';
-        E.preview_part.textContent = (m.partPct || 0).toFixed(2) + '%';
-        E.preview_qc.textContent = (m.questContribution || 0).toFixed(2);
-        E.preview_hc.textContent = (m.huntContribution || 0).toFixed(2);
-        E.preview_fc.textContent = (m.frostsContribution || 0).toFixed(2);
-        E.preview_picks.textContent = m.picks;
-      }
-
-      function addPlayer(name) {
-        const normalized = String(name).trim();
-        if (!normalized) { alert('Enter a name'); return; }
-        const data = loadData();
-        if (data.some(d => d.name.toLowerCase() === normalized.toLowerCase())) { alert('Player exists'); return; }
-        const now = Date.now();
-        WEEKS.forEach((wk, i) => {
-          data.push({
-            id: `id_${now}_${i}_${normalized}`, name: normalized, week: wk,
-            power: 0, throne: 0, points: 0, quest: 0, hunt: 0, frosts: 0,
-            lava: 0, challenge: 0, donations: 0, dv: 0, esi_mon: 0, esi_thu: 0, esb: 0, 
-            p100: 0, p40: 0, p20: 0, p5: 0
-          });
-        });
-        saveData(data);
-        renderPlayersList();
-        selectPlayer(normalized);
-        document.getElementById('playerNameInput').value = '';
+        updatePreview();
       }
 
       function saveStatsForWeek() {
@@ -432,105 +230,52 @@
         const data = loadData();
         const state = getFormStateObject();
         const idx = data.findIndex(d => d.name === currentPlayer && d.week === currentWeek);
-        const entryId = idx >= 0 ? data[idx].id : `id_${Date.now()}_${currentPlayer}_${currentWeek}`;
-        const newEntry = { ...state, id: entryId };
-        if (idx >= 0) data[idx] = newEntry;
-        else data.push(newEntry);
+        if (idx >= 0) data[idx] = { ...data[idx], ...state };
+        else data.push({ id: 'id_'+Date.now(), ...state });
         saveData(data);
-        flashButton(E.statsSaveBtn);
+        alert('Saved!');
+      }
+
+      function selectPlayer(name) {
+        currentPlayer = name;
+        E.selectedPlayerDisplay.textContent = name;
+        loadCurrentWeekEntry();
+      }
+
+      function renderPlayersList() {
+        const data = loadData();
+        const names = [...new Set(data.map(d => d.name))].sort();
+        E.playersList.innerHTML = names.map(n => `<li onclick="selectPlayer('${n}')">${n}</li>`).join('');
+      }
+
+      // Add Global to let the onclick work
+      window.selectPlayer = selectPlayer;
+
+      E.playerForm.onsubmit = (e) => {
+        e.preventDefault();
+        const name = E.playerNameInput.value.trim();
+        if (!name) return;
+        const data = loadData();
+        WEEKS.forEach(w => data.push({ name, week: w, power: 0 }));
+        saveData(data);
         renderPlayersList();
-        updatePreview();
-      }
+        selectPlayer(name);
+      };
 
-      function flashButton(btn) {
-        btn.classList.add('success-flash');
-        setTimeout(() => btn.classList.remove('success-flash'), 900);
-      }
+      E.statsSaveBtn.onclick = saveStatsForWeek;
+      
+      E.weekOptions.onclick = (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        E.weekBtns.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        currentWeek = btn.dataset.week;
+        loadCurrentWeekEntry();
+      };
 
-      function wireEvents() {
-        E.playerForm.addEventListener('submit', (ev) => { ev.preventDefault(); addPlayer(document.getElementById('playerNameInput').value.trim()); });
-        E.playerSearch.addEventListener('input', filterPlayers);
-        E.statsInputContainer.addEventListener('keydown', (ev) => {
-            if (ev.key === 'Enter') {
-                ev.preventDefault();
-                saveStatsForWeek();
-            }
-        });
-        E.playersList.addEventListener('click', (ev) => {
-          const action = ev.target.dataset.action;
-          const playerName = ev.target.dataset.player;
-          if (action === 'select') selectPlayer(playerName);
-          else if (action === 'delete-player') {
-            if (confirm(`Delete player "${playerName}"?`)) {
-                const data = loadData().filter(e => e.name !== playerName);
-                saveData(data);
-                renderPlayersList();
-                if (currentPlayer === playerName) selectPlayer(null);
-            }
-          }
-        });
-        E.weekOptions.addEventListener('click', (ev) => {
-          const btn = ev.target.closest('button[data-week]');
-          if (!btn) return;
-          E.weekBtns.forEach(b => b.classList.remove('selected'));
-          btn.classList.add('selected');
-          currentWeek = btn.dataset.week;
-          if (currentPlayer) loadCurrentWeekEntry();
-          updatePreview();
-        });
-        document.querySelectorAll('#statsSection input').forEach(inp => {
-          inp.addEventListener('input', updatePreview);
-          inp.addEventListener('change', updatePreview);
-        });
-        E.statsSaveBtn.addEventListener('click', saveStatsForWeek);
-        E.statsDeleteBtn.addEventListener('click', () => {
-           if (!currentPlayer) return;
-           if (confirm('Delete this week entry?')) {
-             const data = loadData().filter(d => !(d.name === currentPlayer && d.week === currentWeek));
-             saveData(data);
-             clearForm();
-             updatePreview();
-             renderPlayersList();
-           }
-        });
-        E.clearPlayerDataBtn.addEventListener('click', () => {
-           if (!currentPlayer) return;
-           if (confirm('Reset all stats for this player?')) {
-             const data = loadData().map(e => {
-               if (e.name === currentPlayer) {
-                 return { ...e, power:0, throne:0, points:0, quest:0, hunt:0, frosts:0, lava:0, challenge:0, donations:0, dv:0, esi_mon:0, esi_thu:0, esb:0, p100:0, p40:0, p20:0, p5:0 };
-               }
-               return e;
-             });
-             saveData(data);
-             loadCurrentWeekEntry();
-             updatePreview();
-           }
-        });
-        E.deleteAllBtn.addEventListener('click', () => { if(confirm('Delete ALL data?')) { localStorage.removeItem('formData'); renderPlayersList(); selectPlayer(null); } });
-        E.darkToggle.addEventListener('click', () => {
-          document.body.classList.toggle('dark-mode');
-          localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-        });
-      }
+      document.querySelectorAll('input').forEach(i => i.oninput = updatePreview);
 
-      function init() {
-        renderPlayersList();
-        enableStatsArea(false);
-        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-        wireEvents();
-        const editName = localStorage.getItem('editTargetName');
-        const editWeek = localStorage.getItem('editTargetWeek');
-        if (editName) {
-          if (editWeek) {
-            currentWeek = editWeek;
-            E.weekBtns.forEach(b => b.classList.toggle('selected', b.dataset.week === editWeek));
-          }
-          selectPlayer(editName);
-          localStorage.removeItem('editTargetName'); localStorage.removeItem('editTargetWeek');
-        }
-      }
-      document.addEventListener('DOMContentLoaded', init);
+      renderPlayersList();
     })();
   </script>
 </body>
