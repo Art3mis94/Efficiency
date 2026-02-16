@@ -13,23 +13,18 @@
     header h1{flex-grow:1; text-align:center; margin:0; font-size:1.5rem;}
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
-    
     .container{padding:1.5rem; width:100%; box-sizing:border-box;}
     
-    /* Stats & Top 3 (Restored) */
     .top-row{display:grid; grid-template-columns: 1fr 2fr; gap:20px; margin-bottom:20px;}
     .stat-cards{display:grid; grid-template-columns: 1fr 1fr; gap:15px;}
     .card{background:white; padding:15px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-left:4px solid var(--accent);}
     .card label{display:block; font-size:0.7rem; color:var(--muted); text-transform:uppercase; font-weight:700;}
     .card span{font-size:1.4rem; font-weight:800;}
-    
     .rank-list{display:flex; gap:10px; margin-top:5px;}
     .rank-item{flex:1; background:#f1f5f9; padding:10px; border-radius:8px; text-align:center; border:1px solid #e2e8f0;}
-    .rank-item.first{border:2px solid var(--gold); background:#fffbeb;}
 
-    /* Profile Modal */
     .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);}
-    .modal-content{background:white; margin:2% auto; padding:25px; width:90%; max-width:900px; border-radius:16px; position:relative; max-height:95vh; overflow-y:auto;}
+    .modal-content{background:white; margin:2% auto; padding:25px; width:90%; max-width:900px; border-radius:16px; position:relative;}
     .close{position:absolute; right:20px; top:15px; font-size:28px; cursor:pointer;}
     
     .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
@@ -39,11 +34,8 @@
     
     .hero-100{color:var(--success); font-weight:900; border: 1px solid var(--success); padding: 2px 5px; border-radius: 4px; background: #ecfdf5;}
     .btn-edit{padding:6px 12px; background:var(--accent); color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer;}
-    .btn-view{padding:6px 12px; background:#f1f5f9; color:var(--text); border:1px solid #cbd5e1; border-radius:6px; font-weight:600; cursor:pointer; margin-right:5px;}
-    
+    .btn-view{padding:6px 12px; background:#f1f5f9; color:var(--text); border:1px solid #cbd5e1; border-radius:6px; font-weight:600; cursor:pointer;}
     .controls{display:flex; gap:15px; margin-bottom:15px; align-items:center;}
-    select, input{padding:8px; border-radius:8px; border:1px solid #cbd5e1;}
-
     #configPanel{display:none; background:white; padding:20px; border-radius:12px; margin-bottom:20px; border:2px solid var(--accent);}
     .config-grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;}
   </style>
@@ -70,7 +62,7 @@
         <div><label>UH</label><input type="number" id="m_hunt" step="0.000001"></div>
         <div><label>Quest</label><input type="number" id="m_quest" step="0.000001"></div>
       </div>
-      <button onclick="saveConfig()" class="btn-edit" style="margin-top:10px; background:var(--success)">Apply</button>
+      <button onclick="saveConfig()" class="btn-edit" style="margin-top:10px; background:var(--success)">Apply Multipliers</button>
     </div>
 
     <div class="top-row">
@@ -110,15 +102,13 @@
   <div id="profileModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
-      <h2 id="modalName" style="margin-bottom:10px;">Player Profile</h2>
-      <div style="display:flex; gap:20px; align-items:flex-start;">
+      <h2 id="modalName">Player Profile</h2>
+      <div style="display:flex; gap:20px;">
         <div style="flex:1;">
-          <label style="font-weight:700; font-size:0.8rem;">Select Week to Inspect:</label><br>
-          <select id="modalWeekSelect" onchange="updateModalStats()" style="width:100%; margin-top:5px;"></select>
+          <select id="modalWeekSelect" onchange="updateModalStats()" style="width:100%;"></select>
           <div id="modalStatsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;"></div>
         </div>
         <div style="flex:2; background:#f8fafc; padding:15px; border-radius:12px;">
-           <h4 style="margin:0 0 10px 0;">Efficiency Trend</h4>
            <canvas id="playerChart" width="400" height="180"></canvas>
         </div>
       </div>
@@ -128,14 +118,9 @@
   <script>
     (function(){
       let myChart = null;
-      let activePlayer = null;
       const WEEKS_ORDER = ['home week', 'week 1', 'week 2', 'week 3'];
 
-      const formatPower = (num) => {
-        if(!num || num === 0) return "--";
-        return (num / 1000).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "Bn";
-      };
-
+      const formatPower = (num) => (num && num !== 0) ? (num / 1000).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "Bn" : "--";
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":1.0,"M_THRONE":3.0,"M_HUNT":0.00001,"M_QUEST":0.0000025}');
 
@@ -159,10 +144,9 @@
       };
 
       window.openProfile = (name) => {
-        activePlayer = name;
+        window.activePlayer = name;
         document.getElementById('modalName').textContent = name;
-        const sel = document.getElementById('modalWeekSelect');
-        sel.innerHTML = WEEKS_ORDER.map(w => `<option value="${w}">${w.toUpperCase()}</option>`).join('');
+        document.getElementById('modalWeekSelect').innerHTML = WEEKS_ORDER.map(w => `<option value="${w}">${w.toUpperCase()}</option>`).join('');
         document.getElementById('profileModal').style.display = "block";
         updateModalStats();
         drawTrendChart(name);
@@ -171,33 +155,26 @@
       window.updateModalStats = () => {
         const data = loadData();
         const week = document.getElementById('modalWeekSelect').value;
-        const e = data.find(d => d.name === activePlayer && d.week === week) || {};
+        const e = data.find(d => d.name === window.activePlayer && d.week === week) || {};
         const p = parseFloat(e.power)||0;
-        const eff = p > 0 ? (parseFloat(e.points)||0)/p : 0;
-        
         document.getElementById('modalStatsGrid').innerHTML = `
           <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
           <div class="card"><label>Points</label><span>${(parseFloat(e.points)||0).toLocaleString()}</span></div>
-          <div class="card"><label>Efficiency</label><span>${eff.toFixed(2)}</span></div>
-          <div class="card"><label>Picks Sum</label><span>${(e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0)}</span></div>
+          <div class="card"><label>Throne</label><span>${(parseFloat(e.throne)||0).toLocaleString()}</span></div>
+          <div class="card"><label>Hunt</label><span>${(parseFloat(e.hunt)||0).toLocaleString()}</span></div>
         `;
       };
 
       function drawTrendChart(name) {
         const data = loadData().filter(d => d.name === name && d.week !== 'home week');
-        const ctx = document.getElementById('playerChart').getContext('2d');
-        if(myChart) myChart.destroy();
-        
         const labels = ['Week 1', 'Week 2', 'Week 3'];
         const values = labels.map(l => {
           const e = data.find(d => d.week.toLowerCase() === l.toLowerCase()) || {};
           return e.power > 0 ? (e.points / e.power) : 0;
         });
-
-        myChart = new Chart(ctx, {
-          type: 'line',
-          data: { labels, datasets: [{ label:'Eff', data: values, borderColor:'#3b82f6', tension:0.3, fill:true, backgroundColor:'rgba(59,130,246,0.1)' }] },
-          options: { plugins: { legend: { display:false } } }
+        if(myChart) myChart.destroy();
+        myChart = new Chart(document.getElementById('playerChart'), {
+          type: 'line', data: { labels, datasets: [{ label:'Eff', data: values, borderColor:'#3b82f6', tension:0.3, fill:true, backgroundColor:'rgba(59, 130, 246, 0.1)' }] }
         });
       }
 
@@ -217,60 +194,64 @@
         allNames.forEach(name => {
           const playerEntries = data.filter(d => d.name === name);
           const hasGlobal100 = playerEntries.some(d => d.p100 == 1);
-          let row = {};
-
-          if(view === 'overall'){
-            // LATEST LOGIC: Find the entry in the furthest week that has data
-            const latestEntry = [...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || { name };
-            const p = parseFloat(latestEntry.power)||0;
-            const pts = parseFloat(latestEntry.points)||0;
-            const eff = p > 0 ? pts/p : 0;
-            const pSum = playerEntries.reduce((s,d)=>s+(d.p100?100:0)+(d.p40?40:0)+(d.p20?20:0)+(d.p5?5:0),0);
-            row = { name, p, pts, eff, total: eff, pickDisplay: pSum, has100: hasGlobal100 };
+          
+          // Get specific entry based on view
+          let e;
+          if(view === 'overall') {
+            e = [...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || { name };
           } else {
-            const e = playerEntries.find(d => d.week === view) || { name };
-            const p = parseFloat(e.power)||0;
-            const pts = parseFloat(e.points)||0;
-            const eff = p > 0 ? pts/p : 0;
-            const pSum = (e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0);
-            row = { name, p, pts, eff, total: eff, pickDisplay: pSum, has100: hasGlobal100 };
+            e = playerEntries.find(d => d.week === view) || { name };
           }
-          if(row.eff > 0) { totalEffSum += row.eff; effCount++; }
-          results.push(row);
+
+          const p = parseFloat(e.power)||0;
+          const pts = parseFloat(e.points)||0;
+          const eff = p > 0 ? pts/p : 0;
+          
+          // Calculate synced columns
+          const act = ((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0)) * 0.833;
+          const part = ((e.dv?1:0)*0.833)+((e.esb?1:0)*0.833)+(((e.esi_mon?1:0)+(e.esi_thu?1:0))*0.416);
+          const tEff = p > 0 ? (parseFloat(e.throne)||0)/p * m.M_THRONE : 0;
+          const huntVal = (parseFloat(e.hunt)||0) * m.M_HUNT;
+          const questVal = (parseFloat(e.quest)||0) * m.M_QUEST;
+
+          const totalScore = eff + act + part + tEff + huntVal + questVal;
+          const pSum = (view==='overall') ? playerEntries.reduce((s,d)=>s+(d.p100?100:0)+(d.p40?40:0)+(d.p20?20:0)+(d.p5?5:0),0) : ((e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0));
+
+          if(eff > 0) { totalEffSum += eff; effCount++; }
+          results.push({ name, p, pts, eff, act, part, tEff, total: totalScore, pickDisplay: pSum, has100: hasGlobal100 });
         });
 
         document.getElementById('stat_avg').textContent = effCount > 0 ? (totalEffSum/effCount).toFixed(2) : "0.00";
         const sorted = results.sort((a,b)=>b.total-a.total);
         
-        // Top 3 Leaders
         document.getElementById('topThreeList').innerHTML = sorted.slice(0,3).map((p,i)=>`
-          <div class="rank-item ${i===0?'first':''}">
-            <div style="font-size:0.6rem; font-weight:700;">#${i+1}</div>
-            <div style="font-weight:800; font-size:0.8rem;">${p.name}</div>
+          <div class="rank-item">
+            <div style="font-size:0.6rem; font-weight:700;">#${i+1} ${p.name}</div>
             <div style="color:var(--accent); font-weight:700;">${p.total.toFixed(2)}</div>
-          </div>
-        `).join('');
+          </div>`).join('');
 
         const tbody = document.getElementById('dashTableBody');
         tbody.innerHTML = '';
         sorted.forEach((r, idx) => {
           if(search && !r.name.toLowerCase().includes(search)) return;
           const tr = document.createElement('tr');
-          let pSpan = r.has100 ? `<span class="hero-100">${r.pickDisplay || '-'}</span>` : `<span>${r.pickDisplay || '-'}</span>`;
           tr.innerHTML = `
             <td>#${idx+1}</td>
             <td><strong>${r.name}</strong></td>
             <td>${formatPower(r.p)}</td>
             <td>${Math.round(r.pts).toLocaleString()}</td>
             <td>${r.eff.toFixed(2)}</td>
-            <td>0.00</td><td>0.00</td><td>0.00</td>
-            <td>${pSpan}</td>
+            <td>${r.act.toFixed(2)}</td>
+            <td>${r.part.toFixed(2)}</td>
+            <td>${r.tEff.toFixed(2)}</td>
+            <td><span class="${r.has100?'hero-100':''}">${r.pickDisplay || '-'}</span></td>
             <td style="font-weight:900; background:#f8fafc">${r.total.toFixed(2)}</td>
             <td>
-              <button class="btn-view" onclick="openProfile('${r.name.replace(/'/g,"\\'")}')">View</button>
-              <button class="btn-edit" onclick="goEdit('${r.name.replace(/'/g,"\\'")}')">Edit</button>
-            </td>
-          `;
+              <div style="display:flex; gap:5px;">
+                <button class="btn-view" onclick="openProfile('${r.name.replace(/'/g,"\\'")}')">View</button>
+                <button class="btn-edit" onclick="goEdit('${r.name.replace(/'/g,"\\'")}')">Edit</button>
+              </div>
+            </td>`;
           tbody.appendChild(tr);
         });
       }
