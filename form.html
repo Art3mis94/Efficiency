@@ -6,22 +6,33 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--white:#ffffff;--muted:#64748b;--dark:#1e40af;}
-    body{margin:0;font-family:Inter,sans-serif;background:var(--bg);display:flex;height:100vh;}
-    .sidebar{width:280px;background:white;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;}
+    :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--white:#ffffff;--muted:#64748b;--dark:#1e40af;--success:#10b981;}
+    body{margin:0;font-family:Inter,sans-serif;background:var(--bg);display:flex;height:100vh;overflow:hidden;}
+    
+    /* Sidebar Styling */
+    .sidebar{width:300px;background:white;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;}
     .sidebar-header{padding:20px;border-bottom:1px solid #f1f5f9;}
     .player-list{flex:1;overflow-y:auto;list-style:none;padding:0;margin:0;}
-    .player-list li{padding:12px 20px;cursor:pointer;border-bottom:1px solid #f8fafc;font-weight:600;}
+    .player-list li{padding:12px 20px;cursor:pointer;border-bottom:1px solid #f8fafc;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
     .player-list li:hover{background:#f1f5f9;}
     .player-list li.active{background:var(--accent);color:white;}
+    
+    /* Main Content */
     .main-content{flex:1;overflow-y:auto;padding:40px;background:var(--bg);}
-    .form-card{background:white;padding:30px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.05);max-width:800px;margin:auto;}
+    .form-card{background:white;padding:30px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.05);max-width:850px;margin:auto;}
+    
+    /* Ranking Badge Styling */
+    .rank-badges{display:flex;gap:10px;margin-bottom:20px;}
+    .badge{flex:1;background:#f1f5f9;padding:10px;border-radius:8px;text-align:center;border:1px solid #e2e8f0;}
+    .badge label{display:block;font-size:0.65rem;color:var(--muted);text-transform:uppercase;font-weight:700;}
+    .badge span{font-size:1.1rem;font-weight:800;color:var(--dark);}
+
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
     label{display:block;font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
     input[type=number], input[type=text], select{width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;box-sizing:border-box;}
     .checkbox-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f8fafc;padding:15px;border-radius:8px;}
     .check-item{display:flex;align-items:center;gap:10px;font-size:0.85rem;}
-    .btn-save{width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:1rem;}
+    .btn-save{width:100%;padding:14px;background:var(--success);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:1rem;}
   </style>
 </head>
 <body>
@@ -29,9 +40,9 @@
   <div class="sidebar">
     <div class="sidebar-header">
       <a href="index.html" style="text-decoration:none; color:var(--accent); font-weight:800;">← Back to Dashboard</a>
-      <h3 style="margin:20px 0 10px 0;">Players</h3>
+      <h3 style="margin:20px 0 10px 0;">Alliance Roster</h3>
       <div style="display:flex; gap:5px;">
-        <input type="text" id="newPlayerName" placeholder="Name..." style="flex:1;">
+        <input type="text" id="newPlayerName" placeholder="New Player Name...">
         <button onclick="addPlayer()" style="background:var(--accent); color:white; border:none; border-radius:4px; padding:0 10px; cursor:pointer;">+</button>
       </div>
     </div>
@@ -40,110 +51,100 @@
 
   <div class="main-content">
     <div class="form-card">
-      <h2 id="formTitle">Select a player</h2>
+      <h2 id="formTitle" style="margin-top:0;">Select a player to begin</h2>
+      
+      <div class="rank-badges" id="rankSection" style="display:none;">
+        <div class="badge"><label>Eff Rank</label><span id="rankEff">--</span></div>
+        <div class="badge"><label>Act Rank</label><span id="rankAct">--</span></div>
+        <div class="badge"><label>Throne Rank</label><span id="rankThrone">--</span></div>
+        <div class="badge"><label>Overall Rank</label><span id="rankTotal">--</span></div>
+      </div>
+
       <form id="dataForm">
         <div class="grid">
           <div>
-            <label>Select Week</label>
+            <label>Reporting Week</label>
             <select id="weekSelector" onchange="loadPlayerWeekData()">
               <option value="week 1">Week 1</option>
               <option value="week 2">Week 2</option>
               <option value="week 3">Week 3</option>
             </select>
           </div>
-          <div><label>Power</label><input type="number" name="power" id="power"></div>
-          <div><label>Points</label><input type="number" name="points" id="points"></div>
-          <div><label>Quests</label><input type="number" name="quest" id="quest"></div>
-          <div><label>Hunt</label><input type="number" name="hunt" id="hunt"></div>
-          <div><label>Throne Kills</label><input type="number" name="throne" id="throne"></div>
+          <div><label>Current Power</label><input type="number" name="power" id="power"></div>
+          <div><label>Total Points</label><input type="number" name="points" id="points"></div>
+          <div><label>Quests Completed</label><input type="number" name="quest" id="quest"></div>
+          <div><label>Hunt Score (W2)</label><input type="number" name="hunt" id="hunt"></div>
+          <div><label>Throne Kills (W3)</label><input type="number" name="throne" id="throne"></div>
         </div>
 
         <div class="grid">
           <div>
-            <label>Activity</label>
+            <label>Weekly Activity</label>
             <div class="checkbox-group">
-              <div class="check-item"><input type="checkbox" name="lava" id="lava"> Lava</div>
-              <div class="check-item"><input type="checkbox" name="challenge" id="challenge"> Challenge</div>
-              <div class="check-item"><input type="checkbox" name="donations" id="donations"> Donations</div>
+              <div class="check-item"><input type="checkbox" id="lava"> Lava</div>
+              <div class="check-item"><input type="checkbox" id="challenge"> Challenge</div>
+              <div class="check-item"><input type="checkbox" id="donations"> Donations</div>
             </div>
           </div>
           <div>
-            <label>Participation</label>
+            <label>Event Participation</label>
             <div class="checkbox-group">
-              <div class="check-item"><input type="checkbox" name="dv" id="dv"> DV</div>
-              <div class="check-item"><input type="checkbox" name="esb" id="esb"> ESB</div>
-              <div class="check-item"><input type="checkbox" name="esi_mon" id="esi_mon"> ESI Tue</div>
-              <div class="check-item"><input type="checkbox" name="esi_thu" id="esi_thu"> ESI Thu</div>
+              <div class="check-item"><input type="checkbox" id="dv"> DV</div>
+              <div class="check-item"><input type="checkbox" id="esb"> ESB</div>
+              <div class="check-item"><input type="checkbox" id="esi_mon"> ESI Tue</div>
+              <div class="check-item"><input type="checkbox" id="esi_thu"> ESI Thu</div>
             </div>
           </div>
         </div>
 
-        <label>Hero Picks</label>
+        <label>Hero Picks (Bounties)</label>
         <div class="checkbox-group" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
-          <div class="check-item"><input type="checkbox" name="p100" id="p100"> 100</div>
-          <div class="check-item"><input type="checkbox" name="p40" id="p40"> 40</div>
-          <div class="check-item"><input type="checkbox" name="p20" id="p20"> 20</div>
-          <div class="check-item"><input type="checkbox" name="p5" id="p5"> 5</div>
+          <div class="check-item"><input type="checkbox" id="p100"> 100</div>
+          <div class="check-item"><input type="checkbox" id="p40"> 40</div>
+          <div class="check-item"><input type="checkbox" id="p20"> 20</div>
+          <div class="check-item"><input type="checkbox" id="p5"> 5</div>
         </div>
 
-        <button type="submit" class="btn-save">Save Entry</button>
+        <button type="submit" class="btn-save">Save Weekly Data</button>
       </form>
     </div>
   </div>
 
   <script>
     (function() {
-      const form = document.getElementById('dataForm');
-      const playerList = document.getElementById('playersList');
       let players = JSON.parse(localStorage.getItem('players') || '[]');
       let formData = JSON.parse(localStorage.getItem('formData') || '[]');
       let selectedPlayer = null;
 
-      function handleAutoEdit() {
-        const target = localStorage.getItem('editTargetName');
-        if (!target) return;
-        const items = playerList.querySelectorAll('li');
-        let found = false;
-        items.forEach(li => {
-          if (li.textContent.trim() === target) {
-            selectPlayer(target, li);
-            localStorage.removeItem('editTargetName');
-            found = true;
-          }
-        });
-        if (!found) setTimeout(handleAutoEdit, 100);
-      }
-
-      window.addEventListener('DOMContentLoaded', () => {
-        renderPlayerList();
-        handleAutoEdit();
-      });
-
       function renderPlayerList() {
-        playerList.innerHTML = '';
-        players.sort((a,b)=>a.localeCompare(b)).forEach(name => {
+        const list = document.getElementById('playersList');
+        list.innerHTML = '';
+        players.sort().forEach(name => {
           const li = document.createElement('li');
           li.textContent = name;
           li.onclick = () => selectPlayer(name, li);
-          playerList.appendChild(li);
+          list.appendChild(li);
         });
       }
 
       function selectPlayer(name, element) {
         selectedPlayer = name;
-        document.querySelectorAll('#playersList li').forEach(li => li.classList.remove('active'));
-        element.classList.add('active');
-        document.getElementById('formTitle').textContent = "Editing: " + name;
-        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        document.querySelectorAll('.player-list li').forEach(li => li.classList.remove('active'));
+        if(element) element.classList.add('active');
+        document.getElementById('formTitle').textContent = name;
+        document.getElementById('rankSection').style.display = 'flex';
         loadPlayerWeekData();
       }
 
       window.loadPlayerWeekData = function() {
         if (!selectedPlayer) return;
         const week = document.getElementById('weekSelector').value;
+        const form = document.getElementById('dataForm');
         form.reset();
-        const checkboxIds = ['lava','challenge','donations','dv','esb','esi_mon','esi_thu','p100','p40','p20','p5'];
-        checkboxIds.forEach(id => { const el = document.getElementById(id); if(el) el.checked = false; });
+        
+        // Clear all checkboxes
+        const chks = ['lava','challenge','donations','dv','esb','esi_mon','esi_thu','p100','p40','p20','p5'];
+        chks.forEach(id => document.getElementById(id).checked = false);
 
         const entry = formData.find(d => d.name === selectedPlayer && d.week === week);
         if (entry) {
@@ -155,25 +156,87 @@
             }
           });
         }
+        calculateRanks(week);
       };
 
-      form.onsubmit = (e) => {
-        e.preventDefault();
-        if (!selectedPlayer) return alert('Select a player');
-        const week = document.getElementById('weekSelector').value;
-        const fd = new FormData(form);
-        const data = { name: selectedPlayer, week: week };
-        fd.forEach((value, key) => { data[key] = value; });
-        ['lava','challenge','donations','dv','esb','esi_mon','esi_thu','p100','p40','p20','p5'].forEach(id => {
-          data[id] = document.getElementById(id).checked;
+      // THE OLD RANKING LOGIC
+      function calculateRanks(week) {
+        const currentData = formData.filter(d => d.week === week);
+        if (currentData.length < 1) return;
+
+        const metrics = currentData.map(d => {
+          const p = parseFloat(d.power) || 1;
+          return {
+            name: d.name,
+            eff: (parseFloat(d.points) || 0) / p,
+            act: (d.lava?1:0) + (d.challenge?1:0) + (d.donations?1:0),
+            throne: (parseFloat(d.throne) || 0) / p,
+            total: (parseFloat(d.points) || 0) // Simplified for rank comparison
+          };
         });
 
-        const index = formData.findIndex(d => d.name === selectedPlayer && d.week === week);
-        if (index > -1) formData[index] = data;
-        else formData.push(data);
+        const getRank = (list, key, name) => {
+          const sorted = [...list].sort((a,b) => b[key] - a[key]);
+          const idx = sorted.findIndex(x => x.name === name);
+          return idx === -1 ? '--' : idx + 1;
+        };
 
+        document.getElementById('rankEff').textContent = '#' + getRank(metrics, 'eff', selectedPlayer);
+        document.getElementById('rankAct').textContent = '#' + getRank(metrics, 'act', selectedPlayer);
+        document.getElementById('rankThrone').textContent = '#' + getRank(metrics, 'throne', selectedPlayer);
+        document.getElementById('rankTotal').textContent = '#' + getRank(metrics, 'total', selectedPlayer);
+      }
+
+      // RESTORED AUTO-SELECT SNIPPET
+      function handleAutoEdit() {
+        const targetName = localStorage.getItem('editTargetName');
+        const targetWeek = localStorage.getItem('editTargetWeek');
+        if (!targetName) return;
+
+        const items = Array.from(document.querySelectorAll('.player-list li'));
+        const found = items.find(li => li.textContent.trim() === targetName);
+
+        if (found) {
+          if (targetWeek) document.getElementById('weekSelector').value = targetWeek;
+          selectPlayer(targetName, found);
+          found.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          localStorage.removeItem('editTargetName');
+          localStorage.removeItem('editTargetWeek');
+        }
+      }
+
+      document.getElementById('dataForm').onsubmit = (e) => {
+        e.preventDefault();
+        if (!selectedPlayer) return;
+        const week = document.getElementById('weekSelector').value;
+        
+        const newData = {
+          name: selectedPlayer,
+          week: week,
+          power: document.getElementById('power').value,
+          points: document.getElementById('points').value,
+          quest: document.getElementById('quest').value,
+          hunt: document.getElementById('hunt').value,
+          throne: document.getElementById('throne').value,
+          lava: document.getElementById('lava').checked,
+          challenge: document.getElementById('challenge').checked,
+          donations: document.getElementById('donations').checked,
+          dv: document.getElementById('dv').checked,
+          esb: document.getElementById('esb').checked,
+          esi_mon: document.getElementById('esi_mon').checked,
+          esi_thu: document.getElementById('esi_thu').checked,
+          p100: document.getElementById('p100').checked,
+          p40: document.getElementById('p40').checked,
+          p20: document.getElementById('p20').checked,
+          p5: document.getElementById('p5').checked
+        };
+
+        const idx = formData.findIndex(d => d.name === selectedPlayer && d.week === week);
+        if (idx > -1) formData[idx] = newData; else formData.push(newData);
+        
         localStorage.setItem('formData', JSON.stringify(formData));
-        alert('Data saved!');
+        calculateRanks(week);
+        alert('Saved successfully!');
       };
 
       window.addPlayer = () => {
@@ -185,6 +248,9 @@
           document.getElementById('newPlayerName').value = '';
         }
       };
+
+      renderPlayerList();
+      setTimeout(handleAutoEdit, 150);
     })();
   </script>
 </body>
