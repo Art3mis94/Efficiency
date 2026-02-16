@@ -92,6 +92,14 @@ function loadMultipliers() {
     return saved ? JSON.parse(saved) : DEFAULTS;
 }
 
+// Helper to format numbers to 2 decimal places, removing .00
+const fmt = (num) => {
+    return Number(num).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    });
+};
+
 function computePicks(e) {
   return (e.p100 ? 100 : 0) + (e.p40 ? 40 : 0) + (e.p20 ? 20 : 0) + (e.p5 ? 5 : 0);
 }
@@ -105,7 +113,6 @@ function calculateMetrics(e) {
   const act = Math.min((Number(e.lava||0) + Number(e.challenge||0) + Number(e.donations||0)) * (2.5/3), 2.5);
   const part = Math.min((Number(e.dv||0))*(2.5/3) + (Number(e.esb||0))*(2.5/3) + ((Number(e.esi_mon||0) + Number(e.esi_thu||0)))*(2.5/6), 2.5);
   
-  // Throne Raw vs Throne Weighted
   const throneRaw = power > 0 ? (Number(e.throne||0) / power) : 0;
   const throneWeighted = throneRaw * (Number(m.M_THRONE) || DEFAULTS.M_THRONE);
   
@@ -195,7 +202,7 @@ function updateDisplay() {
     : (Number(b[currentSortKey]) || 0) - (Number(a[currentSortKey]) || 0);
 
   if (view === '__total') {
-    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">End Power</th><th class="sortable" onclick="setSort('points')">Total Pts</th><th class="sortable" onclick="setSort('rawEff')">W2/3 Eff</th><th>Act</th><th>Part</th><th class="sortable" title="Before Multiplier" onclick="setSort('throneRaw')">Throne(R)</th><th class="sortable" onclick="setSort('total')">Score</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
+    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">End Power</th><th class="sortable" onclick="setSort('points')">Total Pts</th><th class="sortable" onclick="setSort('rawEff')">W2/3 Eff</th><th>Act</th><th>Part</th><th class="sortable" onclick="setSort('throneRaw')">Throne(R)</th><th class="sortable" onclick="setSort('total')">Score</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
     
     const grouped = {};
     data.forEach(d => { grouped[d.name] = grouped[d.name] || []; grouped[d.name].push(d); });
@@ -213,14 +220,14 @@ function updateDisplay() {
           <td>${p.rawEff.toFixed(5)}</td>
           <td>${p.activityPct.toFixed(1)}</td>
           <td>${p.partPct.toFixed(1)}</td>
-          <td>${p.throneRaw.toFixed(5)}</td>
-          <td><strong>${p.total.toFixed(3)}</strong></td>
+          <td>${fmt(p.throneRaw)}</td>
+          <td><strong>${fmt(p.total)}</strong></td>
           <td>${pickTag}</td>
           <td><button class="edit-btn" onclick="editPlayer('${p.name}', '${p.lastWeek}')">Edit</button></td>
         </tr>`;
       });
   } else {
-    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('points')">Points</th><th class="sortable" onclick="setSort('rawEff')">Eff</th><th>Act%</th><th>Part%</th><th class="sortable" title="Before Multiplier" onclick="setSort('throneRaw')">Throne(R)</th><th class="sortable" onclick="setSort('total')">Total</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
+    header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('points')">Points</th><th class="sortable" onclick="setSort('rawEff')">Eff</th><th>Act%</th><th>Part%</th><th class="sortable" onclick="setSort('throneRaw')">Throne(R)</th><th class="sortable" onclick="setSort('total')">Total</th><th class="sortable" onclick="setSort('picks')">Picks</th><th>Action</th>`;
 
     data.filter(d => d.week === view).map(calculateMetrics)
       .filter(d => d.name.toLowerCase().includes(search))
@@ -235,8 +242,8 @@ function updateDisplay() {
           <td>${d.rawEff.toFixed(5)}</td>
           <td>${(d.activityPct * 40).toFixed(0)}%</td>
           <td>${(d.partPct * 40).toFixed(0)}%</td>
-          <td>${d.throneRaw.toFixed(5)}</td>
-          <td>${d.total.toFixed(3)}</td>
+          <td>${fmt(d.throneRaw)}</td>
+          <td>${fmt(d.total)}</td>
           <td>${pickTag}</td>
           <td><button class="edit-btn" onclick="editPlayer('${d.name}', '${d.week}')">Edit</button></td>
         </tr>`;
@@ -248,7 +255,7 @@ function updateTop3() {
   const grouped = {};
   loadData().forEach(d => { grouped[d.name] = grouped[d.name] || []; grouped[d.name].push(d); });
   const top = Object.values(grouped).map(calculateOverallMetrics).sort((a,b) => b.total - a.total).slice(0,3);
-  top3List.innerHTML = top.map((p,i) => `<li>${p.name}: <span style="color:var(--accent)">${p.total.toFixed(3)}</span></li>`).join('');
+  top3List.innerHTML = top.map((p,i) => `<li>${p.name}: <span style="color:var(--accent)">${fmt(p.total)}</span></li>`).join('');
 }
 
 weekSelect.innerHTML = ['__total', ...WEEKS].map(w => `<option value="${w}">${w === '__total' ? 'Full Season Summary' : w.toUpperCase()}</option>`).join('');
