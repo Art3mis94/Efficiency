@@ -9,7 +9,6 @@
     :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--white:#ffffff;--muted:#64748b;--dark:#1e40af;--success:#10b981;}
     body{margin:0;font-family:Inter,sans-serif;background:var(--bg);display:flex;height:100vh;overflow:hidden;}
     
-    /* Sidebar Styling */
     .sidebar{width:300px;background:white;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;}
     .sidebar-header{padding:20px;border-bottom:1px solid #f1f5f9;}
     .player-list{flex:1;overflow-y:auto;list-style:none;padding:0;margin:0;}
@@ -17,11 +16,9 @@
     .player-list li:hover{background:#f1f5f9;}
     .player-list li.active{background:var(--accent);color:white;}
     
-    /* Main Content */
     .main-content{flex:1;overflow-y:auto;padding:40px;background:var(--bg);}
     .form-card{background:white;padding:30px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.05);max-width:850px;margin:auto;}
     
-    /* Ranking Badge Styling */
     .rank-badges{display:flex;gap:10px;margin-bottom:20px;}
     .badge{flex:1;background:#f1f5f9;padding:10px;border-radius:8px;text-align:center;border:1px solid #e2e8f0;}
     .badge label{display:block;font-size:0.65rem;color:var(--muted);text-transform:uppercase;font-weight:700;}
@@ -142,9 +139,8 @@
         const form = document.getElementById('dataForm');
         form.reset();
         
-        // Clear all checkboxes
         const chks = ['lava','challenge','donations','dv','esb','esi_mon','esi_thu','p100','p40','p20','p5'];
-        chks.forEach(id => document.getElementById(id).checked = false);
+        chks.forEach(id => { if(document.getElementById(id)) document.getElementById(id).checked = false; });
 
         const entry = formData.find(d => d.name === selectedPlayer && d.week === week);
         if (entry) {
@@ -159,7 +155,6 @@
         calculateRanks(week);
       };
 
-      // THE OLD RANKING LOGIC
       function calculateRanks(week) {
         const currentData = formData.filter(d => d.week === week);
         if (currentData.length < 1) return;
@@ -171,7 +166,7 @@
             eff: (parseFloat(d.points) || 0) / p,
             act: (d.lava?1:0) + (d.challenge?1:0) + (d.donations?1:0),
             throne: (parseFloat(d.throne) || 0) / p,
-            total: (parseFloat(d.points) || 0) // Simplified for rank comparison
+            total: (parseFloat(d.points) || 0)
           };
         });
 
@@ -187,22 +182,29 @@
         document.getElementById('rankTotal').textContent = '#' + getRank(metrics, 'total', selectedPlayer);
       }
 
-      // RESTORED AUTO-SELECT SNIPPET
+      // IMPROVED AUTO-SELECT Logic
       function handleAutoEdit() {
         const targetName = localStorage.getItem('editTargetName');
         const targetWeek = localStorage.getItem('editTargetWeek');
+        
         if (!targetName) return;
 
-        const items = Array.from(document.querySelectorAll('.player-list li'));
-        const found = items.find(li => li.textContent.trim() === targetName);
+        // Give the UI a moment to render the list
+        setTimeout(() => {
+          const items = Array.from(document.querySelectorAll('.player-list li'));
+          const found = items.find(li => li.textContent.trim() === targetName);
 
-        if (found) {
-          if (targetWeek) document.getElementById('weekSelector').value = targetWeek;
-          selectPlayer(targetName, found);
-          found.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          localStorage.removeItem('editTargetName');
-          localStorage.removeItem('editTargetWeek');
-        }
+          if (found) {
+            if (targetWeek) document.getElementById('weekSelector').value = targetWeek;
+            selectPlayer(targetName, found);
+            found.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Clear keys after successful select
+            localStorage.removeItem('editTargetName');
+            localStorage.removeItem('editTargetWeek');
+          } else {
+             console.log("Could not find player: " + targetName);
+          }
+        }, 100); 
       }
 
       document.getElementById('dataForm').onsubmit = (e) => {
@@ -240,17 +242,19 @@
       };
 
       window.addPlayer = () => {
-        const name = document.getElementById('newPlayerName').value.trim();
+        const nameInput = document.getElementById('newPlayerName');
+        const name = nameInput.value.trim();
         if (name && !players.includes(name)) {
           players.push(name);
           localStorage.setItem('players', JSON.stringify(players));
           renderPlayerList();
-          document.getElementById('newPlayerName').value = '';
+          nameInput.value = '';
         }
       };
 
+      // Initialization
       renderPlayerList();
-      setTimeout(handleAutoEdit, 150);
+      handleAutoEdit();
     })();
   </script>
 </body>
