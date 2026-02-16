@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Player Dashboard</title>
+<title>Alliance Dashboard — Performance & Picks</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f8fafc;--text:#1e293b;--card:#ffffff;--accent:#3b82f6;--muted:#475569;}
@@ -74,16 +74,14 @@ function calculateMetrics(e) {
   const m = loadMultipliers();
   const power = parseFloat(e.power) || 0;
   const points = parseFloat(e.points) || 0;
-  
   const rawEff = power > 0 ? points / power : 0;
   const act = Math.min((parseFloat(e.lava||0) + parseFloat(e.challenge||0) + parseFloat(e.donations||0)) * 0.833, 2.5);
   const part = Math.min((parseFloat(e.dv||0)*0.833) + (parseFloat(e.esb||0)*0.833) + ((parseFloat(e.esi_mon||0) + parseFloat(e.esi_thu||0))*0.416), 2.5);
   const throneScore = power > 0 ? (parseFloat(e.throne||0) / power) * m.M_THRONE : 0;
-  const frostScore = (parseFloat(e.frost) || 0) * m.M_FROST;
-  const questScore = (parseFloat(e.quest) || 0) * m.M_QUEST;
+  const total = rawEff + act + part + throneScore + ((parseFloat(e.frost)||0)*m.M_FROST) + ((parseFloat(e.quest)||0)*m.M_QUEST);
 
-  const total = rawEff + act + part + throneScore + frostScore + questScore;
-  const picks = (Number(e.p100)||0) + (Number(e.p40)||0) + (Number(e.p20)||0) + (Number(e.p5)||0);
+  // Weighted Pick Sum
+  const picks = (Number(e.p100||0)*100) + (Number(e.p40||0)*40) + (Number(e.p20||0)*20) + (Number(e.p5||0)*5);
   
   return { ...e, rawEff, activityPct: act, partPct: part, total, picks, isHero: picks > 0 };
 }
@@ -96,13 +94,10 @@ function calculateOverallMetrics(playerEntries) {
 
     playerEntries.forEach(e => {
         const w = e.week.toLowerCase();
-        
-        // Sum picks from EVERYTHING (including Home Week)
-        const pCount = (Number(e.p100)||0) + (Number(e.p40)||0) + (Number(e.p20)||0) + (Number(e.p5)||0);
+        const pCount = (Number(e.p100||0)*100) + (Number(e.p40||0)*40) + (Number(e.p20||0)*20) + (Number(e.p5||0)*5);
         totalPicks += pCount;
         if(pCount > 0) hadHeroPick = true;
 
-        // Sum Scores ONLY from W1-W3
         if (w !== 'home week') {
             const met = calculateMetrics(e);
             if (w === 'week 1') week1Pts = parseFloat(e.points) || 0;
@@ -124,16 +119,9 @@ function calculateOverallMetrics(playerEntries) {
     const fScore = (week1Pts * m.M_WEEK1) + overallEff + totalAct + totalPart + (latestThroneRaw * m.M_THRONE) + (totalQuest * m.M_QUEST) + (totalFrost * m.M_FROST);
 
     return { 
-        name: playerEntries[0].name, 
-        power: latestPower, 
-        points: (week1Pts + otherPts), 
-        rawEff: overallEff, 
-        activityPct: totalAct, 
-        partPct: totalPart, 
-        total: fScore, 
-        picks: totalPicks, 
-        lastWeek: latestWeek,
-        hadHeroPick: hadHeroPick 
+        name: playerEntries[0].name, power: latestPower, points: (week1Pts + otherPts), 
+        rawEff: overallEff, activityPct: totalAct, partPct: totalPart, total: fScore, 
+        picks: totalPicks, hadHeroPick: hadHeroPick, lastWeek: latestWeek 
     };
 }
 
@@ -154,15 +142,10 @@ function updateDisplay() {
   source.filter(p => p.name.toLowerCase().includes(search)).sort((a,b) => (typeof a[currentSortKey] === 'string') ? a[currentSortKey].localeCompare(b[currentSortKey]) : (b[currentSortKey] - a[currentSortKey])).forEach((p, i) => {
       const pickTag = p.hadHeroPick || p.isHero ? `<span class="highlight-picks">${p.picks}</span>` : p.picks;
       tbody.innerHTML += `<tr>
-        <td>${i+1}</td>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.power.toLocaleString()}</td>
-        <td>${p.points.toLocaleString()}</td>
-        <td>${fmt(p.rawEff)}</td>
-        <td>${view === '__total' ? p.activityPct.toFixed(1) : (p.activityPct * 40).toFixed(0)+'%'}</td>
+        <td>${i+1}</td><td><strong>${p.name}</strong></td><td>${p.power.toLocaleString()}</td><td>${p.points.toLocaleString()}</td>
+        <td>${fmt(p.rawEff)}</td><td>${view === '__total' ? p.activityPct.toFixed(1) : (p.activityPct * 40).toFixed(0)+'%'}</td>
         <td>${view === '__total' ? p.partPct.toFixed(1) : (p.partPct * 40).toFixed(0)+'%'}</td>
-        <td><strong>${fmt(p.total)}</strong></td>
-        <td>${pickTag}</td>
+        <td><strong>${fmt(p.total)}</strong></td><td>${pickTag}</td>
         <td><button class="edit-btn" onclick="localStorage.setItem('editTargetName','${p.name}');localStorage.setItem('editTargetWeek','${p.lastWeek||p.week}');window.location.href='form.html'">Edit</button></td>
       </tr>`;
   });
