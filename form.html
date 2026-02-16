@@ -13,11 +13,10 @@
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
     
-    /* Removed max-width to allow full-screen utilization */
-    .main-wrap{width:100%; margin:0; padding:1.5rem; display:grid; gap:1.5rem; grid-template-columns:300px 1fr 320px; align-items: start;}
+    .main-wrap{width:100%; margin:0; padding:1.5rem; display:grid; gap:1.5rem; grid-template-columns:320px 1fr 320px; align-items: start;}
     .section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04);}
     
-    .players-list{margin-top:10px;padding:0;list-style:none; height: 500px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:8px; background:#fff;}
+    .players-list{margin-top:10px;padding:0;list-style:none; height: 550px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:8px; background:#fff;}
     .players-list li{padding:.75rem;border-bottom:1px solid #f1f5f9;cursor:pointer; transition: 0.2s;}
     .players-list li.selected{background:#eff6ff;border-left:4px solid var(--accent);font-weight:600;}
     .players-list li:hover{background:#f1f5f9;}
@@ -34,8 +33,7 @@
     .rank-badge{background:var(--accent); text-align:center; padding:1rem; border-radius:8px; margin-top:1rem;}
     .rank-val{font-size:2.5rem; font-weight:800; display:block;}
 
-    .btn{padding:.7rem 1.5rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;width:100%;margin-top:10px; text-align:center; transition: opacity 0.2s;}
-    .btn:active{opacity: 0.8;}
+    .btn{padding:.7rem 1.5rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;width:100%;margin-top:10px; text-align:center;}
     .btn.csv{background:#475569; font-size: 0.8rem; margin-top: 5px;}
     
     .week-btn{padding:10px; border:1px solid var(--accent); background:none; color:var(--accent); border-radius:8px; cursor:pointer; flex:1; font-weight: 700;}
@@ -58,16 +56,16 @@
   <main class="main-wrap">
     <section class="section">
       <h3>Player Directory</h3>
-      <input type="text" id="playerSearch" placeholder="🔍 Search players..." class="input" style="margin-bottom:10px;">
+      <input type="text" id="playerSearch" placeholder="🔍 Search existing..." class="input" style="margin-bottom:10px;">
       <ul class="players-list" id="playersList"></ul>
       
-      <div style="margin-top:15px; padding-top:10px;">
-        <input id="playerNameInput" placeholder="Add new player name..." class="input" style="margin-bottom:5px;">
+      <div style="margin-top:15px; padding-top:10px; border-top: 1px solid #eee;">
+        <label style="font-size:0.7rem; font-weight:700; color:var(--muted); margin-bottom:5px; display:block;">RAPID ADD (ENTER TO ADD)</label>
+        <input id="playerNameInput" placeholder="Type name here..." class="input" style="margin-bottom:5px; border: 2px solid var(--accent);">
         <button id="addPlayerBtn" class="btn" style="background:var(--success)">Add Player</button>
       </div>
 
       <div style="margin-top:20px; border-top:1px dashed #cbd5e1; padding-top:15px;">
-        <label style="font-size:0.75rem; font-weight:700; color:var(--muted); display:block; margin-bottom:5px;">BACKUP & RESTORE</label>
         <button class="btn csv" onclick="exportToCSV()">Export CSV Backup</button>
         <label class="btn csv" style="display:block; cursor:pointer;">
           Import CSV <input type="file" hidden onchange="importFromCSV(this)">
@@ -105,7 +103,7 @@
         </div>
 
         <div style="grid-column: span 2">
-          <label>Hero Picks (Weighted)</label>
+          <label>Hero Picks</label>
           <div class="checkbox-group" style="background:#fff7ed">
             <label><input type="checkbox" id="pick_100"> 100 Pick</label>
             <label><input type="checkbox" id="pick_40"> 40 Pick</label>
@@ -116,8 +114,8 @@
       </div>
       
       <div style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn" id="statsSaveBtn" style="background:var(--success); flex:2; font-size:1.1rem;">Save Data (Enter)</button>
-        <button class="btn" id="playerDeleteBtn" style="background:var(--danger); flex:1;">Delete Item</button>
+        <button class="btn" id="statsSaveBtn" style="background:var(--success); flex:2; font-size:1.1rem;">Save Stats (Enter)</button>
+        <button class="btn" id="playerDeleteBtn" style="background:var(--danger); flex:1;">Delete Player</button>
       </div>
 
       <div class="global-reset-zone">
@@ -155,27 +153,26 @@
 
       // --- Global Actions ---
       window.clearAllData = () => {
-        if(!confirm("Are you sure? This sets all scores to zero for everyone, but keeps names.")) return;
+        if(!confirm("Set all stats to zero for EVERY week? Names will stay.")) return;
         saveData(loadData().map(d => ({
           name: d.name, week: d.week, power:"", points:"", throne:"", quest:"", hunt:"",
-          lava:0, challenge:0, donations:0, dv:0, esb:0, esi_mon:0, esi_thu:0,
-          p100:0, p40:0, p20:0, p5:0
+          lava:0, challenge:0, donations:0, dv:0, esb:0, esi_mon:0, esi_thu:0, p100:0, p40:0, p20:0, p5:0
         })));
         if(currentPlayer) selectPlayer(currentPlayer);
         alert("Scores cleared.");
       };
 
       window.deleteAllPlayers = () => {
-        if(!confirm("WARNING: This deletes ALL players and ALL data. Are you sure?")) return;
+        if(!confirm("Delete EVERYTHING?")) return;
         localStorage.removeItem('formData');
         currentPlayer = null; renderList(); resetSidebar();
         document.getElementById('editHeader').textContent = "Select a Player";
       };
 
-      // --- Robust CSV Logic ---
+      // --- CSV Logic ---
       window.exportToCSV = () => {
         const data = loadData();
-        if(!data.length) return alert("No data to export.");
+        if(!data.length) return alert("No data.");
         const headers = Object.keys(data[0]);
         const csvRows = [headers.join(",")];
         for (const row of data) {
@@ -269,15 +266,42 @@
         };
         if(idx >= 0) data[idx] = state; else data.push(state);
         saveData(data);
-        const b = document.getElementById('statsSaveBtn'); b.textContent = "SAVED ✓"; setTimeout(()=>b.textContent="Save Data (Enter)", 800);
+        const b = document.getElementById('statsSaveBtn'); b.textContent = "SAVED ✓"; setTimeout(()=>b.textContent="Save Stats (Enter)", 800);
       }
 
+      // --- ADD PLAYER: AUTO-POPULATE 4 WEEKS & CLEAR INPUT ---
       function addNewPlayer(){
-        const n = document.getElementById('playerNameInput').value.trim();
+        const input = document.getElementById('playerNameInput');
+        const n = input.value.trim();
         if(!n) return;
-        let d = loadData(); WEEKS.forEach(w => d.push({name: n, week: w}));
-        saveData(d); renderList(); selectPlayer(n);
-        document.getElementById('playerNameInput').value = "";
+
+        let d = loadData();
+        // Check if player exists already
+        if(d.some(entry => entry.name.toLowerCase() === n.toLowerCase())) {
+          alert("Player already exists!");
+          return;
+        }
+
+        // Add an entry for EVERY week immediately
+        WEEKS.forEach(w => {
+          d.push({
+            name: n, 
+            week: w, 
+            power:"", points:"", throne:"", quest:"", hunt:"",
+            lava:0, challenge:0, donations:0, dv:0, esb:0, esi_mon:0, esi_thu:0,
+            p100:0, p40:0, p20:0, p5:0
+          });
+        });
+
+        saveData(d);
+        renderList();
+        
+        // Clear input and keep focus for rapid typing
+        input.value = "";
+        input.focus();
+        
+        // Optional: Auto-select the new player to the current view
+        selectPlayer(n);
       }
 
       function renderList(){
@@ -294,14 +318,20 @@
       document.getElementById('statsSaveBtn').onclick = performSave;
       document.getElementById('addPlayerBtn').onclick = addNewPlayer;
       
-      // Enter to add player
+      // ENTER to add player and clear
       document.getElementById('playerNameInput').addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') addNewPlayer();
+        if(e.key === 'Enter') {
+          e.preventDefault();
+          addNewPlayer();
+        }
       });
 
-      // Global Enter to save stats
+      // Global ENTER for saving stats
       document.addEventListener('keydown', (e) => { 
-        if(e.key === 'Enter' && currentPlayer && document.activeElement.id !== 'playerNameInput') performSave(); 
+        if(e.key === 'Enter' && currentPlayer && document.activeElement.id !== 'playerNameInput') {
+          e.preventDefault();
+          performSave(); 
+        }
       });
 
       document.getElementById('weekOptions').onclick = (e) => {
@@ -315,6 +345,7 @@
         if(!currentPlayer || !confirm(`Delete ${currentPlayer}?`)) return;
         saveData(loadData().filter(d => d.name !== currentPlayer));
         currentPlayer = null; renderList(); resetSidebar();
+        document.getElementById('editHeader').textContent = "Select a Player";
       };
 
       renderList();
