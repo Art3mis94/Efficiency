@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Alliance Intelligence Dashboard</title>
+  <title>Alliance Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -38,7 +38,7 @@
   </style>
 </head>
 <body>
-  <header><h1>Alliance Intelligence Dashboard</h1></header>
+  <header><h1>Alliance Dashboard</h1></header>
   <nav>
     <a href="index.html">Dashboard</a>
     <a href="trends.html">Trends</a>
@@ -49,7 +49,7 @@
     <div class="top-row">
       <div class="stat-cards">
         <div class="card"><label>Roster Size</label><span id="stat_total">0</span></div>
-        <div class="card"><label>Alliance Avg</label><span id="stat_avg">0.00</span></div>
+        <div class="card"><label>Average Efficiency</label><span id="stat_avg">0.00</span></div>
       </div>
       <div class="top-three">
         <label style="font-weight:800; font-size:0.75rem; color:#1e40af; text-transform:uppercase;">🏆 Top Ranking Members</label>
@@ -59,7 +59,7 @@
 
     <div class="controls">
       <select id="weekSelect" style="font-weight:700; border:2px solid var(--accent);">
-        <option value="overall">OVERALL PERFORMANCE</option>
+        <option value="overall">OVERALL</option>
         <option value="home week">Home Week</option>
         <option value="week 1">Week 1</option>
         <option value="week 2">Week 2</option>
@@ -115,7 +115,6 @@
           let rowData = {};
           
           if (view === 'overall') {
-            // AGGREGATE LOGIC
             const totalPower = playerEntries.reduce((sum, d) => sum + (parseFloat(d.power)||0), 0) / (playerEntries.length || 1);
             const totalPoints = playerEntries.reduce((sum, d) => sum + (parseFloat(d.points)||0), 0);
             const totalThrone = playerEntries.reduce((sum, d) => sum + (parseFloat(d.throne)||0), 0);
@@ -128,14 +127,13 @@
             const tEff = totalPower > 0 ? (totalThrone / totalPower * m.M_THRONE) : 0;
             
             const totalScore = eff + act + part + tEff + (totalHunt * m.M_HUNT) + (totalQuest * m.M_QUEST);
-            
-            // Total sum of all pick numbers ever ticked
             const pickSum = playerEntries.reduce((sum, d) => sum + (d.p100?100:0) + (d.p40?40:0) + (d.p20?20:0) + (d.p5?5:0), 0);
 
-            rowData = { name, p: totalPower, pts: totalPoints, eff, act, part, tEff, total: totalScore, 
-                        pickDisplay: `<span class="pick-val">${pickSum}</span>`, has100: hasGlobal100 };
+            let pDisp = `<span class="pick-val">${pickSum || '-'}</span>`;
+            if (hasGlobal100) pDisp = `<span class="hero-100">${pickSum}</span>`;
+
+            rowData = { name, p: totalPower, pts: totalPoints, eff, act, part, tEff, total: totalScore, pickDisplay: pDisp };
           } else {
-            // INDIVIDUAL WEEK LOGIC
             const entry = playerEntries.find(d => d.week === view) || { name };
             const p = parseFloat(entry.power) || 0;
             const pts = parseFloat(entry.points) || 0;
@@ -145,25 +143,23 @@
             const tEff = p > 0 ? ((parseFloat(entry.throne)||0) / p * m.M_THRONE) : 0;
             const total = eff + act + part + tEff + ((parseFloat(entry.hunt)||0)*m.M_HUNT) + ((parseFloat(entry.quest)||0)*m.M_QUEST);
 
-            // Sum of picks for THIS week only
             const weeklyPickSum = (entry.p100?100:0) + (entry.p40?40:0) + (entry.p20?20:0) + (entry.p5?5:0);
             let pDisp = `<span class="pick-val">${weeklyPickSum || '-'}</span>`;
             if (hasGlobal100) pDisp = `<span class="hero-100">${weeklyPickSum}</span>`;
 
-            rowData = { name, p, pts, eff, act, part, tEff, total, pickDisplay: pDisp, has100: hasGlobal100 };
+            rowData = { name, p, pts, eff, act, part, tEff, total, pickDisplay: pDisp };
           }
 
           if(rowData.eff > 0) { totalEffSum += rowData.eff; effCount++; }
           results.push(rowData);
         });
 
-        document.getElementById('stat_avg').textContent = effCount > 0 ? (totalEffSum / effCount).toFixed(4) : "0.0000";
+        document.getElementById('stat_avg').textContent = effCount > 0 ? (totalEffSum / effCount).toFixed(2) : "0.00";
         const sorted = [...results].sort((a,b) => b.total - a.total);
 
-        // Render Top 3
         document.getElementById('topThreeList').innerHTML = sorted.slice(0,3).map((p, i) => `
           <div class="rank-item ${i===0?'first':''}">
-            <div style="font-size:0.6rem; font-weight:bold;">RANK #${i+1} ${i===0?'🥇':''}</div>
+            <div style="font-size:0.6rem; font-weight:bold;">RANK #${i+1}</div>
             <div style="font-weight:800;">${p.name}</div>
             <div style="color:var(--accent); font-weight:700;">${p.total.toFixed(2)}</div>
           </div>
@@ -179,7 +175,7 @@
             <td><strong>${r.name}</strong></td>
             <td>${r.p ? Math.round(r.p).toLocaleString() : "--"}</td>
             <td>${r.pts ? Math.round(r.pts).toLocaleString() : "--"}</td>
-            <td style="color:var(--accent); font-weight:600;">${r.eff.toFixed(4)}</td>
+            <td style="color:var(--accent); font-weight:600;">${r.eff.toFixed(2)}</td>
             <td>${r.act.toFixed(2)}</td>
             <td>${r.part.toFixed(2)}</td>
             <td>${r.tEff.toFixed(2)}</td>
