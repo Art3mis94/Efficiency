@@ -31,7 +31,7 @@
       <a href="index.html" style="text-decoration:none; color:var(--accent); font-weight:800;">← Back to Dashboard</a>
       <h3 style="margin:20px 0 10px 0;">Players</h3>
       <div style="display:flex; gap:5px;">
-        <input type="text" id="newPlayerName" placeholder="Name..." style="flex:1;">
+        <input type="text" id="newPlayerName" placeholder="Name...">
         <button onclick="addPlayer()" style="background:var(--accent); color:white; border:none; border-radius:4px; padding:0 10px; cursor:pointer;">+</button>
       </div>
     </div>
@@ -55,7 +55,7 @@
           <div><label>Points</label><input type="number" name="points" id="points"></div>
           <div><label>Quests</label><input type="number" name="quest" id="quest"></div>
           <div><label>Hunt</label><input type="number" name="hunt" id="hunt"></div>
-          <div><label>Throne Kills</label><input type="number" name="throne" id="throne"></div>
+          <div><label>Throne Score</label><input type="number" name="throne" id="throne"></div>
         </div>
 
         <div class="grid">
@@ -99,26 +99,6 @@
       let formData = JSON.parse(localStorage.getItem('formData') || '[]');
       let selectedPlayer = null;
 
-      function handleAutoEdit() {
-        const target = localStorage.getItem('editTargetName');
-        if (!target) return;
-        const items = playerList.querySelectorAll('li');
-        let found = false;
-        items.forEach(li => {
-          if (li.textContent.trim() === target) {
-            selectPlayer(target, li);
-            localStorage.removeItem('editTargetName');
-            found = true;
-          }
-        });
-        if (!found) setTimeout(handleAutoEdit, 100);
-      }
-
-      window.addEventListener('DOMContentLoaded', () => {
-        renderPlayerList();
-        handleAutoEdit();
-      });
-
       function renderPlayerList() {
         playerList.innerHTML = '';
         players.sort((a,b)=>a.localeCompare(b)).forEach(name => {
@@ -132,18 +112,41 @@
       function selectPlayer(name, element) {
         selectedPlayer = name;
         document.querySelectorAll('#playersList li').forEach(li => li.classList.remove('active'));
-        element.classList.add('active');
+        if(element) element.classList.add('active');
         document.getElementById('formTitle').textContent = "Editing: " + name;
-        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if(element) element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         loadPlayerWeekData();
       }
+
+      // RESTORED AUTO-SELECT FROM OLD CODE
+      function handleAutoEdit() {
+        const targetName = localStorage.getItem('editTargetName');
+        const targetWeek = localStorage.getItem('editTargetWeek');
+        
+        if (targetName) {
+          if (targetWeek) document.getElementById('weekSelector').value = targetWeek;
+          
+          const items = Array.from(playerList.querySelectorAll('li'));
+          const found = items.find(li => li.textContent.trim() === targetName);
+          if (found) {
+             selectPlayer(targetName, found);
+             localStorage.removeItem('editTargetName');
+             localStorage.removeItem('editTargetWeek');
+          }
+        }
+      }
+
+      window.addEventListener('load', () => {
+        renderPlayerList();
+        setTimeout(handleAutoEdit, 100);
+      });
 
       window.loadPlayerWeekData = function() {
         if (!selectedPlayer) return;
         const week = document.getElementById('weekSelector').value;
         form.reset();
-        const checkboxIds = ['lava','challenge','donations','dv','esb','esi_mon','esi_thu','p100','p40','p20','p5'];
-        checkboxIds.forEach(id => { const el = document.getElementById(id); if(el) el.checked = false; });
+        const chks = ['lava','challenge','donations','dv','esb','esi_mon','esi_thu','p100','p40','p20','p5'];
+        chks.forEach(id => { if(document.getElementById(id)) document.getElementById(id).checked = false; });
 
         const entry = formData.find(d => d.name === selectedPlayer && d.week === week);
         if (entry) {
@@ -161,19 +164,16 @@
         e.preventDefault();
         if (!selectedPlayer) return alert('Select a player');
         const week = document.getElementById('weekSelector').value;
-        const fd = new FormData(form);
         const data = { name: selectedPlayer, week: week };
-        fd.forEach((value, key) => { data[key] = value; });
+        const fd = new FormData(form);
+        fd.forEach((v, k) => { data[k] = v; });
         ['lava','challenge','donations','dv','esb','esi_mon','esi_thu','p100','p40','p20','p5'].forEach(id => {
           data[id] = document.getElementById(id).checked;
         });
-
-        const index = formData.findIndex(d => d.name === selectedPlayer && d.week === week);
-        if (index > -1) formData[index] = data;
-        else formData.push(data);
-
+        const idx = formData.findIndex(d => d.name === selectedPlayer && d.week === week);
+        if (idx > -1) formData[idx] = data; else formData.push(data);
         localStorage.setItem('formData', JSON.stringify(formData));
-        alert('Data saved!');
+        alert('Saved!');
       };
 
       window.addPlayer = () => {
