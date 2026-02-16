@@ -25,6 +25,11 @@
     .rank-item.second{border:2px solid var(--silver); background:#f8fafc;}
     .rank-item.third{border:2px solid var(--bronze); background:#fff7ed;}
     
+    /* Modal / Overlay */
+    .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);}
+    .modal-content{background:white; margin:2% auto; padding:25px; width:90%; max-width:900px; border-radius:16px; position:relative; max-height: 90vh; overflow-y: auto;}
+    .close{position:absolute; right:20px; top:15px; font-size:28px; cursor:pointer;}
+
     .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
     table{width:100%; border-collapse:collapse; min-width:1100px;}
     th{background:#f8fafc; padding:12px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
@@ -61,7 +66,7 @@
 
     <div class="controls">
       <select id="weekSelect" style="font-weight:700; border:2px solid var(--accent); padding:8px; border-radius:8px;">
-        <option value="overall">OVERALL (W3 vs W1)</option>
+        <option value="overall">OVERALL</option>
         <option value="home week">HOME WEEK</option>
         <option value="week 1">WEEK 1</option>
         <option value="week 2">WEEK 2</option>
@@ -82,13 +87,63 @@
     </div>
   </div>
 
+  <div id="profileModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 id="modalName">Player Profile</h2>
+      <div style="display:flex; gap:20px; flex-wrap: wrap;">
+        <div style="flex:1; min-width: 300px;">
+          <select id="modalWeekSelect" onchange="updateModalStats()" style="width:100%; padding: 8px; border-radius: 8px; border:1px solid #ddd;"></select>
+          <div id="modalStatsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;"></div>
+        </div>
+        <div style="flex:2; background:#f8fafc; padding:15px; border-radius:12px; min-width: 300px;">
+           <canvas id="playerChart" width="400" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function(){
-      // Sync with the form's order
+      let myChart = null;
       const WEEKS_ORDER = ['home week', 'week 1', 'week 2', 'week 3'];
       const formatPower = (num) => (num && num !== 0) ? (num / 1000).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "Bn" : "--";
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.000001,"M_THRONE":3.0,"M_HUNT":0.00001,"M_QUEST":0.0000025}');
+
+      window.updateModalStats = () => {
+        const data = loadData();
+        const week = document.getElementById('modalWeekSelect').value;
+        const playerEntries = data.filter(d => d.name === window.activePlayer);
+        let html = '';
+
+        const w1 = playerEntries.find(d => d.week === 'week 1') || {};
+        const w3 = playerEntries.find(d => d.week === 'week 3') || {};
+
+        if(week === 'overall') {
+            const p = parseFloat(w3.power)||0;
+            const eff = p > 0 ? ((parseFloat(w3.points)||0) - (parseFloat(w1.points)||0)) / p : 0;
+            html = `<div class="card"><label>Latest Power</label><span>${formatPower(p)}</span></div>
+                    <div class="card"><label>Seasonal Eff</label><span>${eff.toFixed(2)}</span></div>`;
+        } else {
+            const e = playerEntries.find(d => d.week === week) || {};
+            const p = parseFloat(e.power)||0;
+            const eff = p > 0 ? (parseFloat(e.points)||0)/p : 0;
+            html = `<div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
+                    <div class="card"><label>Eff</label><span>${eff.toFixed(2)}</span></div>
+                    <div class="card"><label>Points</label><span>${(parseFloat(e.points)||0).toLocaleString()}</span></div>`;
+        }
+        document.getElementById('modalStatsGrid').innerHTML = html;
+      };
+
+      window.openProfile = (name) => {
+        window.activePlayer = name;
+        document.getElementById('modalName').textContent = name;
+        document.getElementById('modalWeekSelect').innerHTML = ['overall', ...WEEKS_ORDER].map(w => `<option value="${w}">${w.toUpperCase()}</option>`).join('');
+        document.getElementById('profileModal').style.display = "block";
+        updateModalStats();
+        drawTrendChart(name);
+      };
 
       function render() {
         const data = loadData();
@@ -102,37 +157,28 @@
 
         allNames.forEach(name => {
           const playerEntries = data.filter(d => d.name === name);
-          const latestEntry = [...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || { name };
-          
-          // Determine which data to show based on dropdown
-          const e = view === 'overall' ? latestEntry : (playerEntries.find(d => d.week === view) || { name, week: view });
+          const e = view === 'overall' ? ([...playerEntries].sort((a,b) => WEEKS_ORDER.indexOf(b.week) - WEEKS_ORDER.indexOf(a.week))[0] || { name }) : (playerEntries.find(d => d.week === view) || { name, week: view });
 
           const p = parseFloat(e.power)||0;
-          const pts = parseFloat(e.points)||0; 
           const w1 = playerEntries.find(w => w.week === 'week 1') || {};
           const w3 = playerEntries.find(w => w.week === 'week 3') || {};
           
-          // Efficiency: Overall uses W3-W1 difference, specific weeks use raw math
           const eff = (view === 'overall') ? (p > 0 ? ((parseFloat(w3.points)||0) - (parseFloat(w1.points)||0))/p : 0) : (p > 0 ? (parseFloat(e.points)||0)/p : 0);
           
-          // Activity & Participation
-          let act = ((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0)) * (2.5 / 3);
-          let part = ((e.dv?1:0)*(2.5/3)) + ((e.esb?1:0)*(2.5/3));
+          // Activity Logic (weighted at 2.5 max)
+          const act = ((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0)) * (2.5 / 3);
+          const part = ((e.dv?1:0)*(2.5/3)) + ((e.esb?1:0)*(2.5/3));
           
-          const w3Throne = (parseFloat(w3.throne)||0);
-          const tEff = p > 0 ? (w3Throne/p * m.M_THRONE) : 0;
-          
-          // Total Score Logic
+          const tEff = p > 0 ? ((parseFloat(w3.throne)||0)/p * m.M_THRONE) : 0;
           const totalScore = eff + act + part + tEff;
           const pSum = (e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0);
 
           if(eff > 0) { totalEffSum += eff; effCount++; }
-          results.push({ name, p, pts, eff, act, part, tEff, total: totalScore, pickDisplay: pSum, has100: e.p100 == 1, currentView: e.week });
+          results.push({ name, p, pts: (parseFloat(e.points)||0), eff, act, part, tEff, total: totalScore, pickDisplay: pSum, has100: e.p100 == 1, currentWeek: e.week });
         });
 
-        document.getElementById('stat_avg').textContent = effCount > 0 ? (totalEffSum/effCount).toFixed(2) : "0.00";
         const sorted = results.sort((a,b)=>b.total-a.total);
-        
+        document.getElementById('stat_avg').textContent = effCount > 0 ? (totalEffSum/effCount).toFixed(2) : "0.00";
         document.getElementById('topThreeList').innerHTML = sorted.slice(0,3).map((p,i)=>`
           <div class="rank-item ${i===0?'first':i===1?'second':'third'}">
             <div style="font-size:0.6rem; font-weight:700;">#${i+1} ${p.name}</div>
@@ -148,7 +194,7 @@
             <td>#${idx+1}</td>
             <td><strong>${r.name}</strong></td>
             <td>${formatPower(r.p)}</td>
-            <td>${Math.round(r.pts).toLocaleString()}</td>
+            <td>${r.pts.toLocaleString()}</td>
             <td>${r.eff.toFixed(2)}</td>
             <td>${r.act.toFixed(2)}</td>
             <td>${r.part.toFixed(2)}</td>
@@ -156,7 +202,8 @@
             <td><span class="${r.has100?'hero-100':''}">${r.pickDisplay || '-'}</span></td>
             <td style="font-weight:900; background:#f8fafc">${r.total.toFixed(2)}</td>
             <td>
-              <button class="btn-edit" onclick="editPlayer('${r.name.replace(/'/g,"\\'")}','${r.currentView}')">Edit</button>
+              <button class="btn-view" onclick="openProfile('${r.name.replace(/'/g,"\\'")}')">View</button>
+              <button class="btn-edit" onclick="editPlayer('${r.name.replace(/'/g,"\\'")}','${r.currentWeek}')">Edit</button>
             </td>`;
           tbody.appendChild(tr);
         });
@@ -168,6 +215,21 @@
         window.location.href = 'form.html';
       };
 
+      function drawTrendChart(name) {
+        const data = loadData().filter(d => d.name === name);
+        const labels = ['Week 1', 'Week 2', 'Week 3'];
+        const values = labels.map(l => {
+          const e = data.find(d => d.week.toLowerCase() === l.toLowerCase()) || {};
+          return e.power > 0 ? (parseFloat(e.points) / parseFloat(e.power)) : 0;
+        });
+        if(myChart) myChart.destroy();
+        const ctx = document.getElementById('playerChart').getContext('2d');
+        myChart = new Chart(ctx, {
+          type: 'line', data: { labels, datasets: [{ label:'Efficiency', data: values, borderColor:'#3b82f6', tension:0.3, fill:true, backgroundColor:'rgba(59, 130, 246, 0.1)' }] }
+        });
+      }
+
+      window.closeModal = () => document.getElementById('profileModal').style.display="none";
       document.getElementById('weekSelect').onchange = render;
       document.getElementById('dashSearch').oninput = render;
       render();
