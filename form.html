@@ -13,11 +13,11 @@
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
     
-    .main-wrap{max-width:1450px;margin:1.5rem auto;padding:0 1rem;display:grid;gap:1.5rem;grid-template-columns:300px 1fr 320px; align-items: start;}
+    /* Removed max-width to allow full-screen utilization */
+    .main-wrap{width:100%; margin:0; padding:1.5rem; display:grid; gap:1.5rem; grid-template-columns:300px 1fr 320px; align-items: start;}
     .section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.04);}
     
-    /* Locked Page Size / Scrollable List */
-    .players-list{margin-top:10px;padding:0;list-style:none; height: 450px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:8px; background:#fff;}
+    .players-list{margin-top:10px;padding:0;list-style:none; height: 500px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:8px; background:#fff;}
     .players-list li{padding:.75rem;border-bottom:1px solid #f1f5f9;cursor:pointer; transition: 0.2s;}
     .players-list li.selected{background:#eff6ff;border-left:4px solid var(--accent);font-weight:600;}
     .players-list li:hover{background:#f1f5f9;}
@@ -155,20 +155,18 @@
 
       // --- Global Actions ---
       window.clearAllData = () => {
-        if(!confirm("Are you sure? This sets all scores to zero for everyone, but keeps the player names.")) return;
-        const data = loadData().map(d => ({
-          name: d.name, week: d.week,
-          power:"", points:"", throne:"", quest:"", hunt:"",
+        if(!confirm("Are you sure? This sets all scores to zero for everyone, but keeps names.")) return;
+        saveData(loadData().map(d => ({
+          name: d.name, week: d.week, power:"", points:"", throne:"", quest:"", hunt:"",
           lava:0, challenge:0, donations:0, dv:0, esb:0, esi_mon:0, esi_thu:0,
           p100:0, p40:0, p20:0, p5:0
-        }));
-        saveData(data);
+        })));
         if(currentPlayer) selectPlayer(currentPlayer);
-        alert("All scores reset.");
+        alert("Scores cleared.");
       };
 
       window.deleteAllPlayers = () => {
-        if(!confirm("WARNING: This will delete ALL players and ALL data. Are you sure?")) return;
+        if(!confirm("WARNING: This deletes ALL players and ALL data. Are you sure?")) return;
         localStorage.removeItem('formData');
         currentPlayer = null; renderList(); resetSidebar();
         document.getElementById('editHeader').textContent = "Select a Player";
@@ -187,7 +185,7 @@
         const blob = new Blob([csvRows.join("\n")], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `alliance_data_${new Date().toISOString().slice(0,10)}.csv`;
+        link.download = `alliance_backup_${new Date().toISOString().slice(0,10)}.csv`;
         link.click();
       };
 
@@ -206,40 +204,35 @@
               });
               return obj;
             });
-            if (!data[0].name) throw new Error();
             saveData(data); renderList(); location.reload();
-          } catch (err) { alert("Invalid CSV. Ensure 'name' column exists."); }
+          } catch (err) { alert("Invalid CSV."); }
         };
         reader.readAsText(input.files[0]);
       };
 
-      // --- Calculations ---
+      // --- Logic ---
       function calculateLiveMetrics() {
         if(!currentPlayer || currentWeek === 'home week') return resetSidebar();
         const m = loadMults();
         const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
         const getC = (id) => document.getElementById(id).checked ? 1 : 0;
-
-        const power = getV('f_power') || 1;
-        const eff = getV('f_points') / power;
+        const p = getV('f_power') || 1;
+        const eff = getV('f_points') / p;
         const act = Math.min((getC('chk_lava') + getC('chk_challenge') + getC('chk_donations')) * 0.833, 2.5);
         const part = Math.min((getC('chk_dv')*0.833) + (getC('chk_esb')*0.833) + ((getC('esi_mon')+getC('esi_thu'))*0.416), 2.5);
-        const throne = (getV('f_throne')/power) * m.M_THRONE;
-        const hunt = getV('f_hunt') * (m.M_HUNT || 0);
-        const quest = getV('f_quest') * m.M_QUEST;
-        const total = eff + act + part + throne + hunt + quest;
+        const total = eff + act + part + ((getV('f_throne')/p)*m.M_THRONE) + (getV('f_hunt')*m.M_HUNT) + (getV('f_quest')*m.M_QUEST);
 
         document.getElementById('res_eff').textContent = eff.toFixed(4);
-        document.getElementById('res_hunt').textContent = hunt.toFixed(2);
-        document.getElementById('res_throne').textContent = throne.toFixed(2);
+        document.getElementById('res_hunt').textContent = (getV('f_hunt')*m.M_HUNT).toFixed(2);
+        document.getElementById('res_throne').textContent = ((getV('f_throne')/p)*m.M_THRONE).toFixed(2);
         document.getElementById('res_act').textContent = (act + part).toFixed(2);
         document.getElementById('res_total').textContent = total.toFixed(2);
 
-        const allThisWeek = loadData().filter(d => d.week === currentWeek && d.name !== currentPlayer);
-        const better = allThisWeek.filter(d => {
-            const p = parseFloat(d.power) || 1;
-            const s = (parseFloat(d.points)/p) + 2.5 + ((parseFloat(d.hunt)||0)*m.M_HUNT);
-            return s > total;
+        const all = loadData().filter(d => d.week === currentWeek && d.name !== currentPlayer);
+        const better = all.filter(d => {
+            const dp = parseFloat(d.power) || 1;
+            const ds = (parseFloat(d.points)/dp) + 2.5 + ((parseFloat(d.hunt)||0)*m.M_HUNT);
+            return ds > total;
         }).length;
         document.getElementById('res_rank').textContent = `#${better + 1}`;
       }
@@ -279,6 +272,14 @@
         const b = document.getElementById('statsSaveBtn'); b.textContent = "SAVED ✓"; setTimeout(()=>b.textContent="Save Data (Enter)", 800);
       }
 
+      function addNewPlayer(){
+        const n = document.getElementById('playerNameInput').value.trim();
+        if(!n) return;
+        let d = loadData(); WEEKS.forEach(w => d.push({name: n, week: w}));
+        saveData(d); renderList(); selectPlayer(n);
+        document.getElementById('playerNameInput').value = "";
+      }
+
       function renderList(){
         const names = [...new Set(loadData().map(d => d.name))].sort();
         document.getElementById('playersList').innerHTML = names.map(n => `<li class="${n===currentPlayer?'selected':''}" onclick="selectPlayer('${n.replace(/'/g,"\\'")}')">${n}</li>`).join('');
@@ -291,21 +292,23 @@
 
       document.getElementById('inputContainer').oninput = calculateLiveMetrics;
       document.getElementById('statsSaveBtn').onclick = performSave;
-      document.addEventListener('keydown', (e) => { if(e.key === 'Enter' && currentPlayer) performSave(); });
+      document.getElementById('addPlayerBtn').onclick = addNewPlayer;
+      
+      // Enter to add player
+      document.getElementById('playerNameInput').addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') addNewPlayer();
+      });
+
+      // Global Enter to save stats
+      document.addEventListener('keydown', (e) => { 
+        if(e.key === 'Enter' && currentPlayer && document.activeElement.id !== 'playerNameInput') performSave(); 
+      });
 
       document.getElementById('weekOptions').onclick = (e) => {
         if(!e.target.dataset.week) return;
         document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('selected'));
         e.target.classList.add('selected'); currentWeek = e.target.dataset.week;
         if(currentPlayer) selectPlayer(currentPlayer);
-      };
-
-      document.getElementById('addPlayerBtn').onclick = () => {
-        const n = document.getElementById('playerNameInput').value.trim();
-        if(!n) return;
-        let d = loadData(); WEEKS.forEach(w => d.push({name: n, week: w}));
-        saveData(d); renderList(); selectPlayer(n);
-        document.getElementById('playerNameInput').value = "";
       };
 
       document.getElementById('playerDeleteBtn').onclick = () => {
@@ -315,8 +318,6 @@
       };
 
       renderList();
-      const target = localStorage.getItem('editTargetName');
-      if(target) { selectPlayer(target); localStorage.removeItem('editTargetName'); }
     })();
   </script>
 </body>
