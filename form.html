@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Player Manager — Full Restore</title>
+  <title>Player Manager PRO — Full Suite</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -28,7 +28,7 @@
     .week-options button.selected{background:var(--accent);color:white;}
     .btn{padding:.7rem 1.5rem;border-radius:8px;border:0;color:#fff;font-weight:600;cursor:pointer;transition:0.2s;}
     .btn.save{background:var(--success)}
-    .btn.save:hover{background:#059669}
+    .btn.delete{background:var(--danger)}
     #metricPreview{margin-top:1.5rem;padding:1.2rem;background:var(--success-light);border:1px solid var(--success);border-radius:10px;}
     .metric-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(16,185,129,0.1);}
     .rank-badge{font-size:0.75rem;background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-weight:700;}
@@ -101,9 +101,17 @@
         <div class="metric-row"><span>Raw Efficiency:</span> <span><span id="p_eff">0.00</span> <span class="rank-badge" id="r_eff">#--</span></span></div>
       </div>
 
-      <div style="display:flex; gap:10px; margin-top:1.5rem;">
-        <button class="btn save" id="statsSaveBtn" style="flex:2">Save Entry (Enter)</button>
-        <button class="btn" id="clearStatsBtn" style="background:var(--muted); flex:1">Clear Week</button>
+      <div style="display:flex; gap:10px; margin-top:1.5rem; flex-wrap: wrap;">
+        <button class="btn save" id="statsSaveBtn" style="flex:2; min-width:180px;">Save Entry (Enter)</button>
+        <button class="btn delete" id="playerDeleteBtn" style="flex:1">Delete Player</button>
+        <button class="btn" id="resetStatsBtn" style="background:#64748b; flex:1">Reset Scores</button>
+      </div>
+
+      <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid #e2e8f0; display:flex; gap:10px;">
+        <button class="btn" onclick="exportToCSV()" style="background:#475569; flex:1">Export CSV</button>
+        <label class="btn" style="background:#475569; flex:1; text-align:center; cursor:pointer;">
+          Import CSV <input type="file" id="csvImport" hidden onchange="importFromCSV(this)">
+        </label>
       </div>
     </section>
   </main>
@@ -118,12 +126,10 @@
       const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
       const loadMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.1,"M_QUEST":0.0000025,"M_THRONE":3.0,"M_FROST":0.00001}');
 
-      // MATH ENGINE
       function computeAll() {
         if(!currentPlayer) return;
         const m = loadMults();
         const data = loadData();
-        
         const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
         const getC = (id) => document.getElementById(id).checked ? 1 : 0;
 
@@ -136,46 +142,21 @@
 
         document.getElementById('p_total').textContent = total.toFixed(2);
         document.getElementById('p_eff').textContent = eff.toFixed(2);
-
-        // Weekly Ranking
-        const weekEntries = data.filter(d => d.week === currentWeek);
-        const scores = weekEntries.map(d => {
-            const dp = parseFloat(d.power)||0;
-            return (dp>0?(parseFloat(d.points)||0)/dp : 0) + 
-                   Math.min(((d.lava||0)+(d.challenge||0)+(d.donations||0))*0.833, 2.5) +
-                   Math.min(((d.dv||0)*0.833)+((d.esb||0)*0.833)+(((d.esi_mon||0)+(d.esi_thu||0))*0.416), 2.5) +
-                   (dp>0?((parseFloat(d.throne)||0)/dp)*m.M_THRONE : 0) + 
-                   ((parseFloat(d.frost)||0)*m.M_FROST) + ((parseFloat(d.quest)||0)*m.M_QUEST);
-        });
-        scores.push(total);
-        const rank = scores.sort((a,b)=>b-a).indexOf(total) + 1;
-        document.getElementById('r_total').textContent = `#${rank}`;
       }
 
-      // LOADING DATA INTO UI
       window.selectPlayer = function(name) {
         currentPlayer = name;
         document.getElementById('editHeader').textContent = `Editing: ${name}`;
-        const data = loadData();
-        const entry = data.find(d => d.name === name && d.week === currentWeek) || {};
+        const entry = loadData().find(d => d.name === name && d.week === currentWeek) || {};
         
-        // Sync Numeric Inputs
-        const fields = ['power','points','throne','quest','frost','hunt'];
-        fields.forEach(f => document.getElementById('f_'+f).value = entry[f] || '');
-        
-        // Sync Checkboxes (This was the missing link)
-        const checks = ['lava','challenge','donations','dv','esb','esi_mon','esi_thu'];
-        checks.forEach(c => document.getElementById('chk_'+c).checked = (entry[c] == 1));
-        
-        // Sync Hero Picks (Added p5)
-        const picks = ['100','40','20','5'];
-        picks.forEach(p => document.getElementById('pick_'+p).checked = (entry['p'+p] == 1));
+        ['power','points','throne','quest','frost','hunt'].forEach(f => document.getElementById('f_'+f).value = entry[f] || '');
+        ['lava','challenge','donations','dv','esb','esi_mon','esi_thu'].forEach(c => document.getElementById('chk_'+c).checked = (entry[c] == 1));
+        ['100','40','20','5'].forEach(p => document.getElementById('pick_'+p).checked = (entry['p'+p] == 1));
 
         renderList();
         computeAll();
       };
 
-      // SAVE
       function performSave() {
         if(!currentPlayer) return;
         let data = loadData();
@@ -188,17 +169,11 @@
           quest: document.getElementById('f_quest').value,
           frost: document.getElementById('f_frost').value,
           hunt: document.getElementById('f_hunt').value,
-          lava: document.getElementById('chk_lava').checked?1:0,
-          challenge: document.getElementById('chk_challenge').checked?1:0,
-          donations: document.getElementById('chk_donations').checked?1:0,
-          dv: document.getElementById('chk_dv').checked?1:0,
-          esb: document.getElementById('chk_esb').checked?1:0,
-          esi_mon: document.getElementById('esi_mon').checked?1:0,
-          esi_thu: document.getElementById('esi_thu').checked?1:0,
-          p100: document.getElementById('pick_100').checked?1:0,
-          p40: document.getElementById('pick_40').checked?1:0,
-          p20: document.getElementById('pick_20').checked?1:0,
-          p5: document.getElementById('pick_5').checked?1:0
+          lava: document.getElementById('chk_lava').checked?1:0, challenge: document.getElementById('chk_challenge').checked?1:0,
+          donations: document.getElementById('chk_donations').checked?1:0, dv: document.getElementById('chk_dv').checked?1:0,
+          esb: document.getElementById('chk_esb').checked?1:0, esi_mon: document.getElementById('esi_mon').checked?1:0,
+          esi_thu: document.getElementById('esi_thu').checked?1:0, p100: document.getElementById('pick_100').checked?1:0,
+          p40: document.getElementById('pick_40').checked?1:0, p20: document.getElementById('pick_20').checked?1:0, p5: document.getElementById('pick_5').checked?1:0
         };
         if(idx >= 0) data[idx] = state; else data.push(state);
         saveData(data);
@@ -207,7 +182,6 @@
         setTimeout(()=> { sBtn.style.background = ""; sBtn.textContent = "Save Entry (Enter)"; }, 800);
       }
 
-      // UI HELPERS
       function renderList() {
         const names = [...new Set(loadData().map(d => d.name))].sort();
         document.getElementById('playersList').innerHTML = names.map(n => `<li class="${n===currentPlayer?'selected':''}" onclick="selectPlayer('${n.replace(/'/g,"\\'")}')">${n}</li>`).join('');
@@ -219,22 +193,51 @@
         Array.from(document.getElementById('playersList').children).forEach(li => li.classList.toggle('hidden', !li.textContent.toLowerCase().includes(s)));
       }
 
+      // ACTIONS
+      document.getElementById('playerDeleteBtn').onclick = () => {
+        if(!currentPlayer || !confirm(`Delete ${currentPlayer}?`)) return;
+        saveData(loadData().filter(d => d.name !== currentPlayer));
+        currentPlayer = null; renderList();
+      };
+
+      document.getElementById('resetStatsBtn').onclick = () => {
+        if(!confirm("Wipe all scores but keep players?")) return;
+        saveData(loadData().map(d => ({name: d.name, week: d.week})));
+        if(currentPlayer) selectPlayer(currentPlayer);
+      };
+
+      window.exportToCSV = () => {
+        const data = loadData();
+        const csv = [Object.keys(data[0]).join(",")].concat(data.map(o => Object.values(o).join(","))).join("\n");
+        const blob = new Blob([csv], {type: 'text/csv'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup.csv'; a.click();
+      };
+
+      window.importFromCSV = (input) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const lines = reader.result.split('\n');
+          const headers = lines[0].split(',');
+          const data = lines.slice(1).map(l => {
+            const v = l.split(',');
+            return headers.reduce((obj, h, i) => { obj[h.trim()] = v[i]; return obj; }, {});
+          });
+          saveData(data); renderList();
+        };
+        reader.readAsText(input.files[0]);
+      };
+
       // EVENTS
       document.getElementById('addPlayerBtn').onclick = () => {
         const n = document.getElementById('playerNameInput').value.trim();
         if(!n) return;
-        let d = loadData();
-        WEEKS.forEach(w => d.push({name: n, week: w}));
-        saveData(d);
-        document.getElementById('playerNameInput').value = '';
-        renderList(); selectPlayer(n);
+        let d = loadData(); WEEKS.forEach(w => d.push({name: n, week: w}));
+        saveData(d); renderList(); selectPlayer(n);
       };
-      
       document.getElementById('playerSearch').oninput = filterList;
       document.getElementById('statsSaveBtn').onclick = performSave;
       document.getElementById('inputContainer').oninput = computeAll;
       document.addEventListener('keydown', (e) => { if(e.key === 'Enter' && currentPlayer) performSave(); });
-      
       document.getElementById('weekOptions').onclick = (e) => {
         if(!e.target.dataset.week) return;
         document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('selected'));
