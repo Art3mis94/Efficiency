@@ -14,12 +14,12 @@ nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent
 main{max-width:1400px;margin:1.5rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 320px;gap:1.5rem;}
 .dashboard-section{background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);overflow-x:auto;}
 .controls{display:flex;gap:1rem;margin-bottom:1.5rem;align-items:center;}
-input, select{padding:0.6rem;border:1px solid #e2e8f0;border-radius:6px;}
+input, select{padding:0.6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;}
 th.sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
 th.sortable:hover { background: #e2e8f0 !important; color: #1e40af; }
 .edit-btn { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700;}
-/* RESTORED HIGHLIGHT */
-.highlight-picks { background-color: #dcfce7; color: #166534; font-weight: 700; padding: 4px 8px; border-radius: 4px; display: inline-block;}
+/* HERO PICK HIGHLIGHT */
+.highlight-picks { background-color: #dcfce7; color: #166534; font-weight: 700; padding: 4px 8px; border-radius: 4px; display: inline-block; border: 1px solid #86efac;}
 table{width:100%;border-collapse:collapse; font-size: 0.8rem;}
 th,td{padding:0.7rem;text-align:left;border-bottom:1px solid #e2e8f0;}
 th{background:#f1f5f9;font-weight:700;text-transform:uppercase;color:var(--muted); white-space: nowrap;}
@@ -85,16 +85,16 @@ function calculateMetrics(e) {
   const throneRaw = power > 0 ? (parseFloat(e.throne||0) / power) : 0;
   const throneScore = throneRaw * (parseFloat(m.M_THRONE) || 0);
   
-  // FROST CALCULATION
+  // FROST CALCULATION (Using 'frost' key)
   const frostVal = parseFloat(e.frost) || 0;
   const frostScore = frostVal * (parseFloat(m.M_FROST) || 0);
   
   const questScore = (parseFloat(e.quest||0)) * (parseFloat(m.M_QUEST) || 0);
 
   const total = rawEff + act + part + throneScore + frostScore + questScore;
-  const picks = (e.p100 ? 100 : 0) + (e.p40 ? 40 : 0) + (e.p20 ? 20 : 0) + (e.p5 ? 5 : 0);
+  const picks = (Number(e.p100)||0) + (Number(e.p40)||0) + (Number(e.p20)||0) + (Number(e.p5)||0);
   
-  return { ...e, rawEff, activityPct: act, partPct: part, throneRaw, total, picks };
+  return { ...e, rawEff, activityPct: act, partPct: part, throneRaw, total, picks, isHero: !!e.p100 };
 }
 
 function calculateOverallMetrics(playerEntries) {
@@ -115,20 +115,27 @@ function calculateOverallMetrics(playerEntries) {
             latestWeek = e.week;
             latestThroneRaw = met.throneRaw;
         }
-        if (e.p100) hadHeroPick = true;
+        
+        // If 100 pick checkbox was checked in ANY week, highlight them
+        if (e.p100 == 1 || e.p100 === true) hadHeroPick = true;
 
         totalAct += met.activityPct;
         totalPart += met.partPct;
         totalPicks += met.picks;
         totalQuest += parseFloat(e.quest) || 0;
-        totalFrost += parseFloat(e.frost) || 0;
+        totalFrost += parseFloat(e.frost) || 0; // Cumulative Frost across weeks
     });
 
     const overallEff = latestPower > 0 ? otherPts / latestPower : 0;
-    const finalScore = (week1Pts * (parseFloat(m.M_WEEK1) || 0)) + overallEff + totalAct + totalPart + 
-                       (latestThroneRaw * (parseFloat(m.M_THRONE) || 0)) + 
-                       (totalQuest * (parseFloat(m.M_QUEST) || 0)) +
-                       (totalFrost * (parseFloat(m.M_FROST) || 0));
+    
+    // Final Multiplier application
+    const fScore = (week1Pts * (parseFloat(m.M_WEEK1) || 0)) + 
+                   overallEff + 
+                   totalAct + 
+                   totalPart + 
+                   (latestThroneRaw * (parseFloat(m.M_THRONE) || 0)) + 
+                   (totalQuest * (parseFloat(m.M_QUEST) || 0)) +
+                   (totalFrost * (parseFloat(m.M_FROST) || 0));
 
     return { 
         name: playerEntries[0].name, 
@@ -138,10 +145,10 @@ function calculateOverallMetrics(playerEntries) {
         activityPct: totalAct, 
         partPct: totalPart, 
         throneRaw: latestThroneRaw, 
-        total: finalScore, 
+        total: fScore, 
         picks: totalPicks, 
         lastWeek: latestWeek,
-        hadHeroPick: hadHeroPick
+        hadHeroPick: hadHeroPick 
     };
 }
 
@@ -155,14 +162,17 @@ function updateDisplay() {
 
   const sortFn = (a, b) => (typeof a[currentSortKey] === 'string') ? a[currentSortKey].localeCompare(b[currentSortKey]) : (parseFloat(b[currentSortKey]) || 0) - (parseFloat(a[currentSortKey]) || 0);
 
-  header.innerHTML = `<th>#</th><th>Name</th><th>Power</th><th>Pts</th><th>Eff</th><th>Act</th><th>Part</th><th>Throne(R)</th><th>Score</th><th>Picks</th><th>Action</th>`;
+  header.innerHTML = `<th>#</th><th class="sortable" onclick="setSort('name')">Name</th><th class="sortable" onclick="setSort('power')">Power</th><th class="sortable" onclick="setSort('points')">Pts</th><th class="sortable" onclick="setSort('rawEff')">Eff</th><th>Act</th><th>Part</th><th class="sortable" onclick="setSort('throneRaw')">Throne(R)</th><th class="sortable" onclick="setSort('total')">Score</th><th>Picks</th><th>Action</th>`;
 
   const source = view === '__total' ? 
     Object.values(data.reduce((acc, d) => { (acc[d.name] = acc[d.name] || []).push(d); return acc; }, {})).map(calculateOverallMetrics) :
     data.filter(d => d.week === view).map(calculateMetrics);
 
   source.filter(p => p.name.toLowerCase().includes(search)).sort(sortFn).forEach((p, i) => {
-      const pickDisplay = (p.p100 || p.hadHeroPick) ? `<span class="highlight-picks">${p.picks}</span>` : p.picks;
+      // Highlight logic: Use the "hadHeroPick" flag for Summary or "isHero" for weekly
+      const isHero = (view === '__total') ? p.hadHeroPick : p.isHero;
+      const pickTag = isHero ? `<span class="highlight-picks">${p.picks}</span>` : p.picks;
+
       tbody.innerHTML += `<tr>
         <td>${i+1}</td>
         <td><strong>${p.name}</strong></td>
@@ -173,7 +183,7 @@ function updateDisplay() {
         <td>${view === '__total' ? p.partPct.toFixed(1) : (p.partPct * 40).toFixed(0)+'%'}</td>
         <td>${fmt(p.throneRaw)}</td>
         <td><strong>${fmt(p.total)}</strong></td>
-        <td>${pickDisplay}</td>
+        <td>${pickTag}</td>
         <td><button class="edit-btn" onclick="localStorage.setItem('editTargetName','${p.name}');localStorage.setItem('editTargetWeek','${p.lastWeek||p.week}');window.location.href='form.html'">Edit</button></td>
       </tr>`;
   });
@@ -188,7 +198,11 @@ function updateTop3() {
 
 weekSelect.innerHTML = ['__total', ...WEEKS].map(w => `<option value="${w}">${w === '__total' ? 'Full Season Summary' : w.toUpperCase()}</option>`).join('');
 weekSelect.onchange = updateDisplay; searchInput.oninput = updateDisplay;
-darkToggle.onclick = () => document.body.classList.toggle('dark-mode');
+darkToggle.onclick = () => {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+};
+if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 updateDisplay(); updateTop3();
 </script>
 </body>
