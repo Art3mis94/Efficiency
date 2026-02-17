@@ -6,39 +6,39 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root{ --bg:#f1f5f9; --text:#1e293b; --card:#ffffff; --accent:#3b82f6; --success:#10b981; --danger:#ef4444; --dark:#0f172a; --muted:#64748b; }
+        :root{ --bg:#f8fafc; --text:#0f172a; --card:#ffffff; --accent:#2563eb; --success:#10b981; --danger:#ef4444; --dark:#020617; --muted:#64748b; --border:#e2e8f0; --shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -2px rgba(0,0,0,0.05); }
         *{box-sizing:border-box}
         body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding-bottom:50px;}
-        header{background:#1e40af;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
-        nav{display:flex;justify-content:center;gap:12px;padding:.8rem;background:#cbd5e1;border-bottom:2px solid #94a3b8;}
-        nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;font-size:0.9rem;}
-        .main-wrap{ width:100%; padding:1.5rem; display:grid; gap:15px; grid-template-columns:280px 1fr 340px; align-items:start; }
-        .section{ background:var(--card); padding:1.5rem; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
-        .input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; font-family: inherit;}
-        .btn { padding: 12px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width:100%; transition: 0.2s; }
-        .week-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e2e8f0; padding: 5px; border-radius: 10px; }
-        .week-btn { flex: 1; padding: 8px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-weight: 700; color: var(--muted); font-size: 0.7rem; }
-        .week-btn.selected { background: white; color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .dot { height: 10px; width: 10px; background-color: #cbd5e1; border-radius: 50%; display: inline-block; margin-right: 10px; }
-        .dot.active { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
-        .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 6px; margin-bottom: 15px; }
-        .tgl-btn input { display: none; }
-        .tgl-btn label { display: block; padding: 8px 2px; background: #f1f5f9; border-radius: 6px; text-align: center; font-size: 0.6rem; font-weight: 800; cursor: pointer; color: var(--muted); border: 1px solid #e2e8f0; }
-        .tgl-btn input:checked + label { background: var(--accent); color: white; border-color: var(--accent); }
-        .players-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
-        .players-list li { padding: 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; align-items: center; font-size: 0.85rem; }
-        .players-list li.active { background: #eff6ff; color: var(--accent); font-weight: 700; border-left: 5px solid var(--accent); }
-
-        /* ANALYSIS PANEL */
-        .analysis-panel { background: var(--dark); color: white; border-radius: 20px; padding: 20px; position: sticky; top: 1.5rem; }
-        .rank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .rank-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        .rank-card label { display: block; font-size: 0.55rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; }
-        .rank-card .val { font-size: 1rem; font-weight: 800; color: #60a5fa; }
-        .rank-card .rnk { float: right; font-size: 0.7rem; color: #10b981; }
-        .overall-rank { background: linear-gradient(135deg, #3b82f6, #1e40af); padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; }
-        .overall-rank label { font-size: 0.7rem; font-weight: 800; opacity: 0.8; }
-        .overall-rank .big-rank { font-size: 2.2rem; font-weight: 900; display: block; }
+        header{background:var(--dark);color:#fff;padding:1.25rem 2.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
+        nav{display:flex;justify-content:center;gap:1rem;padding:1rem;background:#e2e8f0;border-bottom:1px solid var(--border);}
+        nav a{color:#fff;text-decoration:none;padding:0.75rem 1.5rem;background:var(--accent);border-radius:9999px;font-weight:700;font-size:0.95rem;transition:0.2s;}
+        nav a:hover{transform:translateY(-1px);box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
+        .main-wrap{width:100%;padding:2rem;display:grid;gap:1.5rem;grid-template-columns:300px 1fr 360px;align-items:start;}
+        .section{background:var(--card);padding:1.75rem;border-radius:1.25rem;box-shadow:var(--shadow);border:1px solid var(--border);}
+        .input{width:100%;padding:0.75rem 1rem;border-radius:0.75rem;border:1px solid var(--border);margin-bottom:0.75rem;font-family:inherit;background:#f8fafc;}
+        .btn{padding:0.9rem;border:none;border-radius:0.75rem;color:white;font-weight:700;cursor:pointer;width:100%;transition:0.2s;}
+        .week-tabs{display:flex;gap:0.5rem;margin-bottom:1.5rem;background:#e2e8f0;padding:0.5rem;border-radius:0.75rem;}
+        .week-btn{flex:1;padding:0.75rem;border:none;background:transparent;cursor:pointer;border-radius:0.5rem;font-weight:700;color:var(--muted);font-size:0.8rem;transition:0.2s;}
+        .week-btn.selected{background:white;color:var(--accent);box-shadow:var(--shadow);}
+        .dot{height:10px;width:10px;background:#cbd5e1;border-radius:50%;display:inline-block;margin-right:10px;}
+        .dot.active{background:var(--success);box-shadow:0 0 10px var(--success);}
+        .toggle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;margin-bottom:1.25rem;}
+        .tgl-btn input{display:none;}
+        .tgl-btn label{display:block;padding:0.6rem 0.4rem;background:#f1f5f9;border-radius:0.5rem;text-align:center;font-size:0.7rem;font-weight:700;cursor:pointer;color:var(--muted);border:1px solid var(--border);transition:0.2s;}
+        .tgl-btn input:checked + label{background:var(--accent);color:white;border-color:var(--accent);}
+        .players-list{list-style:none;padding:0;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:1rem;background:white;}
+        .players-list li{padding:0.9rem;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;align-items:center;font-size:0.9rem;transition:0.15s;}
+        .players-list li:hover{background:#f0f9ff;}
+        .players-list li.active{background:#eff6ff;color:var(--accent);font-weight:700;border-left:5px solid var(--accent);}
+        .analysis-panel{background:linear-gradient(135deg,var(--dark),#1e293b);color:white;border-radius:1.5rem;padding:1.75rem;position:sticky;top:2rem;box-shadow:var(--shadow);}
+        .rank-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1.25rem;}
+        .rank-card{background:rgba(255,255,255,0.08);padding:1rem;border-radius:1rem;border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(4px);}
+        .rank-card label{display:block;font-size:0.6rem;color:#94a3b8;text-transform:uppercase;font-weight:800;margin-bottom:0.25rem;}
+        .rank-card .val{font-size:1.1rem;font-weight:800;color:#93c5fd;}
+        .rank-card .rnk{float:right;font-size:0.8rem;color:#34d399;}
+        .overall-rank{background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:1.25rem;border-radius:1.25rem;text-align:center;margin-bottom:1.25rem;box-shadow:0 10px 25px rgba(37,99,235,0.3);}
+        .overall-rank label{font-size:0.75rem;font-weight:800;opacity:0.9;}
+        .overall-rank .big-rank{font-size:2.8rem;font-weight:900;display:block;}
     </style>
 </head>
 <body>
@@ -54,7 +54,7 @@
         <textarea id="bulkInput" placeholder="Bulk Add Names" class="input" style="margin-top:15px;" rows="3"></textarea>
         <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add Players</button>
 
-        <div style="margin-top:20px; display:grid; gap:8px;">
+        <div style="margin-top:1.5rem;display:grid;gap:0.75rem;">
             <button class="btn" style="background:#f59e0b" onclick="exportCSV()">Export CSV</button>
             <input type="file" id="importCSV" accept=".csv" style="display:none" onchange="importCSV(event)">
             <button class="btn" style="background:#f59e0b" onclick="document.getElementById('importCSV').click()">Import CSV</button>
@@ -64,7 +64,7 @@
     </section>
 
     <section class="section">
-        <h2 id="editHeader" style="color:var(--accent); margin-top:0;">Select Player</h2>
+        <h2 id="editHeader" style="color:var(--accent);margin-top:0;">Select Player</h2>
         <div class="week-tabs">
             <button onclick="setWeek('home week')" class="week-btn" id="btn-homeweek">HOME</button>
             <button onclick="setWeek('week 1')" class="week-btn" id="btn-week1">W1</button>
@@ -72,7 +72,7 @@
             <button onclick="setWeek('week 3')" class="week-btn" id="btn-week3">W3</button>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;">
             <div><label>POWER</label><input id="power" type="number" class="input" oninput="updateLive()"></div>
             <div><label>POINTS</label><input id="points" type="number" class="input" oninput="updateLive()"></div>
             <div><label>THRONE</label><input id="throne" type="number" class="input" oninput="updateLive()"></div>
@@ -160,7 +160,7 @@
         
         <div class="rank-grid">
             <div class="rank-card"><label>Points</label><span class="rnk" id="r_pts">#--</span><span class="val" id="val_pts">0</span></div>
-            <div class="rank-card"><label>Efficiency</label><span class="rnk" id="r_eff">#--</span><span class="val" id="val_eff">0.000000</span></div>
+            <div class="rank-card"><label>Efficiency</label><span class="rnk" id="r_eff">#--</span><span class="val" id="val_eff">0.00</span></div>
             <div class="rank-card"><label>Quest</label><span class="rnk" id="r_qst">#--</span><span class="val" id="val_qst">0</span></div>
             <div class="rank-card"><label>Throne</label><span class="rnk" id="r_thr">#--</span><span class="val" id="val_thr">0</span></div>
             <div class="rank-card"><label>Throne Eff</label><span class="rnk" id="r_tef">#--</span><span class="val" id="val_tef">0.000000</span></div>
@@ -213,12 +213,11 @@ window.updateLive = () => {
     const tef = t / p;
 
     document.getElementById('val_pts').innerText = pts.toLocaleString();
-    document.getElementById('val_eff').innerText = eff.toFixed(6);
+    document.getElementById('val_eff').innerText = eff.toFixed(2);
     document.getElementById('val_qst').innerText = q.toLocaleString();
     document.getElementById('val_thr').innerText = t.toLocaleString();
     document.getElementById('val_tef').innerText = tef.toFixed(6);
 
-    // LIVE RANKING LOGIC
     const weekData = db.filter(x => x.week === curW);
     const getRank = (val, keyOrCalc, desc=true) => {
         const calc = typeof keyOrCalc === 'string' ? (x) => parseFloat(x[keyOrCalc])||0 : keyOrCalc;
@@ -233,7 +232,7 @@ window.updateLive = () => {
     document.getElementById('r_thr').innerText = getRank(t, 'throne');
     document.getElementById('r_eff').innerText = getRank(eff, x => (parseFloat(x.points)||0) / (parseFloat(x.power)||1));
     document.getElementById('r_tef').innerText = getRank(tef, x => (parseFloat(x.throne)||0) / (parseFloat(x.power)||1));
-    document.getElementById('rnk_total').innerText = getRank(pts + t, x => parseFloat(x.points) + parseFloat(x.throne)||0); // Simple total estimate
+    document.getElementById('rnk_total').innerText = getRank(pts + t, x => parseFloat(x.points) + parseFloat(x.throne)||0);
 };
 
 window.saveEntry = () => {
