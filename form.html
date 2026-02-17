@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Manage Alliance Data</title>
+<title>Alliance Management</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -13,81 +13,92 @@
 }
 
 *{box-sizing:border-box}
-body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);}
-header{background:#1e40af;color:#fff;padding:1.2rem 2rem;display:flex;justify-content:space-between;align-items:center;}
-nav{display:flex;justify-content:center;gap:15px;padding:.75rem;background:#cbd5e1;}
-nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;}
+body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding-bottom:40px;}
+header{background:#1e40af;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#cbd5e1;}
+nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--accent);border-radius:6px;font-weight:700;font-size:0.9rem;}
 
 .main-wrap{ width:100%; padding:1.5rem; display:grid; gap:1.5rem; grid-template-columns:320px 1fr 320px; align-items:start; }
 .section{ background:var(--card); padding:1.5rem; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
 
-.input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; }
-.btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width:100%; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; font-family: inherit;}
+.btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width:100%; transition: 0.2s; }
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-/* TOGGLE STYLES */
-.toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-bottom: 20px; }
-.tgl-btn { position: relative; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+
+/* CLEAN WEEK TABS */
+.week-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 10px; }
+.week-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-weight: 700; color: var(--muted); font-size: 0.75rem; transition: 0.2s; }
+.week-btn.selected { background: white; color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+/* GREEN LIGHT */
+.dot { height: 9px; width: 9px; background-color: #cbd5e1; border-radius: 50%; display: inline-block; margin-right: 8px; transition: 0.3s; }
+.dot.active { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
+
+/* TOGGLES */
+.toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 6px; margin-bottom: 15px; }
 .tgl-btn input { display: none; }
-.tgl-btn label { display: block; padding: 8px 4px; background: #eee; border-radius: 6px; text-align: center; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+.tgl-btn label { display: block; padding: 8px 2px; background: #f1f5f9; border-radius: 6px; text-align: center; font-size: 0.65rem; font-weight: 800; cursor: pointer; color: var(--muted); }
 .tgl-btn input:checked + label { background: var(--accent); color: white; }
 .tgl-hero input:checked + label { background: #8b5cf6; color: white; }
 
-/* GREEN LIGHT LOGIC */
-#greenLight { width: 12px; height: 12px; background: #334155; border-radius: 50%; display: inline-block; margin-right: 8px; }
-#greenLight.active { background: #10b981; box-shadow: 0 0 10px #10b981; }
-
-.players-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; }
-.players-list li { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
-.players-list li.active { background: #e2e8f0; font-weight: 700; border-left: 4px solid var(--accent); }
+.players-list { list-style: none; padding: 0; max-height: 450px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 8px; }
+.players-list li { padding: 12px; border-bottom: 1px solid #f8fafc; cursor: pointer; display: flex; align-items: center; font-size: 0.9rem; font-weight: 500; }
+.players-list li:hover { background: #f8fafc; }
+.players-list li.active { background: #eff6ff; color: var(--accent); font-weight: 700; border-right: 4px solid var(--accent); }
 
 /* SIDEBAR FLIP */
 .results-sidebar{ perspective:1200px; position:sticky; top:1.5rem; }
-.flip-card{ position:relative; width:100%; min-height:580px; transform-style:preserve-3d; transition:transform .6s; }
+.flip-card{ position:relative; width:100%; min-height:620px; transform-style:preserve-3d; transition:transform 0.6s ease; }
 .flip-card.flipped{ transform:rotateY(180deg); }
-.flip-face{ position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:20px; padding:2rem; }
-.flip-front{ background:var(--dark-panel); color:white; }
+.flip-face{ position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:20px; padding:1.5rem; }
+.flip-front{ background:var(--dark-panel); color:white; cursor: pointer; }
 .flip-back{ background:var(--dark-panel); color:white; transform:rotateY(180deg); }
 
 .res-item{ margin-bottom:1rem; border-bottom:1px solid #334155; padding-bottom: 5px; }
-.res-item label{ font-size:.65rem; color:#94a3b8; text-transform:uppercase; }
-.res-item span{ font-size:1.4rem; font-weight:800; color:#60a5fa; display:block; }
+.res-item label{ font-size:.6rem; color:#94a3b8; text-transform:uppercase; letter-spacing: 0.5px; }
+.res-item span{ font-size:1.3rem; font-weight:800; color:#60a5fa; display:block; }
 
-.pack-table { width: 100%; color: white; border-collapse: collapse; font-size: 0.8rem; }
+.pack-table { width: 100%; color: white; border-collapse: collapse; font-size: 0.75rem; }
+.pack-table th { text-align: center; color: #94a3b8; padding-bottom: 10px; font-size: 0.6rem; }
 .pack-table td { padding: 8px 0; border-bottom: 1px solid #334155; }
+.pack-table input { width: 18px; height: 18px; cursor: pointer; }
 </style>
 </head>
 
 <body>
-<header><h1>Alliance Management</h1><div id="rosterCount">Players: 0</div></header>
+<header><h1>Alliance Management</h1><div id="rosterCount">0 Players</div></header>
 <nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="form.html">Manage Data</a></nav>
 
 <main class="main-wrap">
     <section class="section">
         <h3>Directory</h3>
-        <input type="text" id="playerSearch" placeholder="Search..." class="input" oninput="renderList()">
+        <input type="text" id="playerSearch" placeholder="🔍 Search players..." class="input" oninput="renderList()">
         <ul class="players-list" id="playersList"></ul>
-        <input id="playerNameInput" placeholder="New Player Name" class="input">
-        <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add Player</button>
+        <input id="playerNameInput" placeholder="Add New Player..." class="input" style="margin-top:15px;">
+        <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add to Roster</button>
     </section>
 
     <section class="section">
-        <h2 id="editHeader">Select Player</h2>
-        <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <h2 id="editHeader" style="margin-top:0; color:var(--accent)">Select Player</h2>
+        
+        <div class="week-tabs">
+            <button onclick="setWeek('home week')" class="week-btn" id="btn-homeweek">HOME</button>
             <button onclick="setWeek('week 1')" class="week-btn" id="btn-week1">W1</button>
             <button onclick="setWeek('week 2')" class="week-btn" id="btn-week2">W2</button>
             <button onclick="setWeek('week 3')" class="week-btn" id="btn-week3">W3</button>
         </div>
 
         <div class="grid-2">
-            <div><label>Power</label><input id="f_power" type="number" class="input" oninput="updateLive()"></div>
-            <div><label>Points</label><input id="f_points" type="number" class="input" oninput="updateLive()"></div>
-            <div><label>Throne</label><input id="f_throne" type="number" class="input" oninput="updateLive()"></div>
-            <div><label>Quest</label><input id="f_quest" type="number" class="input"></div>
-            <div><label>Hunt</label><input id="f_hunt" type="number" class="input"></div>
+            <div><label style="font-size:0.7rem; font-weight:700">POWER</label><input id="f_power" type="number" class="input" oninput="updateLive()"></div>
+            <div><label style="font-size:0.7rem; font-weight:700">POINTS</label><input id="f_points" type="number" class="input" oninput="updateLive()"></div>
+            <div><label style="font-size:0.7rem; font-weight:700">THRONE</label><input id="f_throne" type="number" class="input" oninput="updateLive()"></div>
+            <div><label style="font-size:0.7rem; font-weight:700">QUEST</label><input id="f_quest" type="number" class="input"></div>
+            <div><label style="font-size:0.7rem; font-weight:700">HUNT</label><input id="f_hunt" type="number" class="input"></div>
         </div>
 
-        <label style="font-size:0.7rem; font-weight:800; color:var(--muted)">ACTIVITY TOGGLES</label>
+        <label style="font-size:0.65rem; font-weight:800; color:var(--muted)">ACTIVITY TRACKER</label>
         <div class="toggle-grid">
             <div class="tgl-btn"><input type="checkbox" id="t_lava"><label for="t_lava">LAVA</label></div>
             <div class="tgl-btn"><input type="checkbox" id="t_chall"><label for="t_chall">CHALL</label></div>
@@ -98,36 +109,39 @@ nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--acce
             <div class="tgl-btn"><input type="checkbox" id="t_wed"><label for="t_wed">WED</label></div>
         </div>
 
-        <label style="font-size:0.7rem; font-weight:800; color:var(--muted)">HERO PICKS</label>
+        <label style="font-size:0.65rem; font-weight:800; color:var(--muted)">HERO PICKS</label>
         <div class="toggle-grid">
-            <div class="tgl-btn tgl-hero"><input type="checkbox" id="h_100" onchange="updateLive()"><label for="h_100">100</label></div>
+            <div class="tgl-btn tgl-hero"><input type="checkbox" id="h_100" onchange="renderList()"><label for="h_100">100</label></div>
             <div class="tgl-btn tgl-hero"><input type="checkbox" id="h_40"><label for="h_40">40</label></div>
             <div class="tgl-btn tgl-hero"><input type="checkbox" id="h_20"><label for="h_20">20</label></div>
             <div class="tgl-btn tgl-hero"><input type="checkbox" id="h_5"><label for="h_5">5</label></div>
         </div>
 
-        <button class="btn" style="background:var(--success); margin-top:10px;" onclick="performSave()">SAVE PLAYER</button>
+        <button class="btn" style="background:var(--success); margin-top:10px;" onclick="performSave()">SAVE DATA</button>
     </section>
 
     <aside class="results-sidebar">
         <div class="flip-card" id="liveFlip">
             <div class="flip-face flip-front" onclick="this.parentElement.classList.add('flipped')">
-                <div style="display:flex; align-items:center; margin-bottom:10px;">
-                    <div id="greenLight"></div>
-                    <h3 style="margin:0">Live Analysis</h3>
-                </div>
+                <h3 style="margin-top:0">📊 Analysis</h3>
                 <div class="res-item"><label>Efficiency</label><span id="res_eff">0.00</span></div>
                 <div class="res-item"><label>Total Score</label><span id="res_total">0</span></div>
-                <p style="font-size:0.7rem; color:#94a3b8; text-align:center; margin-top:100px;">Tap for King Packs 👑</p>
+                <p style="font-size:0.7rem; color:#94a3b8; text-align:center; margin-top:180px;">Tap to track King Packs 👑</p>
             </div>
-            <div class="flip-face flip-back" onclick="this.parentElement.classList.remove('flipped')">
-                <h3>King Packs</h3>
-                <table class="pack-table" id="packTable">
-                    <tr><td>Legendary</td><td><input type="checkbox" id="pk_leg_t1"></td><td><input type="checkbox" id="pk_leg_t2"></td></tr>
-                    <tr><td>Epic</td><td><input type="checkbox" id="pk_epi_t1"></td><td><input type="checkbox" id="pk_epi_t2"></td></tr>
-                    <tr><td>Rare</td><td><input type="checkbox" id="pk_rare_t1"></td><td><input type="checkbox" id="pk_rare_t2"></td></tr>
+            <div class="flip-face flip-back">
+                <h3 onclick="document.getElementById('liveFlip').classList.remove('flipped')" style="cursor:pointer; margin-top:0">👑 King Packs</h3>
+                <table class="pack-table">
+                    <thead><tr><th align="left">PACK</th><th>T1</th><th>T2</th></tr></thead>
+                    <tbody>
+                        <tr><td>Legendary</td><td align="center"><input type="checkbox" id="pk_leg_t1"></td><td align="center"><input type="checkbox" id="pk_leg_t2"></td></tr>
+                        <tr><td>Epic</td><td align="center"><input type="checkbox" id="pk_epi_t1"></td><td align="center"><input type="checkbox" id="pk_epi_t2"></td></tr>
+                        <tr><td>Excellent</td><td align="center"><input type="checkbox" id="pk_exc_t1"></td><td align="center"><input type="checkbox" id="pk_exc_t2"></td></tr>
+                        <tr><td>Rare (Dra)</td><td align="center"><input type="checkbox" id="pk_rdr_t1"></td><td align="center"><input type="checkbox" id="pk_rdr_t2"></td></tr>
+                        <tr><td>Rare (Hero)</td><td align="center"><input type="checkbox" id="pk_rhe_t1"></td><td align="center"><input type="checkbox" id="pk_rhe_t2"></td></tr>
+                        <tr><td>Rare (Uni)</td><td align="center"><input type="checkbox" id="pk_run_t1"></td><td align="center"><input type="checkbox" id="pk_run_t2"></td></tr>
+                    </tbody>
                 </table>
-                <p style="font-size:0.7rem; color:#94a3b8; text-align:center; margin-top:20px;">Tap to return</p>
+                <p onclick="document.getElementById('liveFlip').classList.remove('flipped')" style="font-size:0.75rem; color:#94a3b8; text-align:center; margin-top:30px; cursor:pointer;">← Return to Scores</p>
             </div>
         </div>
     </aside>
@@ -137,7 +151,7 @@ nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--acce
 let curP = null, curW = 'week 1';
 const fields = ['power','points','throne','quest','hunt'];
 const toggles = ['t_lava','t_chall','t_dono','t_esb','t_dv','t_mon','t_wed','h_100','h_40','h_20','h_5'];
-const packs = ['pk_leg_t1','pk_leg_t2','pk_epi_t1','pk_epi_t2','pk_rare_t1','pk_rare_t2'];
+const packs = ['pk_leg_t1','pk_leg_t2','pk_epi_t1','pk_epi_t2','pk_exc_t1','pk_exc_t2','pk_rdr_t1','pk_rdr_t2','pk_rhe_t1','pk_rhe_t2','pk_run_t1','pk_run_t2'];
 
 const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
 const save = d => localStorage.setItem('formData', JSON.stringify(d));
@@ -146,6 +160,7 @@ window.setWeek = (w) => {
     curW = w;
     document.querySelectorAll('.week-btn').forEach(b => b.classList.toggle('selected', b.id === 'btn-'+w.replace(' ','')));
     if(curP) selectPlayer(curP);
+    renderList();
 };
 
 window.selectPlayer = (n) => {
@@ -153,7 +168,7 @@ window.selectPlayer = (n) => {
     document.getElementById('editHeader').innerText = n;
     const data = load().find(x => x.name === n && x.week === curW) || {};
     fields.forEach(f => document.getElementById('f_'+f).value = data[f] || '');
-    toggles.concat(packs).forEach(t => document.getElementById(t).checked = data[t] === 1);
+    toggles.concat(packs).forEach(t => document.getElementById(t).checked = (data[t] === 1));
     renderList();
     updateLive();
 };
@@ -162,33 +177,47 @@ window.updateLive = () => {
     const p = parseFloat(f_power.value)||0, pts = parseFloat(f_points.value)||0;
     document.getElementById('res_eff').innerText = p > 0 ? (pts/(p/1000000)).toFixed(2) : '0.00';
     document.getElementById('res_total').innerText = (pts + (parseFloat(f_throne.value)||0)).toLocaleString();
-    document.getElementById('greenLight').classList.toggle('active', document.getElementById('h_100').checked);
 };
 
 window.performSave = () => {
-    if(!curP) return;
+    if(!curP) return alert("Select player");
     let d = load();
     const entry = { name: curP, week: curW };
     fields.forEach(f => entry[f] = parseFloat(document.getElementById('f_'+f).value) || 0);
     toggles.concat(packs).forEach(t => entry[t] = document.getElementById(t).checked ? 1 : 0);
     const i = d.findIndex(x => x.name === curP && x.week === curW);
     if(i >= 0) d[i] = entry; else d.push(entry);
-    save(d); alert("Saved!");
+    save(d); renderList(); alert("Saved Successfully");
 };
 
 window.addNewPlayer = () => {
     const n = playerNameInput.value.trim(); if(!n) return;
-    let d = load(); ['week 1','week 2','week 3'].forEach(w => d.push({name:n, week:w}));
+    let d = load(); ['home week','week 1','week 2','week 3'].forEach(w => {
+        if(!d.find(x => x.name === n && x.week === w)) d.push({name:n, week:w});
+    });
     save(d); playerNameInput.value=''; renderList();
 };
 
 window.renderList = () => {
-    const names = [...new Set(load().map(x => x.name))];
-    rosterCount.innerText = "Players: " + names.length;
-    playersList.innerHTML = names.map(n => `<li class="${n===curP?'active':''}" onclick="selectPlayer('${n}')">${n}</li>`).join('');
+    const data = load();
+    const allNames = [...new Set(data.map(x => x.name))];
+    const search = document.getElementById('playerSearch').value.toLowerCase();
+    
+    document.getElementById('rosterCount').innerText = allNames.length + " Players";
+    
+    document.getElementById('playersList').innerHTML = allNames
+        .filter(n => n.toLowerCase().includes(search))
+        .map(n => {
+            const weekData = data.find(x => x.name === n && x.week === curW) || {};
+            // Dot reflects current week's 100 pick
+            const is100 = (n === curP) ? document.getElementById('h_100').checked : (weekData.h_100 === 1);
+            return `<li class="${n===curP?'active':''}" onclick="selectPlayer('${n}')">
+                <span class="dot ${is100?'active':''}"></span>${n}
+            </li>`;
+        }).join('');
 };
 
-setWeek('week 1'); renderList();
+setWeek('week 1');
 </script>
 </body>
 </html>
