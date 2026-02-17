@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Alliance Dashboard - Elite v2</title>
+    <title>Alliance Dashboard - Pro</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f1f5f9; --text: #1e293b; --accent: #3b82f6; --dark: #0f172a; --success: #10b981; --gold: #fbbf24; --silver: #94a3b8; --bronze: #b45309; }
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 50px; }
@@ -13,25 +14,25 @@
         nav { display: flex; justify-content: center; gap: 15px; padding: 1rem; background: #cbd5e1; border-bottom: 1px solid #94a3b8; }
         nav a { text-decoration: none; color: white; background: var(--accent); padding: 0.6rem 1.5rem; border-radius: 10px; font-weight: 800; font-size: 0.9rem; }
 
-        /* Podium UI */
         .podium-wrap { display: flex; justify-content: center; align-items: flex-end; gap: 20px; margin: 20px 0; height: 180px; }
-        .podium-card { background: var(--dark); color: white; padding: 15px; border-radius: 15px; text-align: center; width: 160px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: 0.3s; }
-        .podium-card.p1 { height: 160px; border: 3px solid var(--gold); }
-        .podium-card.p2 { height: 130px; border: 3px solid var(--silver); }
-        .podium-card.p3 { height: 110px; border: 3px solid var(--bronze); }
-        .podium-name { display: block; font-weight: 800; font-size: 0.9rem; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .podium-card { background: rgba(255,255,255,0.05); color: white; padding: 15px; border-radius: 15px; text-align: center; width: 160px; position: relative; border: 1px solid rgba(255,255,255,0.1); }
+        .podium-card.p1 { height: 160px; border-color: var(--gold); }
+        .podium-name { display: block; font-weight: 800; font-size: 0.9rem; margin-top: 5px; }
         .podium-score { color: var(--accent); font-weight: 900; font-size: 1.2rem; }
-        .medal { font-size: 1.5rem; display: block; }
 
-        .container { padding: 2rem; max-width: 1600px; margin: 0 auto; }
+        .container { padding: 2rem; max-width: 1400px; margin: 0 auto; }
         
-        /* Persistent Multipliers */
         .controls { display: grid; grid-template-columns: 1fr auto; gap: 20px; margin-bottom: 2rem; background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .mult-inputs { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .mult-inputs div { display: flex; align-items: center; gap: 5px; background: #f8fafc; padding: 5px 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .mult-inputs div { background: #f8fafc; padding: 5px 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 5px; }
         .mult-inputs input { width: 80px; border: none; background: transparent; font-weight: 700; color: var(--accent); outline: none; }
 
-        /* Table */
+        /* Chart Section */
+        .chart-container { background: white; padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .chart-toggle { display: flex; gap: 10px; margin-bottom: 15px; }
+        .chart-btn { padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; background: #e2e8f0; color: #64748b; }
+        .chart-btn.active { background: var(--accent); color: white; }
+
         .table-wrap { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; }
         th { background: #f8fafc; padding: 15px; text-align: left; font-size: 0.7rem; text-transform: uppercase; font-weight: 800; color: #64748b; border-bottom: 2px solid #e2e8f0; cursor: pointer; }
@@ -39,24 +40,21 @@
         
         .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #cbd5e1; }
         .dot.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
-        
-        /* Modal / Overlay */
-        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; }
-        .modal { background:white; padding:2rem; border-radius:20px; width:400px; max-width:90%; position:relative; }
-        .modal h2 { margin-top:0; color:var(--dark); }
-        .modal-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px; }
-        .m-item { background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; }
-        .m-item label { font-size:0.6rem; color:#94a3b8; display:block; text-transform:uppercase; font-weight:800; }
-        .m-item span { font-weight:800; font-size:1rem; color:var(--dark); }
 
-        .btn-close { position:absolute; top:15px; right:15px; cursor:pointer; font-size:1.5rem; font-weight:800; }
-        .btn-red { background:var(--danger); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:700; }
+        /* Modal Overlay */
+        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
+        .modal { background:white; padding:2rem; border-radius:20px; width:450px; position:relative; }
+        .m-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px; }
+        .m-card { background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; }
+        .m-card label { display:block; font-size:0.6rem; color:#94a3b8; font-weight:800; text-transform:uppercase; }
+        .m-card span { font-size:1.1rem; font-weight:800; }
+
+        .edit-btn { background: #f1f5f9; color: var(--accent); border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 800; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="margin:0; text-align:center; font-size:1.2rem; letter-spacing:2px;">ALLIANCE LEADERBOARD</h1>
     <div class="podium-wrap" id="podium"></div>
 </header>
 
@@ -69,31 +67,37 @@
 <div class="container">
     <div class="controls">
         <div class="mult-inputs">
-            <div><label>W1 Multi:</label><input id="M_W1" type="number" step="0.1" oninput="saveMults()"></div>
-            <div><label>Hunt:</label><input id="M_HUNT" type="number" step="0.001" oninput="saveMults()"></div>
-            <div><label>Quest:</label><input id="M_QUEST" type="number" step="0.01" oninput="saveMults()"></div>
-            <div><label>Throne:</label><input id="M_THRONE" type="number" oninput="saveMults()"></div>
+            <div><label>W1 Multi:</label><input id="M_W1" type="number" step="0.1" oninput="saveConfig()"></div>
+            <div><label>Hunt:</label><input id="M_HUNT" type="number" step="0.001" oninput="saveConfig()"></div>
+            <div><label>Quest:</label><input id="M_QUEST" type="number" step="0.01" oninput="saveConfig()"></div>
+            <div><label>Throne:</label><input id="M_THRONE" type="number" oninput="saveConfig()"></div>
         </div>
         <div style="display:flex; gap:10px;">
-            <input type="text" id="dashSearch" placeholder="Search..." oninput="render()">
-            <select id="weekSelect" onchange="render()">
-                <option value="week 1">Week 1</option>
-                <option value="week 2">Week 2</option>
-                <option value="week 3" selected>Week 3</option>
-                <option value="overall">Overall</option>
+            <select id="weekSelect" onchange="render()" style="padding:10px; border-radius:10px; font-weight:800; border:1px solid #cbd5e1;">
+                <option value="week 1">Week 1</option><option value="week 2">Week 2</option><option value="week 3" selected>Week 3</option><option value="overall">Overall</option>
             </select>
         </div>
     </div>
 
+    <div class="chart-container">
+        <div class="chart-toggle">
+            <button class="chart-btn active" onclick="updateChart('total')">Total Score</button>
+            <button class="chart-btn" onclick="updateChart('pts')">Points</button>
+            <button class="chart-btn" onclick="updateChart('eff')">Efficiency</button>
+            <button class="chart-btn" onclick="updateChart('p')">Power</button>
+        </div>
+        <canvas id="statChart" height="100"></canvas>
+    </div>
+
     <div class="table-wrap">
-        <table id="dashTable">
+        <table>
             <thead>
                 <tr>
                     <th onclick="setSort('name')">Member</th>
                     <th onclick="setSort('p')">Power</th>
                     <th onclick="setSort('pts')">Points</th>
-                    <th onclick="setSort('eff')">Eff.</th>
-                    <th onclick="setSort('total')">Total ▲</th>
+                    <th onclick="setSort('eff')">Efficiency</th>
+                    <th onclick="setSort('total')">Total Score ▲</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -102,157 +106,147 @@
     </div>
 </div>
 
-<div class="overlay" id="playerOverlay" onclick="closeModal(event)">
+<div class="overlay" id="overlay" onclick="this.style.display='none'">
     <div class="modal" onclick="event.stopPropagation()">
-        <span class="btn-close" onclick="document.getElementById('playerOverlay').style.display='none'">&times;</span>
-        <h2 id="m_name">Player Name</h2>
-        <div class="modal-grid" id="modalContent"></div>
-        <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-        <div style="display:flex; gap:10px;">
-            <button class="btn-red" onclick="deleteSinglePlayer()">Delete Player</button>
-            <button style="background:#64748b; color:white; border:none; flex:1; border-radius:5px; cursor:pointer;" onclick="resetSinglePlayerData()">Reset This Week</button>
+        <h2 id="modalName" style="margin:0 0 15px 0">Player</h2>
+        <div class="m-grid" id="modalGrid"></div>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button onclick="deletePlayer()" style="background:#ef4444; color:white; border:none; padding:10px; border-radius:8px; flex:1; cursor:pointer; font-weight:700;">Delete Member</button>
+            <button onclick="document.getElementById('overlay').style.display='none'" style="background:#64748b; color:white; border:none; padding:10px; border-radius:8px; flex:1; cursor:pointer; font-weight:700;">Close</button>
         </div>
     </div>
 </div>
 
 <script>
-let sortCol = 'total', sortAsc = false, activePlayerName = "";
+let sortCol = 'total', sortAsc = false, activeName = "", myChart = null;
+const defaultM = { W1: 0.2, HUNT: 0.005, QUEST: 0.05, THRONE: 1000000000 };
 
-// Persistent Multipliers logic
-const defaultMults = { W1: 0.2, HUNT: 0.005, QUEST: 0.05, THRONE: 1000000000 };
-const loadMults = () => {
-    const saved = JSON.parse(localStorage.getItem('multSettings')) || defaultMults;
-    document.getElementById('M_W1').value = saved.W1;
-    document.getElementById('M_HUNT').value = saved.HUNT;
-    document.getElementById('M_QUEST').value = saved.QUEST;
-    document.getElementById('M_THRONE').value = saved.THRONE;
+const loadConfig = () => {
+    const s = JSON.parse(localStorage.getItem('config')) || defaultM;
+    document.getElementById('M_W1').value = s.W1;
+    document.getElementById('M_HUNT').value = s.HUNT;
+    document.getElementById('M_QUEST').value = s.QUEST;
+    document.getElementById('M_THRONE').value = s.THRONE;
 };
 
-const saveMults = () => {
-    const settings = {
+const saveConfig = () => {
+    localStorage.setItem('config', JSON.stringify({
         W1: parseFloat(document.getElementById('M_W1').value),
         HUNT: parseFloat(document.getElementById('M_HUNT').value),
         QUEST: parseFloat(document.getElementById('M_QUEST').value),
         THRONE: parseFloat(document.getElementById('M_THRONE').value)
-    };
-    localStorage.setItem('multSettings', JSON.stringify(settings));
+    }));
     render();
 };
 
-const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
-const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
-
-window.setSort = (col) => {
-    if(sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = false; }
-    render();
+const fmt = (v) => (parseFloat(v)||0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const fmtP = (v) => {
+    const val = parseFloat(v)||0;
+    return (val/1000).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "bn";
 };
 
-window.showOverlay = (name) => {
-    activePlayerName = name;
-    const data = loadData();
+window.setSort = (c) => { if(sortCol === c) sortAsc = !sortAsc; else { sortCol = c; sortAsc = false; } render(); };
+
+window.showDetail = (name) => {
+    activeName = name;
+    const data = JSON.parse(localStorage.getItem('formData') || '[]');
     const view = document.getElementById('weekSelect').value;
-    const pData = data.find(x => x.name === name && x.week === (view === 'overall' ? 'week 3' : view)) || {};
+    const p = data.find(x => x.name === name && x.week === (view==='overall'?'week 3':view)) || {};
     
-    document.getElementById('m_name').innerText = name;
-    document.getElementById('modalContent').innerHTML = `
-        <div class="m-item"><label>Power</label><span>${(parseFloat(pData.power)||0).toLocaleString()}</span></div>
-        <div class="m-item"><label>Points</label><span>${(parseFloat(pData.points)||0).toLocaleString()}</span></div>
-        <div class="m-item"><label>Throne</label><span>${(parseFloat(pData.throne)||0).toLocaleString()}</span></div>
-        <div class="m-item"><label>Quest</label><span>${(parseFloat(pData.quest)||0).toLocaleString()}</span></div>
-        <div class="m-item"><label>Hunt</label><span>${(parseFloat(pData.hunt)||0).toLocaleString()}</span></div>
+    document.getElementById('modalName').innerText = name;
+    document.getElementById('modalGrid').innerHTML = `
+        <div class="m-card"><label>Power</label><span>${fmtP(p.power)}</span></div>
+        <div class="m-card"><label>Points</label><span>${(parseFloat(p.points)||0).toLocaleString()}</span></div>
+        <div class="m-card"><label>Quest</label><span>${(parseFloat(p.quest)||0).toLocaleString()}</span></div>
+        <div class="m-card"><label>Throne</label><span>${(parseFloat(p.throne)||0).toLocaleString()}</span></div>
     `;
-    document.getElementById('playerOverlay').style.display = 'flex';
+    document.getElementById('overlay').style.display='flex';
 };
 
-window.deleteSinglePlayer = () => {
-    if(!confirm(`Delete ${activePlayerName} entirely?`)) return;
-    saveData(loadData().filter(x => x.name !== activePlayerName));
-    document.getElementById('playerOverlay').style.display='none';
+window.deletePlayer = () => {
+    if(!confirm("Delete " + activeName + "?")) return;
+    const d = JSON.parse(localStorage.getItem('formData') || '[]').filter(x => x.name !== activeName);
+    localStorage.setItem('formData', JSON.stringify(d));
+    document.getElementById('overlay').style.display='none';
     render();
 };
 
-window.resetSinglePlayerData = () => {
-    const view = document.getElementById('weekSelect').value;
-    if(!confirm(`Reset data for ${activePlayerName} in ${view}?`)) return;
-    let d = loadData();
-    const idx = d.findIndex(x => x.name === activePlayerName && x.week === (view === 'overall' ? 'week 3' : view));
-    if(idx > -1) { d.splice(idx, 1); saveData(d); render(); document.getElementById('playerOverlay').style.display='none'; }
+window.updateChart = (key) => {
+    document.querySelectorAll('.chart-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase().includes(key)));
+    render();
 };
 
 window.render = () => {
-    const data = loadData();
+    const data = JSON.parse(localStorage.getItem('formData') || '[]');
     const view = document.getElementById('weekSelect').value;
-    const search = document.getElementById('dashSearch').value.toLowerCase();
-    const mults = JSON.parse(localStorage.getItem('multSettings')) || defaultMults;
-
+    const m = JSON.parse(localStorage.getItem('config')) || defaultM;
     const names = [...new Set(data.map(d => d.name))];
     let results = [];
 
     names.forEach(name => {
-        const eAll = data.filter(d => d.name === name);
-        const w1 = eAll.find(x => x.week === 'week 1') || { points:0, power:1 };
-        const w2 = eAll.find(x => x.week === 'week 2');
-        const w3 = eAll.find(x => x.week === 'week 3');
+        const e = data.filter(d => d.name === name);
+        const w1 = e.find(x => x.week === 'week 1') || { points: 0, power: 0 };
+        const w2 = e.find(x => x.week === 'week 2');
+        const w3 = e.find(x => x.week === 'week 3');
 
-        let active = w1;
-        if(view === 'week 2') active = w2 || w1;
-        if(view === 'week 3' || view === 'overall') active = w3 || w2 || w1;
-
-        const p = parseFloat(active.power) || 1;
-        const pts = parseFloat(active.points) || 0;
-
-        let eff = (view === 'overall') ? ((parseFloat(w3?.points||0) - parseFloat(w1.points)) / (p/1000000)) : (pts / (p/1000000));
-        if(isNaN(eff) || eff < 0) eff = 0;
-
-        let w1Score = (parseFloat(w1.points)||0) * mults.W1;
-        let act = 0, part = 0;
-        const period = (view === 'overall' || view === 'week 3') ? [w1, w2, w3] : (view === 'week 2' ? [w1, w2] : [w1]);
-        period.filter(x => x).forEach(e => {
-            act += ((e.lava?1:0) + (e.challenge?1:0) + (e.donations?1:0)) * 0.833;
-            part += Math.min(2.5, ((e.esb?1:0)*(0.833)) + ((e.dv?1:0)*(0.833)) + ((e.mon?1:0)*(0.416)) + ((e.wed?1:0)*(0.416)));
-        });
+        let active = (view==='week 2') ? (w2||w1) : (view==='week 3'||view==='overall' ? (w3||w2||w1) : w1);
+        
+        const pVal = parseFloat(active.power) || 0;
+        const ptVal = parseFloat(active.points) || 0;
+        
+        // EFFICIENCY = Points / Power (0 if power is 0)
+        let eff = pVal > 0 ? (ptVal / pVal) : 0;
+        
+        let w1S = (parseFloat(w1.points)||0) * m.W1;
+        let act = 0; // Activity sum logic
+        const period = (view==='overall'||view==='week 3') ? [w1,w2,w3] : (view==='week 2'?[w1,w2]:[w1]);
+        period.forEach(x => { if(x) act += ((x.lava?1:0)+(x.challenge?1:0)+(x.donations?1:0))*0.833; });
 
         let totalPicks = 0, has100 = false;
-        eAll.forEach(we => {
-            totalPicks += (we.p100?100:0) + (we.p40?40:0) + (we.p20?20:0) + (we.p5?5:0);
-            if(we.p100 == 1) has100 = true;
-        });
+        e.forEach(we => { totalPicks += (we.p100?100:0)+(we.p40?40:0); if(we.p100==1) has100 = true; });
 
-        const total = w1Score + eff + act + part + ((parseFloat(active.hunt)||0)*mults.HUNT) + ((parseFloat(active.quest)||0)*mults.QUEST) + (((parseFloat(active.throne)||0)/p)*mults.THRONE);
+        const total = w1S + eff + act + ((parseFloat(active.hunt)||0)*m.HUNT) + ((parseFloat(active.quest)||0)*m.QUEST);
 
-        results.push({ name, p, pts, eff, total, picks: totalPicks, has100 });
+        results.push({ name, p: pVal, pts: ptVal, eff, total, has100 });
     });
 
-    results = results.filter(r => r.name.toLowerCase().includes(search));
     results.sort((a,b) => sortAsc ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol]);
 
     // Build Podium
     const pZone = document.getElementById('podium');
     pZone.innerHTML = '';
-    if(results.length > 1) {
-        const top3 = [results[1], results[0], results[2]]; // 2nd, 1st, 3rd layout
-        top3.forEach((r, idx) => {
-            if(!r) return;
-            const pClass = idx === 1 ? 'p1' : idx === 0 ? 'p2' : 'p3';
-            const m = idx === 1 ? '🥇' : idx === 0 ? '🥈' : '🥉';
-            pZone.innerHTML += `<div class="podium-card ${pClass}"><span class="medal">${m}</span><span class="podium-name">${r.name}</span><span class="podium-score">${r.total.toFixed(0)}</span></div>`;
+    if(results.length >= 1) {
+        const pod = [results[1], results[0], results[2]];
+        pod.forEach((r, i) => { if(!r) return;
+            pZone.innerHTML += `<div class="podium-card ${i===1?'p1':''}"><span style="font-size:2rem">${i===1?'🥇':i===0?'🥈':'🥉'}</span><span class="podium-name">${r.name}</span><span class="podium-score">${fmt(r.total)}</span></div>`;
         });
     }
 
-    document.getElementById('dashBody').innerHTML = results.map((r, i) => {
-        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
-        return `<tr onclick="showOverlay('${r.name}')" style="cursor:pointer">
-            <td><span class="dot ${r.has100?'active':''}"></span>${r.name} ${medal}</td>
-            <td>${(r.p).toLocaleString()}</td>
-            <td>${(r.pts).toLocaleString()}</td>
-            <td>${r.eff.toFixed(2)}</td>
-            <td style="font-weight:900; color:var(--accent)">${r.total.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-            <td><button class="edit-btn" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); window.location.href='form.html';">EDIT</button></td>
-        </tr>`;
-    }).join('');
+    // Update Chart
+    const chartKey = document.querySelector('.chart-btn.active').onclick.toString().match(/'(.*?)'/)[1];
+    const top10 = [...results].sort((a,b) => b[chartKey] - a[chartKey]).slice(0,10);
+    if(myChart) myChart.destroy();
+    myChart = new Chart(document.getElementById('statChart'), {
+        type: 'bar',
+        data: {
+            labels: top10.map(x => x.name),
+            datasets: [{ label: chartKey.toUpperCase(), data: top10.map(x => x[chartKey]), backgroundColor: '#3b82f6', borderRadius: 5 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    document.getElementById('dashBody').innerHTML = results.map((r, i) => `
+        <tr onclick="showDetail('${r.name}')" style="cursor:pointer">
+            <td><span class="dot ${r.has100?'active':''}"></span>${r.name} ${i===0?'🥇':i===1?'🥈':i===2?'🥉':''}</td>
+            <td>${fmtP(r.p)}</td>
+            <td>${r.pts.toLocaleString()}</td>
+            <td>${fmt(r.eff)}</td>
+            <td style="color:var(--accent); font-weight:900">${fmt(r.total)}</td>
+            <td><button class="edit-btn" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); location.href='form.html'">EDIT</button></td>
+        </tr>`).join('');
 };
 
-loadMults();
+loadConfig();
 render();
 </script>
 </body>
