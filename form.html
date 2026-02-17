@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Alliance Management</title>
+<title>Manage Alliance Data</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -16,24 +16,21 @@
 body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding-bottom:40px;}
 header{background:#1e40af;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
 nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#cbd5e1;}
-nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--accent);border-radius:6px;font-weight:700;font-size:0.9rem;}
+nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;font-size:0.9rem;}
 
 .main-wrap{ width:100%; padding:1.5rem; display:grid; gap:1.5rem; grid-template-columns:320px 1fr 320px; align-items:start; }
 .section{ background:var(--card); padding:1.5rem; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
 
 .input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; font-family: inherit;}
-.btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
+.btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: 0.2s; width:100%;}
 
-/* WEEK TABS */
 .week-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e2e8f0; padding: 5px; border-radius: 10px; }
 .week-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-weight: 700; color: var(--muted); font-size: 0.7rem; }
 .week-btn.selected { background: white; color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-/* GREEN LIGHT */
 .dot { height: 9px; width: 9px; background-color: #cbd5e1; border-radius: 50%; display: inline-block; margin-right: 8px; }
 .dot.active { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
 
-/* TOGGLES */
 .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 6px; margin-bottom: 15px; }
 .tgl-btn input { display: none; }
 .tgl-btn label { display: block; padding: 8px 2px; background: #f1f5f9; border-radius: 6px; text-align: center; font-size: 0.65rem; font-weight: 800; cursor: pointer; color: var(--muted); }
@@ -43,7 +40,6 @@ nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--acce
 .players-list li { padding: 12px; border-bottom: 1px solid #f8fafc; cursor: pointer; display: flex; align-items: center; font-size: 0.9rem; }
 .players-list li.active { background: #eff6ff; color: var(--accent); font-weight: 700; border-left: 4px solid var(--accent); }
 
-/* SIDEBAR FLIP */
 .results-sidebar{ perspective:1200px; position:sticky; top:1.5rem; }
 .flip-card{ position:relative; width:100%; min-height:650px; transform-style:preserve-3d; transition:transform 0.6s ease; }
 .flip-card.flipped{ transform:rotateY(180deg); }
@@ -56,14 +52,12 @@ nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--acce
 .res-item span{ font-size:1.3rem; font-weight:800; color:#60a5fa; display:block; }
 
 .rank-badge{ background:linear-gradient(135deg,#3b82f6 0%,#1e40af 100%); text-align:center; padding:1rem; border-radius:15px; margin-top:10px; }
-.rank-val{ font-size:2.5rem; font-weight:900; display:block; }
+.rank-val{ font-size:2.5rem; font-weight:900; display:block; color:white; }
 
-.pack-table { width: 100%; color: white; border-collapse: collapse; font-size: 0.7rem; }
-.pack-table td { padding: 6px 0; border-bottom: 1px solid #334155; }
-.flip-trigger { background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-top: 15px; font-weight: 700; font-size: 0.8rem; }
-
-/* UTILITY SECTION */
-.admin-tools { margin-top: 20px; display: grid; gap: 10px; }
+.pack-table { width: 100%; color: white; border-collapse: collapse; font-size: 0.75rem; }
+.pack-table td { padding: 8px 0; border-bottom: 1px solid #334155; }
+.pack-table input { width: 18px; height: 18px; cursor: pointer; }
+.flip-trigger { background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-top: 15px; font-weight: 700; }
 </style>
 </head>
 
@@ -76,20 +70,13 @@ nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--acce
         <h3>Directory</h3>
         <input type="text" id="playerSearch" placeholder="🔍 Search players..." class="input" oninput="renderList()">
         <ul class="players-list" id="playersList"></ul>
-        
-        <div class="admin-tools">
-            <textarea id="bulkInput" placeholder="Bulk Add (One name per line)" class="input" rows="3"></textarea>
-            <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add Players</button>
-            <div style="display:flex; gap:5px;">
-                <button class="btn" style="background:var(--muted); font-size:0.7rem;" onclick="resetStats()">Reset Stats</button>
-                <button class="btn" style="background:var(--danger); font-size:0.7rem;" onclick="deleteAll()">Delete All</button>
-            </div>
-        </div>
+        <textarea id="bulkInput" placeholder="Bulk Add Names (One per line)" class="input" style="margin-top:15px;" rows="3"></textarea>
+        <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add Players</button>
+        <button class="btn" style="background:var(--danger); margin-top:5px; font-size:0.7rem;" onclick="deleteAll()">Wipe All Data</button>
     </section>
 
     <section class="section">
         <h2 id="editHeader" style="color:var(--accent); margin-top:0;">Select Player</h2>
-        
         <div class="week-tabs">
             <button onclick="setWeek('home week')" class="week-btn" id="btn-homeweek">HOME</button>
             <button onclick="setWeek('week 1')" class="week-btn" id="btn-week1">W1</button>
@@ -125,8 +112,8 @@ nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--acce
         </div>
 
         <div style="display:flex; gap:10px;">
-            <button class="btn" style="background:var(--success); flex:2;" onclick="performSave()">SAVE PLAYER</button>
-            <button class="btn" style="background:var(--danger); flex:1;" onclick="deleteSinglePlayer()">DELETE</button>
+            <button class="btn" style="background:var(--success); flex:2;" onclick="performSave()">SAVE DATA</button>
+            <button class="btn" style="background:var(--danger); flex:1;" onclick="deletePlayer()">DELETE</button>
         </div>
     </section>
 
@@ -134,18 +121,14 @@ nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--acce
         <div class="flip-card" id="liveFlip">
             <div class="flip-face flip-front">
                 <h3>📊 Live Analysis</h3>
-                <div class="res-item"><label>Efficiency</label><span id="res_eff">0.00</span></div>
-                <div class="res-item"><label>Hunt Score</label><span id="res_hunt">0.00</span></div>
+                <div class="res-item"><label>Efficiency</label><span id="res_eff">0.0000</span></div>
                 <div class="res-item"><label>Total Score</label><span id="res_total">0</span></div>
-                <div class="rank-badge"><label style="color:#fff; font-size:0.6rem;">EST. RANK</label><span class="rank-val" id="res_rank">#--</span></div>
+                <div class="rank-badge"><label>EST. RANK</label><span class="rank-val" id="res_rank">#--</span></div>
                 <button class="flip-trigger" onclick="document.getElementById('liveFlip').classList.add('flipped')">KING PACKS 👑</button>
             </div>
             <div class="flip-face flip-back">
-                <h3 style="margin-top:0">👑 King Packs</h3>
-                <table class="pack-table">
-                    <thead><tr><th align="left">PACK</th><th>T1</th><th>T2</th></tr></thead>
-                    <tbody id="packBody"></tbody>
-                </table>
+                <h3>👑 King Packs</h3>
+                <table class="pack-table" id="packTable"></table>
                 <button class="flip-trigger" onclick="document.getElementById('liveFlip').classList.remove('flipped')">BACK TO SCORES</button>
             </div>
         </div>
@@ -154,19 +137,20 @@ nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--acce
 
 <script>
 let curP = null, curW = 'week 1';
-const fields = ['power','points','throne','quest','hunt'];
+const fields = ['f_power','f_points','f_throne','f_quest','f_hunt'];
 const toggles = ['t_lava','t_chall','t_dono','t_esb','t_dv','t_mon','t_wed','h_100','h_40','h_20','h_5'];
-const packKeys = ['leg','epi','exc','rdr','rhe','run'];
+const packs = ['pk_leg_t1','pk_leg_t2','pk_epi_t1','pk_epi_t2','pk_exc_t1','pk_exc_t2','pk_rdr_t1','pk_rdr_t2','pk_rhe_t1','pk_rhe_t2','pk_run_t1','pk_run_t2'];
 
 const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
-const save = d => { localStorage.setItem('formData', JSON.stringify(d)); };
+const save = d => localStorage.setItem('formData', JSON.stringify(d));
 
-// Initialize Pack Table
-const packBody = document.getElementById('packBody');
-const packLabels = {leg:'Legendary', epi:'Epic', exc:'Excellent', rdr:'Rare (Dra)', rhe:'Rare (Hero)', run:'Rare (Uni)'};
-packKeys.forEach(k => {
-    packBody.innerHTML += `<tr><td>${packLabels[k]}</td><td align="center"><input type="checkbox" id="pk_${k}_t1"></td><td align="center"><input type="checkbox" id="pk_${k}_t2"></td></tr>`;
-});
+// Build Pack Table
+const packLabels = ["Legendary","Epic","Excellent","Rare (Dra)","Rare (Hero)","Rare (Uni)"];
+const packTable = document.getElementById('packTable');
+for(let i=0; i<6; i++){
+    let id1 = packs[i*2], id2 = packs[i*2+1];
+    packTable.innerHTML += `<tr><td>${packLabels[i]}</td><td><input type="checkbox" id="${id1}"></td><td><input type="checkbox" id="${id2}"></td></tr>`;
+}
 
 window.setWeek = (w) => {
     curW = w;
@@ -179,93 +163,73 @@ window.selectPlayer = (n) => {
     curP = n;
     document.getElementById('editHeader').innerText = n;
     const data = load().find(x => x.name === n && x.week === curW) || {};
-    fields.forEach(f => document.getElementById('f_'+f).value = data[f] || '');
-    toggles.forEach(t => document.getElementById(t).checked = (data[t] === 1));
-    packKeys.forEach(k => {
-        document.getElementById(`pk_${k}_t1`).checked = (data[`pk_${k}_t1`] === 1);
-        document.getElementById(`pk_${k}_t2`).checked = (data[`pk_${k}_t2`] === 1);
-    });
+    fields.forEach(f => document.getElementById(f).value = data[f] || "");
+    toggles.concat(packs).forEach(t => document.getElementById(t).checked = (data[t] === 1));
     renderList(); updateLive();
 };
 
 window.updateLive = () => {
     const data = load();
-    const p = parseFloat(f_power.value)||0, pts = parseFloat(f_points.value)||0, h = parseFloat(f_hunt.value)||0;
-    const total = pts + (parseFloat(f_throne.value)||0);
-    
-    document.getElementById('res_eff').innerText = p > 0 ? (pts/(p/1000000)).toFixed(2) : '0.00';
-    document.getElementById('res_hunt').innerText = h.toLocaleString();
+    const p = parseFloat(f_power.value)||0, pts = parseFloat(f_points.value)||0, t = parseFloat(f_throne.value)||0;
+    const total = pts + t;
+    document.getElementById('res_eff').innerText = p > 0 ? (pts/(p/1000000)).toFixed(4) : "0.0000";
     document.getElementById('res_total').innerText = total.toLocaleString();
 
-    // Live Ranking Logic
-    if(curP){
-        const weekData = data.filter(x => x.week === curW);
-        const scores = weekData.map(x => (parseFloat(x.points)||0) + (parseFloat(x.throne)||0)).sort((a,b) => b-a);
-        const rank = scores.indexOf(total) + 1;
-        document.getElementById('res_rank').innerText = rank > 0 ? "#" + rank : "#--";
-    }
+    const weekScores = data.filter(x => x.week === curW).map(x => (parseFloat(x.f_points)||0) + (parseFloat(x.f_throne)||0)).sort((a,b)=>b-a);
+    const rank = weekScores.indexOf(total) + 1;
+    document.getElementById('res_rank').innerText = rank > 0 ? "#" + rank : "#--";
 };
 
 window.performSave = () => {
-    if(!curP) return alert("Select player");
+    if(!curP) return alert("Select a player");
     let d = load();
     const entry = { name: curP, week: curW };
-    fields.forEach(f => entry[f] = parseFloat(document.getElementById('f_'+f).value) || 0);
-    toggles.forEach(t => entry[t] = document.getElementById(t).checked ? 1 : 0);
-    packKeys.forEach(k => {
-        entry[`pk_${k}_t1`] = document.getElementById(`pk_${k}_t1`).checked ? 1 : 0;
-        entry[`pk_${k}_t2`] = document.getElementById(`pk_${k}_t2`).checked ? 1 : 0;
-    });
+    fields.forEach(f => entry[f] = document.getElementById(f).value);
+    toggles.concat(packs).forEach(t => entry[t] = document.getElementById(t).checked ? 1 : 0);
     const i = d.findIndex(x => x.name === curP && x.week === curW);
-    if(i >= 0) d[i] = entry; else d.push(entry);
-    save(d); renderList(); updateLive();
+    if(i>=0) d[i]=entry; else d.push(entry);
+    save(d); renderList(); alert("Saved!");
 };
 
 window.addNewPlayer = () => {
-    const raw = document.getElementById('bulkInput').value.trim();
-    if(!raw) return;
+    const raw = bulkInput.value.trim(); if(!raw) return;
     let d = load();
-    const names = raw.split('\n').map(n => n.trim()).filter(n => n);
-    names.forEach(n => {
+    raw.split('\n').forEach(n => {
+        n = n.trim(); if(!n) return;
         ['home week','week 1','week 2','week 3'].forEach(w => {
-            if(!d.find(x => x.name === n && x.week === w)) d.push({name:n, week:w});
+            if(!d.find(x=>x.name===n && x.week===w)) d.push({name:n, week:w});
         });
     });
-    save(d); document.getElementById('bulkInput').value=''; renderList();
+    save(d); bulkInput.value=""; renderList();
 };
 
-window.resetStats = () => {
-    if(!confirm("Reset ALL stats for ALL players?")) return;
-    let d = load().map(x => ({name: x.name, week: x.week}));
-    save(d); location.reload();
-};
-
-window.deleteAll = () => {
-    if(!confirm("DELETE ENTIRE ROSTER?")) return;
-    localStorage.removeItem('formData'); location.reload();
-};
-
-window.deleteSinglePlayer = () => {
+window.deletePlayer = () => {
     if(!curP || !confirm("Delete " + curP + "?")) return;
     save(load().filter(x => x.name !== curP));
     curP = null; renderList();
 };
 
+window.deleteAll = () => { if(confirm("WIPE EVERYTHING?")) { localStorage.clear(); location.reload(); }};
+
 window.renderList = () => {
-    const data = load();
-    const allNames = [...new Set(data.map(x => x.name))].sort();
-    const search = document.getElementById('playerSearch').value.toLowerCase();
-    document.getElementById('rosterCount').innerText = allNames.length + " Players";
-    document.getElementById('playersList').innerHTML = allNames
-        .filter(n => n.toLowerCase().includes(search))
-        .map(n => {
-            const weekData = data.find(x => x.name === n && x.week === curW) || {};
-            const is100 = (n === curP) ? document.getElementById('h_100').checked : (weekData.h_100 === 1);
-            return `<li class="${n===curP?'active':''}" onclick="selectPlayer('${n}')"><span class="dot ${is100?'active':''}"></span>${n}</li>`;
-        }).join('');
+    const d = load();
+    const names = [...new Set(d.map(x => x.name))].sort();
+    const s = playerSearch.value.toLowerCase();
+    rosterCount.innerText = names.length + " Players";
+    playersList.innerHTML = names.filter(n => n.toLowerCase().includes(s)).map(n => {
+        const wd = d.find(x => x.name === n && x.week === curW) || {};
+        const is100 = (n === curP) ? document.getElementById('h_100').checked : (wd.h_100 === 1);
+        return `<li class="${n===curP?'active':''}" onclick="selectPlayer('${n}')"><span class="dot ${is100?'active':''}"></span>${n}</li>`;
+    }).join('');
 };
 
-setWeek('week 1');
+// HANDLES "EDIT" LINK FROM INDEX
+const urlP = new URLSearchParams(window.location.search);
+if(urlP.get('player')) {
+    const p = urlP.get('player'), w = urlP.get('week') || 'week 1';
+    setWeek(w); selectPlayer(p);
+} else { setWeek('week 1'); }
+
 </script>
 </body>
 </html>
