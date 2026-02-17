@@ -8,14 +8,8 @@
 
 <style>
 :root{
---bg:#f1f5f9;
---text:#1e293b;
---card:#ffffff;
---accent:#3b82f6;
---success:#10b981;
---danger:#ef4444;
---dark-panel:#0f172a;
---muted:#64748b;
+--bg:#f1f5f9; --text:#1e293b; --card:#ffffff; --accent:#3b82f6;
+--success:#10b981; --danger:#ef4444; --dark-panel:#0f172a; --muted:#64748b;
 }
 
 *{box-sizing:border-box}
@@ -24,249 +18,177 @@ header{background:#1e40af;color:#fff;padding:1.2rem 2rem;display:flex;justify-co
 nav{display:flex;justify-content:center;gap:15px;padding:.75rem;background:#cbd5e1;}
 nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;}
 
-.main-wrap{
-width:100%;
-padding:1.5rem;
-display:grid;
-gap:1.5rem;
-grid-template-columns:350px 1fr 350px;
-align-items:start;
-}
+.main-wrap{ width:100%; padding:1.5rem; display:grid; gap:1.5rem; grid-template-columns:320px 1fr 320px; align-items:start; }
+.section{ background:var(--card); padding:1.5rem; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
 
-.section{
-background:var(--card);
-padding:1.5rem;
-border-radius:16px;
-box-shadow:0 10px 25px rgba(0,0,0,0.05);
-}
+.input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; }
+.btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width:100%; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
 
-.input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-family: inherit; }
-.btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
-.btn:hover { opacity: 0.9; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.week-btn { padding: 8px 15px; border: 1px solid var(--accent); background: white; cursor: pointer; border-radius: 5px; font-weight: 600; }
-.week-btn.selected { background: var(--accent); color: white; }
+/* TOGGLE STYLES */
+.toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-bottom: 20px; }
+.tgl-btn { position: relative; }
+.tgl-btn input { display: none; }
+.tgl-btn label { display: block; padding: 8px 4px; background: #eee; border-radius: 6px; text-align: center; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+.tgl-btn input:checked + label { background: var(--accent); color: white; }
+.tgl-hero input:checked + label { background: #8b5cf6; color: white; }
 
-.players-list { list-style: none; padding: 0; margin-top: 10px; max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
-.players-list li { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
-.players-list li:hover { background: #f1f5f9; }
-.players-list li.active { background: var(--accent); color: white; font-weight: 700; }
+/* GREEN LIGHT LOGIC */
+#greenLight { width: 12px; height: 12px; background: #334155; border-radius: 50%; display: inline-block; margin-right: 8px; }
+#greenLight.active { background: #10b981; box-shadow: 0 0 10px #10b981; }
 
-/* ===== RIGHT SIDEBAR FLIP ===== */
+.players-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; }
+.players-list li { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+.players-list li.active { background: #e2e8f0; font-weight: 700; border-left: 4px solid var(--accent); }
+
+/* SIDEBAR FLIP */
 .results-sidebar{ perspective:1200px; position:sticky; top:1.5rem; }
-.flip-card{ position:relative; width:100%; min-height:620px; transform-style:preserve-3d; transition:transform .6s; }
+.flip-card{ position:relative; width:100%; min-height:580px; transform-style:preserve-3d; transition:transform .6s; }
 .flip-card.flipped{ transform:rotateY(180deg); }
-.flip-face{ position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:20px; padding:2rem; cursor: pointer; }
+.flip-face{ position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:20px; padding:2rem; }
 .flip-front{ background:var(--dark-panel); color:white; }
-.flip-back{ background:var(--dark-panel); color:white; transform:rotateY(180deg); cursor: default; }
+.flip-back{ background:var(--dark-panel); color:white; transform:rotateY(180deg); }
 
-.res-item{ margin-bottom:1.2rem; padding-bottom:.8rem; border-bottom:1px solid #334155; }
-.res-item label{ font-size:.7rem; color:#94a3b8; text-transform:uppercase; }
-.res-item span{ font-size:1.5rem; font-weight:800; color:#60a5fa; display: block; }
+.res-item{ margin-bottom:1rem; border-bottom:1px solid #334155; padding-bottom: 5px; }
+.res-item label{ font-size:.65rem; color:#94a3b8; text-transform:uppercase; }
+.res-item span{ font-size:1.4rem; font-weight:800; color:#60a5fa; display:block; }
 
-.rank-badge{ background:linear-gradient(135deg,#3b82f6 0%,#1e40af 100%); text-align:center; padding:1.5rem; border-radius:15px; margin-top:1.5rem; }
-.rank-val{ font-size:3.5rem; font-weight:900; display:block; }
-
-.pack-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-.pack-table th { font-size: 0.6rem; color: #94a3b8; text-align: center; padding-bottom: 10px; }
-.pack-table td { padding: 8px 0; border-bottom: 1px solid #334155; font-size: 0.85rem; }
-.pack-table input { cursor: pointer; width: 18px; height: 18px; }
-.center { text-align: center; }
+.pack-table { width: 100%; color: white; border-collapse: collapse; font-size: 0.8rem; }
+.pack-table td { padding: 8px 0; border-bottom: 1px solid #334155; }
 </style>
 </head>
 
 <body>
-
-<header>
-<h1>Alliance Management</h1>
-<div id="rosterCount">Players: 0</div>
-</header>
-
-<nav>
-<a href="index.html">Dashboard</a>
-<a href="trends.html">Trends</a>
-<a href="form.html">Manage Data</a>
-</nav>
+<header><h1>Alliance Management</h1><div id="rosterCount">Players: 0</div></header>
+<nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="form.html">Manage Data</a></nav>
 
 <main class="main-wrap">
+    <section class="section">
+        <h3>Directory</h3>
+        <input type="text" id="playerSearch" placeholder="Search..." class="input" oninput="renderList()">
+        <ul class="players-list" id="playersList"></ul>
+        <input id="playerNameInput" placeholder="New Player Name" class="input">
+        <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add Player</button>
+    </section>
 
-<section class="section">
-<h3>Directory</h3>
-<input type="text" id="playerSearch" placeholder="🔍 Search players..." class="input" oninput="renderList()">
-<ul class="players-list" id="playersList"></ul>
+    <section class="section">
+        <h2 id="editHeader">Select Player</h2>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <button onclick="setWeek('week 1')" class="week-btn" id="btn-week1">W1</button>
+            <button onclick="setWeek('week 2')" class="week-btn" id="btn-week2">W2</button>
+            <button onclick="setWeek('week 3')" class="week-btn" id="btn-week3">W3</button>
+        </div>
 
-<div style="margin-top:20px;padding-top:20px;border-top:2px solid #f1f5f9;">
-<input id="playerNameInput" placeholder="Enter name..." class="input" style="border:2px solid var(--accent);">
-<button class="btn" style="background:var(--success); width: 100%;" onclick="addNewPlayer()">Add to Roster</button>
-</div>
-</section>
+        <div class="grid-2">
+            <div><label>Power</label><input id="f_power" type="number" class="input" oninput="updateLive()"></div>
+            <div><label>Points</label><input id="f_points" type="number" class="input" oninput="updateLive()"></div>
+            <div><label>Throne</label><input id="f_throne" type="number" class="input" oninput="updateLive()"></div>
+            <div><label>Quest</label><input id="f_quest" type="number" class="input"></div>
+            <div><label>Hunt</label><input id="f_hunt" type="number" class="input"></div>
+        </div>
 
-<section class="section">
-<h2 id="editHeader">Select a Player</h2>
+        <label style="font-size:0.7rem; font-weight:800; color:var(--muted)">ACTIVITY TOGGLES</label>
+        <div class="toggle-grid">
+            <div class="tgl-btn"><input type="checkbox" id="t_lava"><label for="t_lava">LAVA</label></div>
+            <div class="tgl-btn"><input type="checkbox" id="t_chall"><label for="t_chall">CHALL</label></div>
+            <div class="tgl-btn"><input type="checkbox" id="t_dono"><label for="t_dono">DONO</label></div>
+            <div class="tgl-btn"><input type="checkbox" id="t_esb"><label for="t_esb">ESB</label></div>
+            <div class="tgl-btn"><input type="checkbox" id="t_dv"><label for="t_dv">DV</label></div>
+            <div class="tgl-btn"><input type="checkbox" id="t_mon"><label for="t_mon">MON</label></div>
+            <div class="tgl-btn"><input type="checkbox" id="t_wed"><label for="t_wed">WED</label></div>
+        </div>
 
-<div style="display:flex;gap:10px;margin-bottom:20px;">
-<button onclick="setWeek('week 1')" class="week-btn selected" id="btn-week1">W1</button>
-<button onclick="setWeek('week 2')" class="week-btn" id="btn-week2">W2</button>
-<button onclick="setWeek('week 3')" class="week-btn" id="btn-week3">W3</button>
-</div>
+        <label style="font-size:0.7rem; font-weight:800; color:var(--muted)">HERO PICKS</label>
+        <div class="toggle-grid">
+            <div class="tgl-btn tgl-hero"><input type="checkbox" id="h_100" onchange="updateLive()"><label for="h_100">100</label></div>
+            <div class="tgl-btn tgl-hero"><input type="checkbox" id="h_40"><label for="h_40">40</label></div>
+            <div class="tgl-btn tgl-hero"><input type="checkbox" id="h_20"><label for="h_20">20</label></div>
+            <div class="tgl-btn tgl-hero"><input type="checkbox" id="h_5"><label for="h_5">5</label></div>
+        </div>
 
-<div class="grid-2">
-<div><label>Current Power</label><input id="f_power" type="number" class="input" oninput="updateLiveAnalysis()"></div>
-<div><label>Total Points</label><input id="f_points" type="number" class="input" oninput="updateLiveAnalysis()"></div>
-<div><label>Throne Kills</label><input id="f_throne" type="number" class="input" oninput="updateLiveAnalysis()"></div>
-<div><label>Quest Score</label><input id="f_quest" type="number" class="input" oninput="updateLiveAnalysis()"></div>
-<div><label>Ultimate Hunt</label><input id="f_hunt" type="number" class="input" oninput="updateLiveAnalysis()"></div>
-</div>
+        <button class="btn" style="background:var(--success); margin-top:10px;" onclick="performSave()">SAVE PLAYER</button>
+    </section>
 
-<div style="display:flex;gap:15px;margin-top:30px;">
-<button class="btn" style="background:var(--success);flex:2;" onclick="performSave()">SAVE DATA</button>
-<button class="btn" style="background:var(--danger);flex:1;" onclick="deletePlayer()">DELETE</button>
-</div>
-</section>
-
-<aside class="results-sidebar">
-<div class="flip-card" id="liveFlip">
-
-    <div class="flip-face flip-front" onclick="document.getElementById('liveFlip').classList.add('flipped')">
-        <h3>Live Analysis</h3>
-        <div class="res-item"><label>Efficiency Score</label><span id="res_eff">0.0000</span></div>
-        <div class="res-item"><label>Hunt Score</label><span id="res_hunt">0.00</span></div>
-        <div class="res-item"><label>Throne Score</label><span id="res_throne">0.00</span></div>
-        <div class="res-item"><label>Total Score</label><span id="res_total">0.00</span></div>
-        <div class="rank-badge"><span class="rank-val" id="res_rank">#--</span></div>
-        <p style="margin-top:20px; font-size: 0.7rem; color: #94a3b8; text-align: center;">Click for King Packs 👑</p>
-    </div>
-
-    <div class="flip-face flip-back">
-        <h3 onclick="document.getElementById('liveFlip').classList.remove('flipped')" style="cursor:pointer">👑 KING PACKS</h3>
-        <table class="pack-table">
-            <thead>
-                <tr><th style="text-align: left;">QUALITY</th><th>T1</th><th>T2</th></tr>
-            </thead>
-            <tbody>
-                <tr><td>Legendary</td><td class="center"><input type="checkbox" id="pk_leg_t1"></td><td class="center"><input type="checkbox" id="pk_leg_t2"></td></tr>
-                <tr><td>Epic</td><td class="center"><input type="checkbox" id="pk_epi_t1"></td><td class="center"><input type="checkbox" id="pk_epi_t2"></td></tr>
-                <tr><td>Excellent</td><td class="center"><input type="checkbox" id="pk_exc_t1"></td><td class="center"><input type="checkbox" id="pk_exc_t2"></td></tr>
-                <tr><td>Rare (Dragon)</td><td class="center"><input type="checkbox" id="pk_rdr_t1"></td><td class="center"><input type="checkbox" id="pk_rdr_t2"></td></tr>
-                <tr><td>Rare (Hero)</td><td class="center"><input type="checkbox" id="pk_rhe_t1"></td><td class="center"><input type="checkbox" id="pk_rhe_t2"></td></tr>
-                <tr><td>Rare (Units)</td><td class="center"><input type="checkbox" id="pk_run_t1"></td><td class="center"><input type="checkbox" id="pk_run_t2"></td></tr>
-            </tbody>
-        </table>
-        <p onclick="document.getElementById('liveFlip').classList.remove('flipped')" style="margin-top:30px;font-size:.75rem;color:#94a3b8; cursor:pointer; text-align:center;">Return to Analysis</p>
-    </div>
-
-</div>
-</aside>
-
+    <aside class="results-sidebar">
+        <div class="flip-card" id="liveFlip">
+            <div class="flip-face flip-front" onclick="this.parentElement.classList.add('flipped')">
+                <div style="display:flex; align-items:center; margin-bottom:10px;">
+                    <div id="greenLight"></div>
+                    <h3 style="margin:0">Live Analysis</h3>
+                </div>
+                <div class="res-item"><label>Efficiency</label><span id="res_eff">0.00</span></div>
+                <div class="res-item"><label>Total Score</label><span id="res_total">0</span></div>
+                <p style="font-size:0.7rem; color:#94a3b8; text-align:center; margin-top:100px;">Tap for King Packs 👑</p>
+            </div>
+            <div class="flip-face flip-back" onclick="this.parentElement.classList.remove('flipped')">
+                <h3>King Packs</h3>
+                <table class="pack-table" id="packTable">
+                    <tr><td>Legendary</td><td><input type="checkbox" id="pk_leg_t1"></td><td><input type="checkbox" id="pk_leg_t2"></td></tr>
+                    <tr><td>Epic</td><td><input type="checkbox" id="pk_epi_t1"></td><td><input type="checkbox" id="pk_epi_t2"></td></tr>
+                    <tr><td>Rare</td><td><input type="checkbox" id="pk_rare_t1"></td><td><input type="checkbox" id="pk_rare_t2"></td></tr>
+                </table>
+                <p style="font-size:0.7rem; color:#94a3b8; text-align:center; margin-top:20px;">Tap to return</p>
+            </div>
+        </div>
+    </aside>
 </main>
 
 <script>
-(function(){
-let currentPlayer=null, currentWeek='week 1';
-const packFields = ['pk_leg_t1','pk_leg_t2','pk_epi_t1','pk_epi_t2','pk_exc_t1','pk_exc_t2','pk_rdr_t1','pk_rdr_t2','pk_rhe_t1','pk_rhe_t2','pk_run_t1','pk_run_t2'];
+let curP = null, curW = 'week 1';
+const fields = ['power','points','throne','quest','hunt'];
+const toggles = ['t_lava','t_chall','t_dono','t_esb','t_dv','t_mon','t_wed','h_100','h_40','h_20','h_5'];
+const packs = ['pk_leg_t1','pk_leg_t2','pk_epi_t1','pk_epi_t2','pk_rare_t1','pk_rare_t2'];
 
-const load=()=>JSON.parse(localStorage.getItem('formData')||'[]');
-const save=d=>localStorage.setItem('formData',JSON.stringify(d));
+const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
+const save = d => localStorage.setItem('formData', JSON.stringify(d));
 
-window.updateLiveAnalysis = function() {
-    const p = parseFloat(f_power.value) || 0;
-    const pts = parseFloat(f_points.value) || 0;
-    const h = parseFloat(f_hunt.value) || 0;
-    const t = parseFloat(f_throne.value) || 0;
-    
-    // Logic: Points per Million Power
-    const eff = p > 0 ? (pts / (p / 1000000)).toFixed(4) : "0.0000";
-    document.getElementById('res_eff').textContent = eff;
-    document.getElementById('res_hunt').textContent = h.toFixed(2);
-    document.getElementById('res_throne').textContent = t.toFixed(2);
-    document.getElementById('res_total').textContent = (pts + h + t).toLocaleString();
+window.setWeek = (w) => {
+    curW = w;
+    document.querySelectorAll('.week-btn').forEach(b => b.classList.toggle('selected', b.id === 'btn-'+w.replace(' ','')));
+    if(curP) selectPlayer(curP);
 };
 
-window.setWeek=function(w){
-    currentWeek=w;
-    document.querySelectorAll('.week-btn').forEach(b=>b.classList.remove('selected'));
-    document.getElementById('btn-'+w.replace(' ','')).classList.add('selected');
-    if(currentPlayer) selectPlayer(currentPlayer);
-};
-
-window.selectPlayer=function(n){
-    currentPlayer=n;
-    document.getElementById('editHeader').textContent=n;
-    renderList(); // Refresh list to show active state
-    
-    const d=load();
-    const entry = d.find(x=>x.name===n && x.week===currentWeek) || {};
-    
-    f_power.value = entry.power || "";
-    f_points.value = entry.points || "";
-    f_throne.value = entry.throne || "";
-    f_quest.value = entry.quest || "";
-    f_hunt.value = entry.hunt || "";
-
-    packFields.forEach(id => {
-        document.getElementById(id).checked = entry[id] === 1;
-    });
-    
-    updateLiveAnalysis();
-};
-
-window.performSave=function(){
-    if(!currentPlayer) return alert("Select a player first");
-    let d=load();
-    const state={
-        name:currentPlayer,
-        week:currentWeek,
-        power:f_power.value,
-        points:f_points.value,
-        throne:f_throne.value,
-        quest:f_quest.value,
-        hunt:f_hunt.value
-    };
-    
-    packFields.forEach(id => {
-        state[id] = document.getElementById(id).checked ? 1 : 0;
-    });
-
-    const i=d.findIndex(x=>x.name===currentPlayer && x.week===currentWeek);
-    if(i>=0) d[i]=state; else d.push(state);
-    save(d);
-    alert("Saved: " + currentPlayer);
-};
-
-window.addNewPlayer=function(){
-    const n=playerNameInput.value.trim();
-    if(!n)return;
-    let d=load();
-    ['week 1','week 2','week 3'].forEach(w=>{
-        if(!d.find(x=>x.name===n && x.week===w)) d.push({name:n, week:w});
-    });
-    save(d);
-    playerNameInput.value="";
+window.selectPlayer = (n) => {
+    curP = n;
+    document.getElementById('editHeader').innerText = n;
+    const data = load().find(x => x.name === n && x.week === curW) || {};
+    fields.forEach(f => document.getElementById('f_'+f).value = data[f] || '');
+    toggles.concat(packs).forEach(t => document.getElementById(t).checked = data[t] === 1);
     renderList();
+    updateLive();
 };
 
-window.deletePlayer=function(){
-    if(!currentPlayer || !confirm("Delete " + currentPlayer + "?")) return;
-    let d=load().filter(x=>x.name!==currentPlayer);
-    save(d);
-    currentPlayer = null;
-    location.reload();
+window.updateLive = () => {
+    const p = parseFloat(f_power.value)||0, pts = parseFloat(f_points.value)||0;
+    document.getElementById('res_eff').innerText = p > 0 ? (pts/(p/1000000)).toFixed(2) : '0.00';
+    document.getElementById('res_total').innerText = (pts + (parseFloat(f_throne.value)||0)).toLocaleString();
+    document.getElementById('greenLight').classList.toggle('active', document.getElementById('h_100').checked);
 };
 
-window.renderList=function(){
-    const d=load();
-    const search = playerSearch.value.toLowerCase();
-    const names=[...new Set(d.map(x=>x.name))].filter(n => n.toLowerCase().includes(search));
-    rosterCount.textContent="Players: "+[...new Set(d.map(x=>x.name))].length;
-    playersList.innerHTML=names.map(n=>{
-        const active = n === currentPlayer ? 'active' : '';
-        return `<li class="${active}" onclick="selectPlayer('${n}')">${n}</li>`;
-    }).join('');
+window.performSave = () => {
+    if(!curP) return;
+    let d = load();
+    const entry = { name: curP, week: curW };
+    fields.forEach(f => entry[f] = parseFloat(document.getElementById('f_'+f).value) || 0);
+    toggles.concat(packs).forEach(t => entry[t] = document.getElementById(t).checked ? 1 : 0);
+    const i = d.findIndex(x => x.name === curP && x.week === curW);
+    if(i >= 0) d[i] = entry; else d.push(entry);
+    save(d); alert("Saved!");
 };
 
-renderList();
-})();
+window.addNewPlayer = () => {
+    const n = playerNameInput.value.trim(); if(!n) return;
+    let d = load(); ['week 1','week 2','week 3'].forEach(w => d.push({name:n, week:w}));
+    save(d); playerNameInput.value=''; renderList();
+};
+
+window.renderList = () => {
+    const names = [...new Set(load().map(x => x.name))];
+    rosterCount.innerText = "Players: " + names.length;
+    playersList.innerHTML = names.map(n => `<li class="${n===curP?'active':''}" onclick="selectPlayer('${n}')">${n}</li>`).join('');
+};
+
+setWeek('week 1'); renderList();
 </script>
-
 </body>
 </html>
