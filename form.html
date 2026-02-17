@@ -358,6 +358,14 @@ if(tName) {
     setWeek(localStorage.getItem('editTargetWeek') || 'week 1');
     selectPlayer(tName);
 } else { setWeek('week 1'); }
+
+// Press Enter to save (except in textarea)
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && curP && !e.target.matches('textarea')) {
+        e.preventDefault();
+        saveEntry();
+    }
+});
 </script>
 </body>
 </html>
