@@ -2,213 +2,174 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Alliance Manager - Live Rank</title>
+    <title>Manage Data - Pro Elite</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        :root{ --bg:#f1f5f9; --text:#1e293b; --card:#ffffff; --accent:#3b82f6; --success:#10b981; --danger:#ef4444; --dark:#0f172a; --muted:#64748b; }
-        *{box-sizing:border-box}
-        body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding-bottom:50px;}
-        header{background:#1e40af;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
-        nav{display:flex;justify-content:center;gap:12px;padding:.8rem;background:#cbd5e1;border-bottom:2px solid #94a3b8;}
-        nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;font-size:0.9rem;}
-        .main-wrap{ width:100%; padding:1.5rem; display:grid; gap:15px; grid-template-columns:280px 1fr 340px; align-items:start; }
-        .section{ background:var(--card); padding:1.5rem; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
-        .input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; font-family: inherit;}
-        .btn { padding: 12px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width:100%; transition: 0.2s; }
-        .week-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e2e8f0; padding: 5px; border-radius: 10px; }
-        .week-btn { flex: 1; padding: 8px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-weight: 700; color: var(--muted); font-size: 0.7rem; }
-        .week-btn.selected { background: white; color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .dot { height: 10px; width: 10px; background-color: #cbd5e1; border-radius: 50%; display: inline-block; margin-right: 10px; }
-        .dot.active { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
-        .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 6px; margin-bottom: 15px; }
-        .tgl-btn input { display: none; }
-        .tgl-btn label { display: block; padding: 8px 2px; background: #f1f5f9; border-radius: 6px; text-align: center; font-size: 0.6rem; font-weight: 800; cursor: pointer; color: var(--muted); border: 1px solid #e2e8f0; }
-        .tgl-btn input:checked + label { background: var(--accent); color: white; border-color: var(--accent); }
-        .players-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
-        .players-list li { padding: 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; align-items: center; font-size: 0.85rem; }
-        .players-list li.active { background: #eff6ff; color: var(--accent); font-weight: 700; border-left: 5px solid var(--accent); }
+        :root { --bg: #f1f5f9; --text: #1e293b; --accent: #3b82f6; --dark: #0f172a; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; }
+        .card { background: white; padding: 2rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
+        h2 { margin-top: 0; font-weight: 900; color: var(--dark); border-bottom: 2px solid var(--bg); padding-bottom: 1rem; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 1.5rem; }
+        .field { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748b; }
+        input, select { padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-weight: 600; font-family: inherit; outline: none; }
+        input:focus { border-color: var(--accent); }
 
-        /* ANALYSIS PANEL */
-        .analysis-panel { background: var(--dark); color: white; border-radius: 20px; padding: 20px; position: sticky; top: 1.5rem; }
-        .rank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .rank-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        .rank-card label { display: block; font-size: 0.55rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; }
-        .rank-card .val { font-size: 1rem; font-weight: 800; color: #60a5fa; }
-        .rank-card .rnk { float: right; font-size: 0.7rem; color: #10b981; }
-        .overall-rank { background: linear-gradient(135deg, #3b82f6, #1e40af); padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; }
-        .overall-rank label { font-size: 0.7rem; font-weight: 800; opacity: 0.8; }
-        .overall-rank .big-rank { font-size: 2.2rem; font-weight: 900; display: block; }
+        .checkbox-group { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 15px; margin-top: 10px; }
+        .check-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 700; }
+        
+        .btn-row { display: flex; gap: 10px; margin-top: 2rem; }
+        button { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-back { background: #64748b; color: white; text-decoration: none; text-align: center; line-height: 1.2; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
     </style>
 </head>
 <body>
 
-<header><h1>Alliance Management</h1><div id="rosterCount">0 Players</div></header>
-<nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="form.html">Manage Data</a></nav>
-
-<main class="main-wrap">
-    <section class="section">
-        <h3>Directory</h3>
-        <input type="text" id="playerSearch" placeholder="🔍 Search..." class="input" oninput="renderList()">
-        <ul class="players-list" id="playersList"></ul>
-        <textarea id="bulkInput" placeholder="Bulk Add Names" class="input" style="margin-top:15px;" rows="3"></textarea>
-        <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add Players</button>
-    </section>
-
-    <section class="section">
-        <h2 id="editHeader" style="color:var(--accent); margin-top:0;">Select Player</h2>
-        <div class="week-tabs">
-            <button onclick="setWeek('home week')" class="week-btn" id="btn-homeweek">HOME</button>
-            <button onclick="setWeek('week 1')" class="week-btn" id="btn-week1">W1</button>
-            <button onclick="setWeek('week 2')" class="week-btn" id="btn-week2">W2</button>
-            <button onclick="setWeek('week 3')" class="week-btn" id="btn-week3">W3</button>
+<div class="card">
+    <h2>Update Member Data</h2>
+    
+    <div class="grid">
+        <div class="field">
+            <label>Target Week</label>
+            <select id="week" onchange="loadExistingData()">
+                <option value="week 1">Week 1</option>
+                <option value="week 2">Week 2</option>
+                <option value="week 3">Week 3</option>
+            </select>
         </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px;">
-            <div><label>POWER</label><input id="power" type="number" class="input" oninput="updateLive()"></div>
-            <div><label>POINTS</label><input id="points" type="number" class="input" oninput="updateLive()"></div>
-            <div><label>THRONE</label><input id="throne" type="number" class="input" oninput="updateLive()"></div>
-            <div><label>QUEST</label><input id="quest" type="number" class="input" oninput="updateLive()"></div>
-            <div><label>HUNT</label><input id="hunt" type="number" class="input" oninput="updateLive()"></div>
-        </div>
-
-        <label style="font-size:0.6rem; font-weight:800; color:var(--muted)">ACTIVITY</label>
-        <div class="toggle-grid">
-            <div class="tgl-btn"><input type="checkbox" id="lava"><label for="lava">LAVA</label></div>
-            <div class="tgl-btn"><input type="checkbox" id="challenge"><label for="challenge">CHALL</label></div>
-            <div class="tgl-btn"><input type="checkbox" id="donations"><label for="donations">DONO</label></div>
-            <div class="tgl-btn"><input type="checkbox" id="esb"><label for="esb">ESB</label></div>
-            <div class="tgl-btn"><input type="checkbox" id="dv"><label for="dv">DV</label></div>
-            <div class="tgl-btn"><input type="checkbox" id="mon"><label for="mon">MON</label></div>
-            <div class="tgl-btn"><input type="checkbox" id="wed"><label for="wed">WED</label></div>
-        </div>
-
-        <label style="font-size:0.6rem; font-weight:800; color:var(--muted)">HERO PICKS</label>
-        <div class="toggle-grid">
-            <div class="tgl-btn"><input type="checkbox" id="p100" onchange="renderList(); updateLive();"><label for="p100">100</label></div>
-            <div class="tgl-btn"><input type="checkbox" id="p40"><label for="p40">40</label></div>
-            <div class="tgl-btn"><input type="checkbox" id="p20"><label for="p20">20</label></div>
-            <div class="tgl-btn"><input type="checkbox" id="p5"><label for="p5">5</label></div>
-        </div>
-
-        <button class="btn" style="background:var(--success)" onclick="saveEntry()">SAVE DATA</button>
-    </section>
-
-    <aside class="analysis-panel">
-        <div class="overall-rank">
-            <label>ESTIMATED OVERALL RANK</label>
-            <span class="big-rank" id="rnk_total">#--</span>
+        <div class="field">
+            <label>Member Name</label>
+            <input type="text" id="name" placeholder="Enter name..." oninput="suggestName()">
         </div>
         
-        <div class="rank-grid">
-            <div class="rank-card"><label>Points</label><span class="rnk" id="r_pts">#--</span><span class="val" id="val_pts">0</span></div>
-            <div class="rank-card"><label>Efficiency</label><span class="rnk" id="r_eff">#--</span><span class="val" id="val_eff">0.00</span></div>
-            <div class="rank-card"><label>Quest</label><span class="rnk" id="r_qst">#--</span><span class="val" id="val_qst">0</span></div>
-            <div class="rank-card"><label>Throne</label><span class="rnk" id="r_thr">#--</span><span class="val" id="val_thr">0</span></div>
-            <div class="rank-card"><label>Throne Eff</label><span class="rnk" id="r_tef">#--</span><span class="val" id="val_tef">0.00</span></div>
+        <div class="field">
+            <label>Current Power</label>
+            <input type="number" id="power" placeholder="e.g. 5000000">
         </div>
-    </aside>
-</main>
+        <div class="field">
+            <label>Weekly Points</label>
+            <input type="number" id="points" placeholder="0">
+        </div>
+        <div class="field">
+            <label>Hunt Score</label>
+            <input type="number" id="hunt" step="0.001" value="0">
+        </div>
+        <div class="field">
+            <label>Quests Completed</label>
+            <input type="number" id="quest" value="0">
+        </div>
+        <div class="field" style="grid-column: span 2;">
+            <label>Throne Points</label>
+            <input type="number" id="throne" value="0">
+        </div>
+
+        <div class="checkbox-group">
+            <div class="check-item"><input type="checkbox" id="lava"> Lava</div>
+            <div class="check-item"><input type="checkbox" id="challenge"> Challenge</div>
+            <div class="check-item"><input type="checkbox" id="donations"> Donations</div>
+            <div class="check-item"><input type="checkbox" id="esb"> ESB</div>
+            <div class="check-item"><input type="checkbox" id="dv"> DV</div>
+            <div class="check-item"><input type="checkbox" id="mon"> Mon</div>
+            <div class="check-item"><input type="checkbox" id="wed"> Wed</div>
+        </div>
+
+        <div class="checkbox-group" style="background: #eff6ff;">
+            <div class="check-item"><input type="checkbox" id="p100"> Pick 100</div>
+            <div class="check-item"><input type="checkbox" id="p40"> Pick 40</div>
+            <div class="check-item"><input type="checkbox" id="p20"> Pick 20</div>
+            <div class="check-item"><input type="checkbox" id="p5"> Pick 5</div>
+        </div>
+    </div>
+
+    <div class="btn-row">
+        <a href="index.html" class="btn-back">BACK</a>
+        <button class="btn-save" onclick="saveData()">SAVE MEMBER DATA</button>
+    </div>
+</div>
 
 <script>
-let curP = null, curW = 'week 1';
-const fKeys = ['power','points','throne','quest','hunt'];
-const tKeys = ['lava','challenge','donations','esb','dv','mon','wed','p100','p40','p20','p5'];
-
-const loadDB = () => JSON.parse(localStorage.getItem('formData') || '[]');
-const saveDB = d => localStorage.setItem('formData', JSON.stringify(d));
-
-window.setWeek = (w) => {
-    curW = w;
-    document.querySelectorAll('.week-btn').forEach(b => b.classList.toggle('selected', b.id === 'btn-'+w.replace(' ','')));
-    if(curP) selectPlayer(curP);
-    renderList();
+// Auto-load if coming from EDIT button
+window.onload = () => {
+    const target = localStorage.getItem('editTargetName');
+    if(target) {
+        document.getElementById('name').value = target;
+        loadExistingData();
+        localStorage.removeItem('editTargetName');
+    }
 };
 
-window.selectPlayer = (n) => {
-    curP = n; document.getElementById('editHeader').innerText = n;
-    const db = loadDB();
-    const entry = db.find(x => x.name === n && x.week === curW) || {};
-    fKeys.forEach(f => document.getElementById(f).value = entry[f] || "");
-    tKeys.forEach(t => document.getElementById(t).checked = (entry[t] === 1));
-    renderList(); updateLive();
-};
+function loadExistingData() {
+    const name = document.getElementById('name').value.trim();
+    const week = document.getElementById('week').value;
+    if(!name) return;
 
-window.updateLive = () => {
-    if(!curP) return;
-    const db = loadDB();
-    const p = parseFloat(document.getElementById('power').value)||1;
-    const pts = parseFloat(document.getElementById('points').value)||0;
-    const q = parseFloat(document.getElementById('quest').value)||0;
-    const t = parseFloat(document.getElementById('throne').value)||0;
+    const data = JSON.parse(localStorage.getItem('formData') || '[]');
+    const record = data.find(r => r.name.toLowerCase() === name.toLowerCase() && r.week === week);
+
+    if(record) {
+        document.getElementById('power').value = record.power || 0;
+        document.getElementById('points').value = record.points || 0;
+        document.getElementById('hunt').value = record.hunt || 0;
+        document.getElementById('quest').value = record.quest || 0;
+        document.getElementById('throne').value = record.throne || 0;
+        
+        // Checklist
+        ['lava','challenge','donations','esb','dv','mon','wed','p100','p40','p20','p5'].forEach(id => {
+            document.getElementById(id).checked = !!record[id];
+        });
+    } else {
+        // Clear form for new week entry (except name/week)
+        ['power','points','hunt','quest','throne'].forEach(id => document.getElementById(id).value = "");
+        ['lava','challenge','donations','esb','dv','mon','wed','p100','p40','p20','p5'].forEach(id => {
+            document.getElementById(id).checked = false;
+        });
+    }
+}
+
+function saveData() {
+    const name = document.getElementById('name').value.trim();
+    const week = document.getElementById('week').value;
+    if(!name) return alert("Please enter a member name");
+
+    let data = JSON.parse(localStorage.getItem('formData') || '[]');
     
-    const eff = (pts / (p/1000000));
-    const tef = (t / p);
-
-    document.getElementById('val_pts').innerText = pts.toLocaleString();
-    document.getElementById('val_eff').innerText = eff.toFixed(2);
-    document.getElementById('val_qst').innerText = q.toLocaleString();
-    document.getElementById('val_thr').innerText = t.toLocaleString();
-    document.getElementById('val_tef').innerText = tef.toFixed(4);
-
-    // LIVE RANKING LOGIC
-    const weekData = db.filter(x => x.week === curW);
-    const getRank = (val, key, desc=true) => {
-        const scores = weekData.map(x => parseFloat(x[key])||0);
-        scores.push(val);
-        scores.sort((a,b) => desc ? b-a : a-b);
-        return "#" + (scores.indexOf(val) + 1);
+    const newRecord = {
+        name,
+        week,
+        power: parseFloat(document.getElementById('power').value) || 0,
+        points: parseFloat(document.getElementById('points').value) || 0,
+        hunt: parseFloat(document.getElementById('hunt').value) || 0,
+        quest: parseFloat(document.getElementById('quest').value) || 0,
+        throne: parseFloat(document.getElementById('throne').value) || 0,
+        lava: document.getElementById('lava').checked,
+        challenge: document.getElementById('challenge').checked,
+        donations: document.getElementById('donations').checked,
+        esb: document.getElementById('esb').checked,
+        dv: document.getElementById('dv').checked,
+        mon: document.getElementById('mon').checked,
+        wed: document.getElementById('wed').checked,
+        p100: document.getElementById('p100').checked,
+        p40: document.getElementById('p40').checked,
+        p20: document.getElementById('p20').checked,
+        p5: document.getElementById('p5').checked
     };
 
-    document.getElementById('r_pts').innerText = getRank(pts, 'points');
-    document.getElementById('r_qst').innerText = getRank(q, 'quest');
-    document.getElementById('r_thr').innerText = getRank(t, 'throne');
-    document.getElementById('rnk_total').innerText = getRank(pts + t, 'points'); // Simple total estimate
-};
+    // Remove old record for THIS week if it exists, then add new
+    data = data.filter(r => !(r.name.toLowerCase() === name.toLowerCase() && r.week === week));
+    data.push(newRecord);
 
-window.saveEntry = () => {
-    if(!curP) return;
-    let db = loadDB();
-    const newData = { name: curP, week: curW };
-    fKeys.forEach(f => newData[f] = document.getElementById(f).value);
-    tKeys.forEach(t => newData[t] = document.getElementById(t).checked ? 1 : 0);
-    
-    const idx = db.findIndex(x => x.name === curP && x.week === curW);
-    if(idx >= 0) db[idx] = newData; else db.push(newData);
-    saveDB(db); renderList(); alert("Saved!");
-};
+    localStorage.setItem('formData', JSON.stringify(data));
+    alert("Data saved for " + name + " (" + week + ")");
+}
 
-window.addNewPlayer = () => {
-    const raw = document.getElementById('bulkInput').value;
-    let db = loadDB();
-    raw.split('\n').forEach(n => {
-        n = n.trim(); if(!n) return;
-        ['home week','week 1','week 2','week 3'].forEach(w => {
-            if(!db.find(x => x.name === n && x.week === w)) db.push({name:n, week:w});
-        });
-    });
-    saveDB(db); document.getElementById('bulkInput').value = ""; renderList();
-};
-
-window.renderList = () => {
-    const db = loadDB();
-    const names = [...new Set(db.map(x => x.name))].sort();
-    const search = document.getElementById('playerSearch').value.toLowerCase();
-    rosterCount.innerText = names.length + " Players";
-    
-    document.getElementById('playersList').innerHTML = names.filter(n => n.toLowerCase().includes(search)).map(n => {
-        // FIXED GREEN LIGHT LOGIC: Check if ANY week has p100 = 1
-        const has100 = db.some(x => x.name === n && x.p100 === 1);
-        return `<li class="${n===curP?'active':''}" onclick="selectPlayer('${n}')"><span class="dot ${has100?'active':''}"></span>${n}</li>`;
-    }).join('');
-};
-
-const tName = localStorage.getItem('editTargetName');
-if(tName) {
-    localStorage.removeItem('editTargetName');
-    setWeek(localStorage.getItem('editTargetWeek') || 'week 1');
-    selectPlayer(tName);
-} else { setWeek('week 1'); }
+function suggestName() {
+    // Optional: add a datalist here if you want auto-complete
+}
 </script>
+
 </body>
 </html>
