@@ -2,73 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Alliance Data Manager</title>
+    <title>Alliance Manager - Live Rank</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root{ --bg:#f1f5f9; --text:#1e293b; --card:#ffffff; --accent:#3b82f6; --success:#10b981; --danger:#ef4444; --dark:#1e40af; --muted:#64748b; }
+        :root{ --bg:#f1f5f9; --text:#1e293b; --card:#ffffff; --accent:#3b82f6; --success:#10b981; --danger:#ef4444; --dark:#0f172a; --muted:#64748b; }
         *{box-sizing:border-box}
         body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding-bottom:50px;}
-        header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+        header{background:#1e40af;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
         nav{display:flex;justify-content:center;gap:12px;padding:.8rem;background:#cbd5e1;border-bottom:2px solid #94a3b8;}
         nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;font-size:0.9rem;}
-        .main-wrap{ width:100%; padding:2rem; display:grid; gap:20px; grid-template-columns:300px 1fr 300px; align-items:start; }
+        .main-wrap{ width:100%; padding:1.5rem; display:grid; gap:15px; grid-template-columns:280px 1fr 340px; align-items:start; }
         .section{ background:var(--card); padding:1.5rem; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
-        .input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 12px; font-family: inherit;}
+        .input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; font-family: inherit;}
         .btn { padding: 12px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width:100%; transition: 0.2s; }
         .week-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e2e8f0; padding: 5px; border-radius: 10px; }
-        .week-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-weight: 700; color: var(--muted); font-size: 0.75rem; }
+        .week-btn { flex: 1; padding: 8px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-weight: 700; color: var(--muted); font-size: 0.7rem; }
         .week-btn.selected { background: white; color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .dot { height: 10px; width: 10px; background-color: #cbd5e1; border-radius: 50%; display: inline-block; margin-right: 10px; }
         .dot.active { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
-        .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 8px; margin-bottom: 15px; }
+        .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 6px; margin-bottom: 15px; }
         .tgl-btn input { display: none; }
-        .tgl-btn label { display: block; padding: 10px 2px; background: #f1f5f9; border-radius: 8px; text-align: center; font-size: 0.65rem; font-weight: 800; cursor: pointer; color: var(--muted); border: 1px solid #e2e8f0; }
+        .tgl-btn label { display: block; padding: 8px 2px; background: #f1f5f9; border-radius: 6px; text-align: center; font-size: 0.6rem; font-weight: 800; cursor: pointer; color: var(--muted); border: 1px solid #e2e8f0; }
         .tgl-btn input:checked + label { background: var(--accent); color: white; border-color: var(--accent); }
-        .players-list { list-style: none; padding: 0; max-height: 450px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
-        .players-list li { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; align-items: center; }
+        .players-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
+        .players-list li { padding: 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; align-items: center; font-size: 0.85rem; }
         .players-list li.active { background: #eff6ff; color: var(--accent); font-weight: 700; border-left: 5px solid var(--accent); }
-        .flip-card{ position:relative; width:100%; min-height:580px; transform-style:preserve-3d; transition:transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-        .flip-card.flipped{ transform:rotateY(180deg); }
-        .flip-face{ position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:20px; padding:1.5rem; }
-        .flip-front{ background:#0f172a; color:white; }
-        .flip-back{ background:#1e293b; color:white; transform:rotateY(180deg); }
-        .res-item{ margin-bottom:1.5rem; border-bottom:1px solid #334155; padding-bottom: 8px; }
-        .res-item label{ font-size:.65rem; color:#94a3b8; text-transform:uppercase; font-weight:700; }
-        .res-item span{ font-size:1.5rem; font-weight:800; color:#60a5fa; display:block; }
-        .pack-table { width: 100%; color: white; border-collapse: collapse; font-size: 0.75rem; margin-top: 10px;}
-        .pack-table td { padding: 10px 0; border-bottom: 1px solid #334155; }
-        .flip-trigger { background: #334155; color: white; border: 2px solid #475569; padding: 12px; border-radius: 10px; width: 100%; cursor: pointer; margin-top: 20px; font-weight: 800; }
+
+        /* ANALYSIS PANEL */
+        .analysis-panel { background: var(--dark); color: white; border-radius: 20px; padding: 20px; position: sticky; top: 1.5rem; }
+        .rank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .rank-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .rank-card label { display: block; font-size: 0.55rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; }
+        .rank-card .val { font-size: 1rem; font-weight: 800; color: #60a5fa; }
+        .rank-card .rnk { float: right; font-size: 0.7rem; color: #10b981; }
+        .overall-rank { background: linear-gradient(135deg, #3b82f6, #1e40af); padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; }
+        .overall-rank label { font-size: 0.7rem; font-weight: 800; opacity: 0.8; }
+        .overall-rank .big-rank { font-size: 2.2rem; font-weight: 900; display: block; }
     </style>
 </head>
 <body>
+
 <header><h1>Alliance Management</h1><div id="rosterCount">0 Players</div></header>
 <nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="form.html">Manage Data</a></nav>
+
 <main class="main-wrap">
     <section class="section">
         <h3>Directory</h3>
         <input type="text" id="playerSearch" placeholder="🔍 Search..." class="input" oninput="renderList()">
         <ul class="players-list" id="playersList"></ul>
-        <textarea id="bulkInput" placeholder="Add names (1 per line)" class="input" style="margin-top:15px;" rows="4"></textarea>
+        <textarea id="bulkInput" placeholder="Bulk Add Names" class="input" style="margin-top:15px;" rows="3"></textarea>
         <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add Players</button>
     </section>
 
     <section class="section">
-        <h2 id="editHeader" style="color:var(--accent); margin-top:0;">Select a Member</h2>
+        <h2 id="editHeader" style="color:var(--accent); margin-top:0;">Select Player</h2>
         <div class="week-tabs">
             <button onclick="setWeek('home week')" class="week-btn" id="btn-homeweek">HOME</button>
             <button onclick="setWeek('week 1')" class="week-btn" id="btn-week1">W1</button>
             <button onclick="setWeek('week 2')" class="week-btn" id="btn-week2">W2</button>
             <button onclick="setWeek('week 3')" class="week-btn" id="btn-week3">W3</button>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px;">
             <div><label>POWER</label><input id="power" type="number" class="input" oninput="updateLive()"></div>
             <div><label>POINTS</label><input id="points" type="number" class="input" oninput="updateLive()"></div>
             <div><label>THRONE</label><input id="throne" type="number" class="input" oninput="updateLive()"></div>
-            <div><label>QUEST</label><input id="quest" type="number" class="input"></div>
+            <div><label>QUEST</label><input id="quest" type="number" class="input" oninput="updateLive()"></div>
             <div><label>HUNT</label><input id="hunt" type="number" class="input" oninput="updateLive()"></div>
         </div>
-        <label style="font-size:0.7rem; font-weight:800; color:var(--muted)">ACTIVITY</label>
+
+        <label style="font-size:0.6rem; font-weight:800; color:var(--muted)">ACTIVITY</label>
         <div class="toggle-grid">
             <div class="tgl-btn"><input type="checkbox" id="lava"><label for="lava">LAVA</label></div>
             <div class="tgl-btn"><input type="checkbox" id="challenge"><label for="challenge">CHALL</label></div>
@@ -78,42 +82,30 @@
             <div class="tgl-btn"><input type="checkbox" id="mon"><label for="mon">MON</label></div>
             <div class="tgl-btn"><input type="checkbox" id="wed"><label for="wed">WED</label></div>
         </div>
-        <label style="font-size:0.7rem; font-weight:800; color:var(--muted)">HERO PICKS</label>
+
+        <label style="font-size:0.6rem; font-weight:800; color:var(--muted)">HERO PICKS</label>
         <div class="toggle-grid">
-            <div class="tgl-btn"><input type="checkbox" id="p100" onchange="renderList()"><label for="p100">100</label></div>
+            <div class="tgl-btn"><input type="checkbox" id="p100" onchange="renderList(); updateLive();"><label for="p100">100</label></div>
             <div class="tgl-btn"><input type="checkbox" id="p40"><label for="p40">40</label></div>
             <div class="tgl-btn"><input type="checkbox" id="p20"><label for="p20">20</label></div>
             <div class="tgl-btn"><input type="checkbox" id="p5"><label for="p5">5</label></div>
         </div>
-        <div style="display:flex; gap:12px; margin-top:10px;">
-            <button class="btn" style="background:var(--success); flex:2;" onclick="saveEntry()">SAVE CHANGES</button>
-            <button class="btn" style="background:var(--danger); flex:1;" onclick="deleteUser()">DELETE</button>
-        </div>
+
+        <button class="btn" style="background:var(--success)" onclick="saveEntry()">SAVE DATA</button>
     </section>
 
-    <aside style="perspective:1000px;">
-        <div class="flip-card" id="liveFlip">
-            <div class="flip-face flip-front">
-                <h3>Live Analysis</h3>
-                <div class="res-item"><label>Efficiency</label><span id="res_eff">0.0000</span></div>
-                <div class="res-item"><label>Total Score</label><span id="res_total">0</span></div>
-                <button class="flip-trigger" onclick="document.getElementById('liveFlip').classList.add('flipped')">KING PACKS 👑</button>
-            </div>
-            <div class="flip-face flip-back">
-                <h3>King Packs</h3>
-                <table class="pack-table">
-                    <thead><tr><th align="left">Type</th><th>T1</th><th>T2</th></tr></thead>
-                    <tbody>
-                        <tr><td>Legendary</td><td><input type="checkbox" id="pk_leg_t1"></td><td><input type="checkbox" id="pk_leg_t2"></td></tr>
-                        <tr><td>Epic</td><td><input type="checkbox" id="pk_epi_t1"></td><td><input type="checkbox" id="pk_epi_t2"></td></tr>
-                        <tr><td>Excellent</td><td><input type="checkbox" id="pk_exc_t1"></td><td><input type="checkbox" id="pk_exc_t2"></td></tr>
-                        <tr><td>Rare (Dra)</td><td><input type="checkbox" id="pk_rdr_t1"></td><td><input type="checkbox" id="pk_rdr_t2"></td></tr>
-                        <tr><td>Rare (Hero)</td><td><input type="checkbox" id="pk_rhe_t1"></td><td><input type="checkbox" id="pk_rhe_t2"></td></tr>
-                        <tr><td>Rare (Uni)</td><td><input type="checkbox" id="pk_run_t1"></td><td><input type="checkbox" id="pk_run_t2"></td></tr>
-                    </tbody>
-                </table>
-                <button class="flip-trigger" onclick="document.getElementById('liveFlip').classList.remove('flipped')">BACK</button>
-            </div>
+    <aside class="analysis-panel">
+        <div class="overall-rank">
+            <label>ESTIMATED OVERALL RANK</label>
+            <span class="big-rank" id="rnk_total">#--</span>
+        </div>
+        
+        <div class="rank-grid">
+            <div class="rank-card"><label>Points</label><span class="rnk" id="r_pts">#--</span><span class="val" id="val_pts">0</span></div>
+            <div class="rank-card"><label>Efficiency</label><span class="rnk" id="r_eff">#--</span><span class="val" id="val_eff">0.00</span></div>
+            <div class="rank-card"><label>Quest</label><span class="rnk" id="r_qst">#--</span><span class="val" id="val_qst">0</span></div>
+            <div class="rank-card"><label>Throne</label><span class="rnk" id="r_thr">#--</span><span class="val" id="val_thr">0</span></div>
+            <div class="rank-card"><label>Throne Eff</label><span class="rnk" id="r_tef">#--</span><span class="val" id="val_tef">0.00</span></div>
         </div>
     </aside>
 </main>
@@ -122,7 +114,6 @@
 let curP = null, curW = 'week 1';
 const fKeys = ['power','points','throne','quest','hunt'];
 const tKeys = ['lava','challenge','donations','esb','dv','mon','wed','p100','p40','p20','p5'];
-const pKeys = ['pk_leg_t1','pk_leg_t2','pk_epi_t1','pk_epi_t2','pk_exc_t1','pk_exc_t2','pk_rdr_t1','pk_rdr_t2','pk_rhe_t1','pk_rhe_t2','pk_run_t1','pk_run_t2'];
 
 const loadDB = () => JSON.parse(localStorage.getItem('formData') || '[]');
 const saveDB = d => localStorage.setItem('formData', JSON.stringify(d));
@@ -136,41 +127,62 @@ window.setWeek = (w) => {
 
 window.selectPlayer = (n) => {
     curP = n; document.getElementById('editHeader').innerText = n;
-    const entry = loadDB().find(x => x.name === n && x.week === curW) || {};
+    const db = loadDB();
+    const entry = db.find(x => x.name === n && x.week === curW) || {};
     fKeys.forEach(f => document.getElementById(f).value = entry[f] || "");
-    tKeys.concat(pKeys).forEach(t => document.getElementById(t).checked = (entry[t] === 1));
+    tKeys.forEach(t => document.getElementById(t).checked = (entry[t] === 1));
     renderList(); updateLive();
 };
 
 window.updateLive = () => {
-    const p = parseFloat(document.getElementById('power').value)||0, pts = parseFloat(document.getElementById('points').value)||0, t = parseFloat(document.getElementById('throne').value)||0;
-    document.getElementById('res_eff').innerText = p > 0 ? (pts/(p/1000000)).toFixed(4) : "0.0000";
-    document.getElementById('res_total').innerText = (pts + t).toLocaleString();
+    if(!curP) return;
+    const db = loadDB();
+    const p = parseFloat(document.getElementById('power').value)||1;
+    const pts = parseFloat(document.getElementById('points').value)||0;
+    const q = parseFloat(document.getElementById('quest').value)||0;
+    const t = parseFloat(document.getElementById('throne').value)||0;
+    
+    const eff = (pts / (p/1000000));
+    const tef = (t / p);
+
+    document.getElementById('val_pts').innerText = pts.toLocaleString();
+    document.getElementById('val_eff').innerText = eff.toFixed(2);
+    document.getElementById('val_qst').innerText = q.toLocaleString();
+    document.getElementById('val_thr').innerText = t.toLocaleString();
+    document.getElementById('val_tef').innerText = tef.toFixed(4);
+
+    // LIVE RANKING LOGIC
+    const weekData = db.filter(x => x.week === curW);
+    const getRank = (val, key, desc=true) => {
+        const scores = weekData.map(x => parseFloat(x[key])||0);
+        scores.push(val);
+        scores.sort((a,b) => desc ? b-a : a-b);
+        return "#" + (scores.indexOf(val) + 1);
+    };
+
+    document.getElementById('r_pts').innerText = getRank(pts, 'points');
+    document.getElementById('r_qst').innerText = getRank(q, 'quest');
+    document.getElementById('r_thr').innerText = getRank(t, 'throne');
+    document.getElementById('rnk_total').innerText = getRank(pts + t, 'points'); // Simple total estimate
 };
 
 window.saveEntry = () => {
-    if(!curP) return alert("Select player!");
+    if(!curP) return;
     let db = loadDB();
     const newData = { name: curP, week: curW };
     fKeys.forEach(f => newData[f] = document.getElementById(f).value);
-    tKeys.concat(pKeys).forEach(t => newData[t] = document.getElementById(t).checked ? 1 : 0);
+    tKeys.forEach(t => newData[t] = document.getElementById(t).checked ? 1 : 0);
     
-    // THE GREEN LIGHT PATCH: If checking 100 here, sync it to Home Week too
-    if (newData.p100 === 1) {
-        let homeIdx = db.findIndex(x => x.name === curP && x.week === 'home week');
-        if (homeIdx >= 0) db[homeIdx].p100 = 1;
-    }
-
     const idx = db.findIndex(x => x.name === curP && x.week === curW);
     if(idx >= 0) db[idx] = newData; else db.push(newData);
     saveDB(db); renderList(); alert("Saved!");
 };
 
 window.addNewPlayer = () => {
-    const lines = document.getElementById('bulkInput').value.split('\n');
+    const raw = document.getElementById('bulkInput').value;
     let db = loadDB();
-    lines.forEach(line => {
-        const n = line.trim(); if(!n) return;
+    raw.split('\n').forEach(n => {
+        n = n.trim(); if(!n) return;
         ['home week','week 1','week 2','week 3'].forEach(w => {
             if(!db.find(x => x.name === n && x.week === w)) db.push({name:n, week:w});
         });
@@ -178,20 +190,16 @@ window.addNewPlayer = () => {
     saveDB(db); document.getElementById('bulkInput').value = ""; renderList();
 };
 
-window.deleteUser = () => {
-    if(!curP || !confirm("Delete " + curP + "?")) return;
-    saveDB(loadDB().filter(x => x.name !== curP)); curP = null; renderList();
-};
-
 window.renderList = () => {
     const db = loadDB();
     const names = [...new Set(db.map(x => x.name))].sort();
     const search = document.getElementById('playerSearch').value.toLowerCase();
     rosterCount.innerText = names.length + " Players";
+    
     document.getElementById('playersList').innerHTML = names.filter(n => n.toLowerCase().includes(search)).map(n => {
-        // Dot Logic: Check if ANY week has p100 marked for this player
-        const has100Anywhere = db.some(x => x.name === n && x.p100 === 1);
-        return `<li class="${n===curP?'active':''}" onclick="selectPlayer('${n}')"><span class="dot ${has100Anywhere?'active':''}"></span>${n}</li>`;
+        // FIXED GREEN LIGHT LOGIC: Check if ANY week has p100 = 1
+        const has100 = db.some(x => x.name === n && x.p100 === 1);
+        return `<li class="${n===curP?'active':''}" onclick="selectPlayer('${n}')"><span class="dot ${has100?'active':''}"></span>${n}</li>`;
     }).join('');
 };
 
