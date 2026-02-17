@@ -24,14 +24,6 @@
         label { font-size: .75rem; font-weight: 700; color: var(--muted); }
         input, select { padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; font-family: inherit; font-size: 0.9rem; }
         
-        /* Flip Card Styling */
-        .flip-container { perspective: 1000px; min-height: 160px; }
-        .flipper { transition: 0.6s; transform-style: preserve-3d; position: relative; width: 100%; height: 100%; }
-        .flipped { transform: rotateY(180deg); }
-        .front, .back { backface-visibility: hidden; width: 100%; position: absolute; top: 0; left: 0; background: white; }
-        .back { transform: rotateY(180deg); }
-
-        .king-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-top: 10px; }
         .btn-save { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.2s; }
         .btn-save:hover { opacity: 0.9; transform: translateY(-2px); }
         
@@ -40,6 +32,11 @@
         .toggle-item input { display: none; }
         .toggle-item label { display: block; padding: 8px; background: #f1f5f9; border-radius: 8px; text-align: center; cursor: pointer; font-weight: 700; transition: 0.2s; color: var(--text); }
         .toggle-item input:checked + label { background: var(--accent); color: white; }
+
+        /* King Pack List Styles */
+        .king-list-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 10px; }
+        .throne-check-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+        .throne-check-item input { width: 18px; height: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -102,37 +99,35 @@
         </div>
     </div>
 
-    <div class="card" style="overflow: hidden;">
-        <div class="flip-container">
-            <div class="flipper" id="flipper">
-                <div class="front">
-                    <h3 onclick="toggleFlip()" style="cursor:pointer; color:var(--accent);">📊 Live Analysis (Click to Flip)</h3>
-                    <div id="liveAnalysis" style="font-size: 0.85rem; color: var(--muted); padding-top:10px;">
-                        Enter data to see breakdown...
+    <div class="card">
+        <h3 id="analysisHeader" onclick="toggleKingMode()" style="cursor:pointer; color:var(--accent); display: flex; justify-content: space-between; align-items: center;">
+            <span id="headerTitle">📊 LIVE ANALYSIS</span>
+            <span style="font-size: 0.65rem; color: var(--muted); font-weight: 400;">CLICK TO TRACK KING PACK 👑</span>
+        </h3>
+        
+        <div id="analysisContent">
+            <div id="scoreView" style="font-size: 0.85rem; color: var(--muted); padding-top:10px;">
+                Enter player metrics to see efficiency breakdown...
+            </div>
+
+            <div id="kingView" style="display:none;">
+                <div class="king-list-grid">
+                    <div>
+                        <label style="display:block; margin-bottom:5px; font-weight:800; font-size:0.7rem;">PACK QUALITY</label>
+                        <select id="kingPackType" style="width:100%;">
+                            <option value="none">None</option>
+                            <option value="legendary">Legendary</option>
+                            <option value="epic">Epic</option>
+                            <option value="excellent">Excellent</option>
+                            <option value="rare_dragon">Rare (Dragon)</option>
+                            <option value="rare_hero">Rare (Hero)</option>
+                            <option value="rare_units">Rare (Units)</option>
+                        </select>
                     </div>
-                </div>
-                <div class="back">
-                    <h3 onclick="toggleFlip()" style="cursor:pointer; color:var(--gold);">👑 King Pack (Click to Flip)</h3>
-                    <div class="king-grid">
-                        <div class="field">
-                            <label>Pack Quality</label>
-                            <select id="kingPackType">
-                                <option value="none">None</option>
-                                <option value="legendary">Legendary</option>
-                                <option value="epic">Epic</option>
-                                <option value="excellent">Excellent</option>
-                                <option value="rare_dragon">Rare (Dragon)</option>
-                                <option value="rare_hero">Rare (Hero)</option>
-                                <option value="rare_units">Rare (Units)</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label>Throne Ticks</label>
-                            <div style="display:flex; gap:10px; padding-top:5px;">
-                                <label><input type="checkbox" id="throne1"> T1</label>
-                                <label><input type="checkbox" id="throne2"> T2</label>
-                            </div>
-                        </div>
+                    <div>
+                        <label style="display:block; margin-bottom:5px; font-weight:800; font-size:0.7rem;">THRONE TICKS</label>
+                        <label class="throne-check-item"><input type="checkbox" id="throne1"> Throne 1</label>
+                        <label class="throne-check-item"><input type="checkbox" id="throne2"> Throne 2</label>
                     </div>
                 </div>
             </div>
@@ -143,7 +138,13 @@
 </div>
 
 <script>
-    const fields = ['power', 'points', 'hunt', 'quest', 'throne', 'lava', 'challenge', 'donations', 'esb', 'dv', 'mon', 'wed', 'p100', 'p40', 'p20', 'p5', 'kingPackType', 'throne1', 'throne2'];
+    // List of all fields to track
+    const fields = [
+        'power', 'points', 'hunt', 'quest', 'throne', 
+        'lava', 'challenge', 'donations', 'esb', 'dv', 'mon', 'wed', 
+        'p100', 'p40', 'p20', 'p5', 
+        'kingPackType', 'throne1', 'throne2'
+    ];
 
     const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
 
@@ -153,8 +154,23 @@
         document.getElementById('nameList').innerHTML = names.map(n => `<option value="${n}">`).join('');
     };
 
-    function toggleFlip() {
-        document.getElementById('flipper').classList.toggle('flipped');
+    // Toggle between Live Score text and King Pack List
+    function toggleKingMode() {
+        const scoreView = document.getElementById('scoreView');
+        const kingView = document.getElementById('kingView');
+        const title = document.getElementById('headerTitle');
+
+        if (kingView.style.display === 'none') {
+            kingView.style.display = 'block';
+            scoreView.style.display = 'none';
+            title.innerText = "👑 KING PACK & THRONES";
+            title.style.color = "var(--gold)";
+        } else {
+            kingView.style.display = 'none';
+            scoreView.style.display = 'block';
+            title.innerText = "📊 LIVE ANALYSIS";
+            title.style.color = "var(--accent)";
+        }
     }
 
     const syncForm = () => {
@@ -165,8 +181,12 @@
 
         fields.forEach(f => {
             const el = document.getElementById(f);
-            if (el.type === 'checkbox') el.checked = entry[f] === 1;
-            else el.value = entry[f] || (el.tagName === 'SELECT' ? (f === 'kingPackType' ? 'none' : '') : '');
+            if (!el) return;
+            if (el.type === 'checkbox') {
+                el.checked = entry[f] === 1;
+            } else {
+                el.value = entry[f] || (el.tagName === 'SELECT' ? (f === 'kingPackType' ? 'none' : '') : '');
+            }
         });
         updateAnalysis();
     };
@@ -180,14 +200,16 @@
         const entry = { name, week };
         fields.forEach(f => {
             const el = document.getElementById(f);
+            if (!el) return;
             entry[f] = el.type === 'checkbox' ? (el.checked ? 1 : 0) : el.value;
         });
 
         const idx = data.findIndex(d => d.name === name && d.week === week);
-        if (idx > -1) data[idx] = entry; else data.push(entry);
+        if (idx > -1) data[idx] = entry; 
+        else data.push(entry);
 
         localStorage.setItem('formData', JSON.stringify(data));
-        alert("Data Saved!");
+        alert(`${name} - ${week.toUpperCase()} saved successfully!`);
         populateNameList();
         updateAnalysis();
     };
@@ -195,19 +217,27 @@
     const updateAnalysis = () => {
         const p = parseFloat(document.getElementById('power').value) || 0;
         const pts = parseFloat(document.getElementById('points').value) || 0;
-        const analysis = document.getElementById('liveAnalysis');
-        if (!p || !pts) { analysis.innerHTML = "Awaiting valid power/points data..."; return; }
+        const analysis = document.getElementById('scoreView');
+        
+        if (!p || !pts) { 
+            analysis.innerHTML = "Awaiting valid power/points data..."; 
+            return; 
+        }
         
         const eff = (pts / (p / 1000000)).toFixed(2);
-        analysis.innerHTML = `<strong>Efficiency:</strong> ${eff} pts/m power<br><strong>Current Status:</strong> Data ready for dashboard.`;
+        analysis.innerHTML = `<strong>Efficiency:</strong> ${eff} pts per million power.<br>Selection saved for ${document.getElementById('weekSelect').value}.`;
     };
 
-    // Initialization
+    // Listeners
     document.getElementById('memberName').addEventListener('input', syncForm);
     document.getElementById('weekSelect').addEventListener('change', syncForm);
-    fields.forEach(f => document.getElementById(f).addEventListener('input', updateAnalysis));
+    
+    // Auto-update analysis on metric change
+    ['power', 'points'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateAnalysis);
+    });
 
-    // Handle Edit Redirects
+    // Handle Edit Redirects from Dashboard
     const editName = localStorage.getItem('editTargetName');
     const editWeek = localStorage.getItem('editTargetWeek');
     if(editName) {
