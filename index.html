@@ -5,77 +5,81 @@
   <title>Alliance Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--success:#10b981;--gold:#f59e0b;--dark:#1e40af;--muted:#64748b;}
+    :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--success:#10b981;--dark:#1e40af;--muted:#64748b;}
     body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);}
     header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
     .container{padding:1.5rem;}
-    .top-row{display:grid; grid-template-columns: 1fr 2fr; gap:20px; margin-bottom:20px;}
-    .card{background:white; padding:15px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-left:4px solid var(--accent);}
-    .card label{display:block; font-size:0.7rem; color:var(--muted); text-transform:uppercase; font-weight:700;}
-    .card span{font-size:1.4rem; font-weight:800;}
-    .status-green{color:var(--success); font-weight:800;}
-    .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
-    table{width:100%; border-collapse:collapse; min-width:1100px;}
-    th{background:#f8fafc; padding:12px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
-    td{padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.85rem;}
+    
+    /* Global Green Logic */
+    .has-100{color:var(--success) !important; font-weight:800;}
+    .pick-badge{padding:2px 8px; border-radius:12px; background:#f1f5f9; font-size:0.75rem; font-weight:700;}
+    .pick-badge.met{background:var(--success); color:white;}
+
+    .table-wrap{background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.05);}
+    table{width:100%; border-collapse:collapse; min-width:1000px;}
+    th{background:#f8fafc; padding:15px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
+    td{padding:12px 15px; border-bottom:1px solid #f1f5f9; font-size:0.85rem;}
+    tr:hover{background:#f8fafc;}
+    
     .btn-edit{padding:6px 12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:700; cursor:pointer;}
-    .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);}
-    .modal-content{background:white; margin:2% auto; padding:25px; width:90%; max-width:950px; border-radius:16px; position:relative;}
+    select, input{padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-weight:600;}
   </style>
 </head>
 <body>
   <header><h1>Alliance Dashboard</h1></header>
-  <nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="form.html">Manage Data</a></nav>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="trends.html">Trends</a>
+    <a href="form.html">Manage Data</a>
+  </nav>
+
   <div class="container">
-    <div class="top-row">
-      <div class="card"><label>Roster</label><span id="stat_total">0</span></div>
-      <div class="card"><label>🏆 Seasonal Leaders</label><div id="topThreeList" style="display:flex; gap:10px; margin-top:5px;"></div></div>
-    </div>
-    <div style="display:flex; gap:15px; margin-bottom:15px;">
-      <select id="weekSelect" style="font-weight:700; padding:10px; border-radius:8px; border:2px solid var(--accent);">
-        <option value="overall">OVERALL</option>
+    <div style="display:flex; gap:15px; margin-bottom:20px;">
+      <select id="weekSelect" style="border:2px solid var(--accent);">
+        <option value="overall">OVERALL SEASON</option>
         <option value="home week">HOME WEEK</option>
         <option value="week 1">WEEK 1</option>
         <option value="week 2">WEEK 2</option>
         <option value="week 3">WEEK 3</option>
       </select>
-      <input type="text" id="dashSearch" placeholder="Search members..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
+      <input type="text" id="dashSearch" placeholder="Filter roster..." style="flex:1;">
     </div>
+
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Picks</th><th>Eff</th><th>Act</th><th>Score</th><th>Status</th><th>Actions</th></tr>
+          <tr>
+            <th>Rank</th>
+            <th>Name</th>
+            <th>Power</th>
+            <th>Points</th>
+            <th>Picks (Total)</th>
+            <th>Efficiency</th>
+            <th>Score</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody id="dashTableBody"></tbody>
       </table>
     </div>
   </div>
 
-  <div id="profileModal" class="modal">
-    <div class="modal-content">
-      <span style="position:absolute; right:20px; cursor:pointer; font-size:24px;" onclick="closeModal()">&times;</span>
-      <h2 id="modalName">Member Profile</h2>
-      <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
-        <div id="modalStatsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
-        <canvas id="playerChart"></canvas>
-      </div>
-    </div>
-  </div>
-
   <script>
     (function(){
-      const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
-      const fmt = (n) => n ? (n/1000).toFixed(1)+"Bn" : "--";
-      
+      const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
+      const loadMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.1,"M_QUEST":0.0000025,"M_THRONE":3.0,"M_HUNT":0.00001}');
+      const fmtPower = (n) => n ? (n/1000).toFixed(1)+"Bn" : "--";
+
       function render(){
-        const data = load();
+        const data = loadData();
+        const m = loadMults();
         const view = document.getElementById('weekSelect').value;
         const search = document.getElementById('dashSearch').value.toLowerCase();
         const names = [...new Set(data.map(d => d.name))];
+        
         let results = [];
 
         names.forEach(name => {
@@ -84,45 +88,70 @@
           const w3 = entries.find(d => d.week === 'week 3') || {};
           const cur = view === 'overall' ? w3 : (entries.find(d => d.week === view) || {});
 
-          // LOGIC: Home Week always scores 0
-          if(view === 'home week' || cur.week === 'home week') {
-             results.push({name, p:cur.power, pts:0, picks:0, eff:0, total:0, status:'Baseline'});
-             return;
+          // Baseline Logic
+          const power = parseFloat(cur.power) || 1;
+          const points = (view === 'home week') ? 0 : (parseFloat(cur.points) || 0);
+
+          // Efficiency Logic (W3 - W1 for Overall)
+          const eff = (view === 'overall') ? ((points - (parseFloat(w1.points)||0))/power) : (view === 'home week' ? 0 : points/power);
+
+          // Hero Picks Sum (Checkbox logic: count each 1 if checked)
+          let pickCount = 0;
+          const has100Global = entries.some(e => e.p100 == 1);
+
+          if(view === 'overall') {
+            // Sum of all checkboxes checked across all weeks
+            pickCount = entries.reduce((acc, e) => acc + (e.p100||0) + (e.p40||0) + (e.p20||0) + (e.p5||0), 0);
+          } else {
+            // Checkboxes for the specific week
+            pickCount = (cur.p100||0) + (cur.p40||0) + (cur.p20||0) + (cur.p5||0);
           }
 
-          const power = parseFloat(cur.power) || 1;
-          const pts = parseFloat(cur.points) || 0;
-          const picks = parseFloat(cur.picks) || 0;
-          
-          // Overall Score logic (Efficiency + Activity + Picks)
-          const eff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/power) : (pts/power);
-          const total = eff + (picks * 0.5); 
-          const isGreen = total > 15 || picks > 10; // "Green Logic"
+          // Total Score Logic
+          const act = ((cur.lava||0) + (cur.challenge||0) + (cur.donations||0)) * 0.833;
+          const score = (view === 'home week') ? 0 : eff + act + ((parseFloat(cur.throne||0)/power)*m.M_THRONE);
 
-          results.push({name, p:power, pts, picks, eff, total, status: isGreen ? '✅ MET' : '--'});
+          results.push({
+            name,
+            power,
+            points,
+            picks: pickCount,
+            eff,
+            score,
+            has100: has100Global,
+            week: cur.week || view
+          });
         });
 
-        const sorted = results.sort((a,b) => b.total - a.total);
+        // Sort by Score
+        const sorted = results.sort((a,b) => b.score - a.score);
         const tbody = document.getElementById('dashTableBody');
-        tbody.innerHTML = sorted.map((r, i) => {
-          if(search && !r.name.toLowerCase().includes(search)) return '';
-          return `<tr>
-            <td>#${i+1}</td><td><strong>${r.name}</strong></td>
-            <td>${fmt(r.p)}</td><td>${r.pts.toLocaleString()}</td>
-            <td>${r.picks}</td><td>${r.eff.toFixed(2)}</td>
-            <td>--</td><td style="font-weight:800;">${r.total.toFixed(2)}</td>
-            <td class="${r.status.includes('MET')?'status-green':''}">${r.status}</td>
-            <td><button class="btn-edit" onclick="editPlayer('${r.name.replace(/'/g,"\\'")}','${view}')">Edit</button></td>
-          </tr>`;
-        }).join('');
+        tbody.innerHTML = '';
+
+        sorted.forEach((r, i) => {
+          if(search && !r.name.toLowerCase().includes(search)) return;
+          
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="color:var(--muted); font-weight:700;">#${i+1}</td>
+            <td class="${r.has100 ? 'has-100' : ''}" style="font-weight:700;">${r.name}</td>
+            <td>${fmtPower(r.power)}</td>
+            <td>${r.points.toLocaleString()}</td>
+            <td><span class="pick-badge ${r.has100 ? 'met' : ''}">${r.picks}</span></td>
+            <td>${r.eff.toFixed(4)}</td>
+            <td style="font-weight:800; color:var(--dark);">${r.score.toFixed(2)}</td>
+            <td><button class="btn-edit" onclick="editPlayer('${r.name.replace(/'/g,"\\'")}', '${r.week}')">Edit</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
       }
 
-      window.editPlayer = (n, w) => {
-        localStorage.setItem('editTargetName', n);
-        localStorage.setItem('editTargetWeek', w === 'overall' ? 'week 3' : w);
+      window.editPlayer = (name, week) => {
+        localStorage.setItem('editTargetName', name);
+        localStorage.setItem('editTargetWeek', week);
         window.location.href = 'form.html';
       };
-      
+
       document.getElementById('weekSelect').onchange = render;
       document.getElementById('dashSearch').oninput = render;
       render();
