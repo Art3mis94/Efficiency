@@ -8,55 +8,60 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--success:#10b981;--dark:#1e40af;--muted:#64748b;}
-    body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+    body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);font-size:0.9rem;}
     header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
-    nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
-    nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;}
+    nav{display:flex;justify-content:center;gap:10px;padding:0.5rem;background:#e2e8f0;}
+    nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;background:var(--accent);border-radius:6px;font-weight:700;font-size:0.8rem;}
     .container{padding:1.5rem;}
     
-    .green-glow{color:var(--success) !important; font-weight:800;}
-    .table-wrap{background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.05);}
-    table{width:100%; border-collapse:collapse; min-width:1000px;}
-    th{background:#f8fafc; padding:15px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
-    td{padding:15px; border-bottom:1px solid #f1f5f9; font-size:0.85rem; cursor:pointer;}
-    tr:hover{background:#f1f7ff;}
-    
-    /* MODAL OVERLAY */
-    .overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); backdrop-filter:blur(8px); z-index:1000; align-items:center; justify-content:center;}
-    .overlay-content{background:white; width:95%; max-width:900px; border-radius:24px; padding:30px; position:relative; max-height:90vh; overflow-y:auto;}
-    .close-overlay{position:absolute; top:20px; right:20px; font-size:30px; cursor:pointer; color:var(--muted); z-index:10;}
-    
-    .chart-container{margin-top:20px; background:#f8fafc; padding:20px; border-radius:16px; height:300px;}
-    .graph-controls{display:flex; gap:10px; margin-top:15px; justify-content:center;}
-    .graph-btn{padding:8px 16px; border-radius:20px; border:1px solid #cbd5e1; background:white; cursor:pointer; font-weight:700; font-size:0.8rem;}
-    .graph-btn.active{background:var(--accent); color:white; border-color:var(--accent);}
+    /* Config Section */
+    .config-bar{background:#fff; padding:15px; border-radius:12px; display:flex; gap:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); align-items:center;}
+    .config-bar label{font-size:0.7rem; font-weight:800; color:var(--muted);}
+    .config-bar input{width:80px; padding:5px; border:1px solid #cbd5e1; border-radius:4px;}
 
-    .ov-grid{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:20px;}
-    .ov-stat-card{background:#fff; padding:12px; border-radius:12px; border:1px solid #e2e8f0; text-align:center;}
-    .ov-stat-card label{display:block; font-size:0.6rem; font-weight:800; color:var(--muted); text-transform:uppercase;}
-    .ov-stat-card span{font-size:1rem; font-weight:800; color:var(--dark);}
+    /* Table */
+    .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 4px 15px rgba(0,0,0,0.05);}
+    table{width:100%; border-collapse:collapse; white-space:nowrap;}
+    th{background:#f8fafc; padding:12px; text-align:left; font-size:0.65rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
+    td{padding:10px 12px; border-bottom:1px solid #f1f5f9; cursor:pointer;}
+    .green-glow{color:var(--success) !important; font-weight:800;}
+    .btn-edit{padding:4px 8px; background:var(--success); color:white; border:none; border-radius:4px; font-weight:700; cursor:pointer;}
+
+    /* Overlay */
+    .overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); z-index:1000; align-items:center; justify-content:center;}
+    .overlay-content{background:white; width:95%; max-width:800px; border-radius:20px; padding:30px; position:relative;}
+    .close-overlay{position:absolute; top:20px; right:20px; font-size:24px; cursor:pointer;}
+    .chart-container{height:300px; margin-top:20px;}
   </style>
 </head>
 <body>
   <header><h1>Alliance Dashboard</h1></header>
-  <nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="form.html">Manage Data</a></nav>
+  <nav><a href="index.html">Dashboard</a><a href="form.html">Manage Data</a></nav>
 
   <div class="container">
-    <div style="display:flex; gap:15px; margin-bottom:20px;">
-      <select id="weekSelect" style="padding:10px; border-radius:8px; border:2px solid var(--accent); font-weight:700;">
-        <option value="overall">OVERALL SEASON</option>
-        <option value="home week">HOME WEEK</option>
-        <option value="week 1">WEEK 1</option>
-        <option value="week 2">WEEK 2</option>
-        <option value="week 3">WEEK 3</option>
+    <div class="config-bar">
+      <div><label>M_QUEST</label><input type="number" step="0.0000001" id="m_quest" onchange="saveMults()"></div>
+      <div><label>M_THRONE</label><input type="number" step="0.1" id="m_throne" onchange="saveMults()"></div>
+      <div><label>M_HUNT</label><input type="number" step="0.0000001" id="m_hunt" onchange="saveMults()"></div>
+      <div><label>M_ACT</label><input type="number" step="0.1" id="m_act" onchange="saveMults()"></div>
+      <div style="flex:1; text-align:right;"><small>Multipliers apply live to Total Score</small></div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-bottom:15px;">
+      <select id="weekSelect" style="padding:8px; border-radius:6px; font-weight:700;">
+        <option value="overall">OVERALL</option>
+        <option value="week 1">W1</option><option value="week 2">W2</option><option value="week 3">W3</option>
       </select>
-      <input type="text" id="dashSearch" placeholder="Search roster..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
+      <input type="text" id="dashSearch" placeholder="Search name..." style="flex:1; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
     </div>
 
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Hero Picks</th><th>Eff</th><th>Total Score</th></tr>
+          <tr>
+            <th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Eff</th>
+            <th>Act</th><th>Part</th><th>Throne Eff</th><th>Total</th><th>Hero Picks</th><th>Edit</th>
+          </tr>
         </thead>
         <tbody id="dashTableBody"></tbody>
       </table>
@@ -66,118 +71,116 @@
   <div id="playerOverlay" class="overlay">
     <div class="overlay-content">
       <span class="close-overlay" onclick="closeOverlay()">&times;</span>
-      <h2 id="ovName" style="margin:0;">Member Analysis</h2>
-      
-      <div class="graph-controls">
-        <button class="graph-btn active" onclick="updateGraph('power', this)">Power</button>
-        <button class="graph-btn" onclick="updateGraph('points', this)">Points</button>
-        <button class="graph-btn" onclick="updateGraph('eff', this)">Efficiency</button>
+      <h2 id="ovName">Analysis</h2>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <button onclick="updateGraph('power')">Power</button>
+        <button onclick="updateGraph('points')">Points</button>
+        <button onclick="updateGraph('eff')">Efficiency</button>
       </div>
-
-      <div class="chart-container">
-        <canvas id="trendChart"></canvas>
-      </div>
-
-      <div class="ov-grid" id="ovGrid">
-        </div>
+      <div class="chart-container"><canvas id="trendChart"></canvas></div>
     </div>
   </div>
 
   <script>
     (function(){
       let chartInstance = null;
-      let activePlayerEntries = [];
+      let activeEntries = [];
 
       const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
-      const mults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_QUEST":0.0000025,"M_THRONE":3.0,"M_HUNT":0.00001}');
-      const fmt = (n) => n ? (n/1000).toFixed(1)+"Bn" : "--";
+      const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_QUEST":0.0000025,"M_THRONE":3.0,"M_HUNT":0.00001,"M_ACT":0.833}');
+      
+      window.saveMults = () => {
+        const m = {
+          M_QUEST: parseFloat(document.getElementById('m_quest').value),
+          M_THRONE: parseFloat(document.getElementById('m_throne').value),
+          M_HUNT: parseFloat(document.getElementById('m_hunt').value),
+          M_ACT: parseFloat(document.getElementById('m_act').value)
+        };
+        localStorage.setItem('scoringMultipliers', JSON.stringify(m));
+        render();
+      };
 
       function render(){
         const data = load();
-        const m = mults();
+        const m = getMults();
+        // Set inputs
+        document.getElementById('m_quest').value = m.M_QUEST;
+        document.getElementById('m_throne').value = m.M_THRONE;
+        document.getElementById('m_hunt').value = m.M_HUNT;
+        document.getElementById('m_act').value = m.M_ACT;
+
         const view = document.getElementById('weekSelect').value;
         const search = document.getElementById('dashSearch').value.toLowerCase();
         const names = [...new Set(data.map(d => d.name))];
         let results = [];
 
         names.forEach(name => {
-          const entries = data.filter(d => d.name === name);
-          const w1 = entries.find(d => d.week === 'week 1') || {};
-          const w3 = entries.find(d => d.week === 'week 3') || {};
-          const cur = view === 'overall' ? w3 : (entries.find(d => d.week === view) || {});
+          const eAll = data.filter(d => d.name === name);
+          const w1 = eAll.find(d => d.week === 'week 1') || {};
+          const cur = view === 'overall' ? (eAll.find(d => d.week === 'week 3') || {}) : (eAll.find(d => d.week === view) || {});
 
-          let pickSum = (view === 'overall') 
-            ? entries.reduce((s, e) => s + (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0), 0)
+          const power = parseFloat(cur.power) || 1;
+          const pts = parseFloat(cur.points) || 0;
+          const eff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/power) : (pts/power);
+          
+          const actCount = (cur.lava||0) + (cur.challenge||0) + (cur.donations||0) + (cur.dv||0) + (cur.esb||0) + (cur.mon||0) + (cur.wed||0);
+          const actScore = actCount * m.M_ACT;
+          const partScore = (parseFloat(cur.quest)||0) * m.M_QUEST + (parseFloat(cur.hunt)||0) * m.M_HUNT;
+          const tEff = ((parseFloat(cur.throne)||0)/power) * m.M_THRONE;
+          
+          const total = eff + actScore + partScore + tEff;
+          const picks = (view === 'overall') 
+            ? eAll.reduce((s, e) => s + (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0), 0)
             : (cur.p100?100:0) + (cur.p40?40:0) + (cur.p20?20:0) + (cur.p5?5:0);
 
-          const has100 = entries.some(e => e.p100 == 1);
-          const power = parseFloat(cur.power) || 1;
-          const pts = (view === 'home week') ? 0 : (parseFloat(cur.points) || 0);
-          const eff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/power) : (view === 'home week' ? 0 : pts/power);
-
-          const act = ((cur.lava||0) + (cur.challenge||0) + (cur.donations||0) + (cur.dv||0) + (cur.esb||0)) * 0.833;
-          const score = (view === 'home week') ? 0 : (eff + act + ((parseFloat(cur.throne||0)/power)*m.M_THRONE) + (parseFloat(cur.quest||0)*m.M_QUEST));
-
-          results.push({name, power, pts, picks:pickSum, eff, score, has100});
+          results.push({name, power, pts, eff, actScore, partScore, tEff, total, picks, has100: eAll.some(x=>x.p100==1), week:cur.week});
         });
 
-        const sorted = results.sort((a,b) => b.score - a.score);
-        document.getElementById('dashTableBody').innerHTML = sorted.map((r, i) => {
+        results.sort((a,b) => b.total - a.total);
+        document.getElementById('dashTableBody').innerHTML = results.map((r, i) => {
           if(search && !r.name.toLowerCase().includes(search)) return '';
+          const g = r.has100 ? 'green-glow' : '';
           return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
-            <td style="font-weight:700; color:var(--muted);">#${i+1}</td>
-            <td class="${r.has100?'green-glow':''}">${r.name}</td>
-            <td>${fmt(r.power)}</td><td>${r.pts.toLocaleString()}</td>
-            <td class="${r.has100?'green-glow':''}">${r.picks}</td>
-            <td>${r.eff.toFixed(4)}</td><td style="font-weight:800;">${r.score.toFixed(2)}</td>
+            <td>#${i+1}</td>
+            <td class="${g}">${r.name}</td>
+            <td>${r.power.toLocaleString()}</td>
+            <td>${r.pts.toLocaleString()}</td>
+            <td>${r.eff.toFixed(4)}</td>
+            <td>${r.actScore.toFixed(2)}</td>
+            <td>${r.partScore.toFixed(2)}</td>
+            <td>${r.tEff.toFixed(2)}</td>
+            <td style="font-weight:800;">${r.total.toFixed(2)}</td>
+            <td class="${g}">${r.picks}</td>
+            <td><button class="btn-edit" onclick="event.stopPropagation(); editP('${r.name}','${r.week}')">Edit</button></td>
           </tr>`;
         }).join('');
       }
 
       window.openOverlay = (name) => {
         const data = load();
-        activePlayerEntries = ['home week','week 1','week 2','week 3'].map(w => data.find(d => d.name === name && d.week === w) || {week:w});
+        activeEntries = ['week 1','week 2','week 3'].map(w => data.find(d => d.name === name && d.week === w) || {week:w, power:0, points:0});
         document.getElementById('ovName').textContent = name;
         document.getElementById('playerOverlay').style.display = 'flex';
-        updateGraph('power', document.querySelector('.graph-btn'));
+        updateGraph('power');
       };
 
-      window.updateGraph = (type, btn) => {
-        document.querySelectorAll('.graph-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const labels = ['HOME', 'W1', 'W2', 'W3'];
-        const values = activePlayerEntries.map(e => {
+      window.updateGraph = (type) => {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        if(chartInstance) chartInstance.destroy();
+        const vals = activeEntries.map(e => {
           if(type === 'power') return parseFloat(e.power) || 0;
           if(type === 'points') return parseFloat(e.points) || 0;
           return (parseFloat(e.points)||0) / (parseFloat(e.power)||1);
         });
-
-        if(chartInstance) chartInstance.destroy();
-        const ctx = document.getElementById('trendChart').getContext('2d');
         chartInstance = new Chart(ctx, {
           type: 'line',
-          data: {
-            labels,
-            datasets: [{
-              label: type.toUpperCase(),
-              data: values,
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              fill: true,
-              tension: 0.3,
-              pointRadius: 6,
-              pointBackgroundColor: '#1e40af'
-            }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          data: { labels: ['W1', 'W2', 'W3'], datasets: [{ label: type.toUpperCase(), data: vals, borderColor: '#3b82f6', tension: 0.2 }] },
+          options: { maintainAspectRatio: false }
         });
       };
 
-      window.closeOverlay = () => {
-        document.getElementById('playerOverlay').style.display = 'none';
-        if(chartInstance) chartInstance.destroy();
-      };
+      window.closeOverlay = () => document.getElementById('playerOverlay').style.display = 'none';
+      window.editP = (n, w) => { localStorage.setItem('editTargetName', n); localStorage.setItem('editTargetWeek', w); window.location.href = 'form.html'; };
 
       document.getElementById('weekSelect').onchange = render;
       document.getElementById('dashSearch').oninput = render;
