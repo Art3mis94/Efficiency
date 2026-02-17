@@ -52,7 +52,10 @@
             <div>Throne: <input id="M_THRONE" type="number" oninput="saveAndRender()"></div>
         </div>
         <select id="weekSelect" onchange="render()" style="padding:10px; border-radius:10px; font-weight:800; border:1px solid #cbd5e1;">
-            <option value="week 1">Week 1</option><option value="week 2">Week 2</option><option value="week 3" selected>Week 3</option><option value="overall">Overall</option>
+            <option value="week 1">Week 1</option>
+            <option value="week 2">Week 2</option>
+            <option value="week 3" selected>Week 3</option>
+            <option value="overall">Overall</option>
         </select>
     </div>
 
@@ -190,7 +193,6 @@ window.render = () => {
         const eff = p > 0 ? (pts / p) : 0;
         const tEff = p > 0 ? (parseFloat(active.throne||0)/p)*config.THRONE : 0;
 
-        // TOTAL EXCLUDES PICKS
         const total = (parseFloat(w1.points)*config.W1) + eff + act + part + ((parseFloat(active.hunt||0))*config.HUNT) + ((parseFloat(active.quest||0))*config.QUEST) + tEff;
         return { name, p, pts, eff, act, part, tEff, picks, total, has100 };
     });
@@ -201,7 +203,22 @@ window.render = () => {
         return sortAsc ? (parseFloat(vA)||0) - (parseFloat(vB)||0) : (parseFloat(vB)||0) - (parseFloat(vA)||0);
     });
 
-    const cols = [{k:'rank', l:'Rank'}, {k:'name', l:'Member'}, {k:'p', l:'Power'}, {k:'pts', l:'Points'}, {k:'eff', l:'Eff'}, {k:'act', l:'Act'}, {k:'part', l:'Part'}, {k:'tEff', l:'Throne'}, {k:'picks', l:'Picks'}, {k:'total', l:'Total Score'}];
+    // Define columns dynamically — hide Eff in Week 1
+    let cols = [
+        {k:'rank', l:'Rank'},
+        {k:'name', l:'Member'},
+        {k:'p', l:'Power'},
+        {k:'pts', l:'Points'}
+    ];
+    if (view !== 'week 1') cols.push({k:'eff', l:'Eff'});
+    cols = cols.concat([
+        {k:'act', l:'Act'},
+        {k:'part', l:'Part'},
+        {k:'tEff', l:'Throne'},
+        {k:'picks', l:'Picks'},
+        {k:'total', l:'Total Score'}
+    ]);
+
     document.getElementById('tableHead').innerHTML = `<tr>${cols.map(c => `<th class="${sortCol===c.k?'active':''}" onclick="setSort('${c.k}')">${c.l} ${sortCol===c.k ? (sortAsc?'▲':'▼') : ''}</th>`).join('')}<th>Edit</th></tr>`;
 
     const pZone = document.getElementById('podium'); pZone.innerHTML = '';
@@ -215,20 +232,24 @@ window.render = () => {
         });
     }
 
-    document.getElementById('dashBody').innerHTML = results.map((r, i) => `
-        <tr onclick="showDetail('${r.name}')" style="cursor:pointer">
-            <td style="color:#94a3b8">#${i+1}</td>
-            <td><span class="dot ${r.has100?'active':''}"></span>${r.name}</td>
-            <td style="${sortCol==='p'?'color:var(--accent)':''}">${fmtP(r.p)}</td>
-            <td style="${sortCol==='pts'?'color:var(--accent)':''}">${r.pts.toLocaleString()}</td>
-            <td>${fmt(r.eff)}</td>
-            <td>${r.act.toFixed(2)}</td>
-            <td>${r.part.toFixed(2)}</td>
-            <td>${fmt(r.tEff)}</td>
-            <td style="${sortCol==='picks'?'color:var(--accent)':''}">${r.picks}</td>
-            <td style="${sortCol==='total'?'color:var(--accent); font-weight:900':''}">${fmt(r.total)}</td>
-            <td><button class="c-btn" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); location.href='form.html'">EDIT</button></td>
-        </tr>`).join('');
+    document.getElementById('dashBody').innerHTML = results.map((r, i) => {
+        let row = `
+            <tr onclick="showDetail('${r.name}')" style="cursor:pointer">
+                <td style="color:#94a3b8">#${i+1}</td>
+                <td><span class="dot ${r.has100?'active':''}"></span>${r.name}</td>
+                <td style="${sortCol==='p'?'color:var(--accent)':''}">${fmtP(r.p)}</td>
+                <td style="${sortCol==='pts'?'color:var(--accent)':''}">${r.pts.toLocaleString()}</td>`;
+        if (view !== 'week 1') row += `<td>${fmt(r.eff)}</td>`;
+        row += `
+                <td>${r.act.toFixed(2)}</td>
+                <td>${r.part.toFixed(2)}</td>
+                <td>${fmt(r.tEff)}</td>
+                <td style="${sortCol==='picks'?'color:var(--accent)':''}">${r.picks}</td>
+                <td style="${sortCol==='total'?'color:var(--accent); font-weight:900':''}">${fmt(r.total)}</td>
+                <td><button class="c-btn" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); location.href='form.html'">EDIT</button></td>
+            </tr>`;
+        return row;
+    }).join('');
 };
 
 window.onload = () => {
