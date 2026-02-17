@@ -37,7 +37,8 @@
         
         .table-wrap { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
         table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-        th { background: #f8fafc; padding: 15px 12px; font-size: .65rem; text-transform:uppercase; color: var(--muted); border-bottom: 2px solid #e2e8f0; text-align: left; }
+        th { background: #f8fafc; padding: 15px 12px; font-size: .65rem; text-transform:uppercase; color: var(--muted); border-bottom: 2px solid #e2e8f0; text-align: left; cursor: pointer; user-select: none; }
+        th:hover { background: #f1f5f9; color: var(--accent); }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
         .status-green { color: var(--success) !important; font-weight: 800; }
         
@@ -46,6 +47,7 @@
         .ov-table { width: 100%; border-collapse: collapse; margin-top: 20px; text-align: center; font-size: 0.8rem; }
         .ov-table th, .ov-table td { border: 1px solid #e2e8f0; padding: 10px; }
         .btn-edit { padding: 6px 12px; background: var(--success); color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: .7rem; }
+        .sort-indicator { font-size: 0.6rem; margin-left: 4px; }
     </style>
 </head>
 <body>
@@ -87,9 +89,20 @@
         <table>
             <thead>
                 <tr>
-                    <th>Rank</th><th>Name</th><th>Power</th><th>Points</th>
-                    <th>W1 Multi</th><th>Efficiency</th><th>Act</th><th>Part</th><th>Hunt</th><th>Quest</th><th>Throne</th>
-                    <th>Total</th><th>Picks</th><th>Action</th>
+                    <th style="cursor:default">Rank</th>
+                    <th onclick="setSort('name')">Name<span id="sort_name" class="sort-indicator"></span></th>
+                    <th onclick="setSort('p')">Power<span id="sort_p" class="sort-indicator"></span></th>
+                    <th onclick="setSort('pts')">Points<span id="sort_pts" class="sort-indicator"></span></th>
+                    <th onclick="setSort('w1S')">W1 Multi<span id="sort_w1S" class="sort-indicator"></span></th>
+                    <th onclick="setSort('eff')">Efficiency<span id="sort_eff" class="sort-indicator"></span></th>
+                    <th onclick="setSort('act')">Act<span id="sort_act" class="sort-indicator"></span></th>
+                    <th onclick="setSort('part')">Part<span id="sort_part" class="sort-indicator"></span></th>
+                    <th onclick="setSort('hunt')">Hunt<span id="sort_hunt" class="sort-indicator"></span></th>
+                    <th onclick="setSort('quest')">Quest<span id="sort_quest" class="sort-indicator"></span></th>
+                    <th onclick="setSort('throne')">Throne<span id="sort_throne" class="sort-indicator"></span></th>
+                    <th onclick="setSort('total')">Total<span id="sort_total" class="sort-indicator"></span></th>
+                    <th onclick="setSort('picks')">Picks<span id="sort_picks" class="sort-indicator"></span></th>
+                    <th style="cursor:default">Action</th>
                 </tr>
             </thead>
             <tbody id="dashTableBody"></tbody>
@@ -120,6 +133,8 @@
 (function(){
     let chartInstance = null;
     let currentOverlayData = [];
+    let sortCol = 'total';
+    let sortAsc = false;
 
     const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
     const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
@@ -145,6 +160,12 @@
         });
     });
 
+    window.setSort = (col) => {
+        if (sortCol === col) sortAsc = !sortAsc;
+        else { sortCol = col; sortAsc = false; }
+        render();
+    };
+
     window.render = () => {
         const data = load();
         const mults = getMults();
@@ -160,7 +181,6 @@
             const w2 = eAll.find(x => x.week === 'week 2');
             const w3 = eAll.find(x => x.week === 'week 3');
 
-            // Logic to pick the data for the selected week
             const activeEntry = (view === 'overall' || view === 'week 3') ? (w3 || w2 || w1) : (view === 'week 2' ? (w2 || w1) : w1);
             if (!activeEntry) return;
 
@@ -179,9 +199,8 @@
                 partScore += Math.min(2.5, ((e.esb?1:0)*(2.5/3)) + ((e.dv?1:0)*(2.5/3)) + ((e.mon?1:0)*(2.5/6)) + ((e.wed?1:0)*(2.5/6)));
             });
 
-            // --- HERO PICKS TARGETING HOME WEEK ---
-            let picks = 0;
-            let has100 = false;
+            // Hero picks forced from HOME WEEK
+            let picks = 0, has100 = false;
             if (home) {
                 picks = (home.p100?100:0) + (home.p40?40:0) + (home.p20?20:0) + (home.p5?5:0);
                 if(home.p100 == 1) has100 = true;
@@ -190,31 +209,49 @@
             const total = w1Score + effScore + actScore + partScore + huntScore + questScore + throneScore;
 
             results.push({
-                name, p: pCurr, pts: activeEntry.points, w1S: w1Score, eff: effScore, 
+                name, p: pCurr, pts: parseFloat(activeEntry.points)||0, w1S: w1Score, eff: effScore, 
                 act: actScore, part: partScore, hunt: huntScore, quest: questScore, 
                 throne: throneScore, total, picks, has100, targetWeek: activeEntry.week
             });
         });
 
-        results.sort((a,b) => b.total - a.total);
+        // 1. Calculate Global Rankings (Always by Total score)
+        const rankedResults = [...results].sort((a,b) => b.total - a.total);
+        
+        // 2. Apply Custom Sorting for the table view
+        results.sort((a, b) => {
+            let valA = a[sortCol], valB = b[sortCol];
+            if (typeof valA === 'string') return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            return sortAsc ? valA - valB : valB - valA;
+        });
+
+        // 3. Update UI Sorting Indicators
+        document.querySelectorAll('.sort-indicator').forEach(s => s.textContent = '');
+        const indicatorId = 'sort_' + sortCol;
+        if(document.getElementById(indicatorId)) document.getElementById(indicatorId).textContent = sortAsc ? ' ▲' : ' ▼';
+
         document.getElementById('stat_total').textContent = results.length;
 
+        // Podium (Always based on top 3 total scores)
         const meds = ["🥇", "🥈", "🥉"];
-        const top3 = results.slice(0,3);
+        const top3 = rankedResults.slice(0,3);
         const podiumArr = [top3[1], top3[0], top3[2]].filter(x => x); 
 
         document.getElementById('topThreeList').innerHTML = podiumArr.map((r) => {
-            const actualRank = results.indexOf(r); 
-            return `<div class="leader-card rank-${actualRank+1}">
-                <div style="font-size:1.2rem">${meds[actualRank]}</div>
+            const actualRank = rankedResults.indexOf(r) + 1; 
+            return `<div class="leader-card rank-${actualRank}">
+                <div style="font-size:1.2rem">${meds[actualRank-1]}</div>
                 <h2>${r.name}</h2>
                 <div class="score">${fmt(r.total)}</div>
             </div>`;
         }).join('');
 
-        document.getElementById('dashTableBody').innerHTML = results.filter(r => r.name.toLowerCase().includes(search)).map((r, i) => `
+        // Table Render
+        document.getElementById('dashTableBody').innerHTML = results.filter(r => r.name.toLowerCase().includes(search)).map((r) => {
+            const globalRank = rankedResults.findIndex(x => x.name === r.name) + 1;
+            return `
             <tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
-                <td>#${i+1}</td>
+                <td>#${globalRank}</td>
                 <td class="${r.has100?'status-green':''}"><strong>${r.name}</strong></td>
                 <td>${fmtPower(r.p)}</td><td>${fmt(r.pts)}</td>
                 <td>${fmt(r.w1S)}</td><td>${fmt(r.eff)}</td>
@@ -223,33 +260,21 @@
                 <td style="font-weight:800">${fmt(r.total)}</td>
                 <td>${r.picks}</td>
                 <td><button class="btn-edit" onclick="event.stopPropagation(); editMember('${r.name.replace(/'/g,"\\'")}', '${r.targetWeek}')">Edit</button></td>
-            </tr>`).join('');
+            </tr>`}).join('');
     };
 
     window.openOverlay = (name) => {
         const data = load();
         const entries = ['week 1', 'week 2', 'week 3'].map(w => data.find(d => d.name === name && d.week === w) || { week: w });
         const w1 = entries[0];
-        
         currentOverlayData = entries.map(e => {
             let eff = 0;
-            if (e.points && w1.points && e.power && e.week !== 'week 1') {
-                eff = (parseFloat(e.points) - parseFloat(w1.points)) / parseFloat(e.power);
-            }
+            if (e.points && w1.points && e.power && e.week !== 'week 1') eff = (parseFloat(e.points) - parseFloat(w1.points)) / parseFloat(e.power);
             return { ...e, efficiency: eff };
         });
-
         document.getElementById('modalName').textContent = name;
         document.getElementById('ovTableBody').innerHTML = currentOverlayData.map(e => `
-            <tr>
-                <td>${e.week.toUpperCase()}</td>
-                <td>${fmtPower(e.power)}</td>
-                <td>${fmt(e.points)}</td>
-                <td>${fmt(e.quest)}</td>
-                <td>${fmt(e.efficiency)}</td>
-                <td>${fmt(e.throne)}</td>
-            </tr>`).join('');
-
+            <tr><td>${e.week.toUpperCase()}</td><td>${fmtPower(e.power)}</td><td>${fmt(e.points)}</td><td>${fmt(e.quest)}</td><td>${fmt(e.efficiency)}</td><td>${fmt(e.throne)}</td></tr>`).join('');
         const sel = document.getElementById('chartMetricSelect');
         sel.innerHTML = `<option value="power">Power</option><option value="points">Points</option><option value="efficiency">Efficiency</option><option value="quest">Quests</option>`;
         sel.onchange = updateChartData;
@@ -263,15 +288,8 @@
         if(chartInstance) chartInstance.destroy();
         chartInstance = new Chart(document.getElementById('playerChart'), {
             type:'line', 
-            data:{ 
-                labels:['W1','W2','W3'], 
-                datasets:[{ label: metric.toUpperCase(), data: vals, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3, pointRadius: 5 }]
-            },
-            options:{ 
-                maintainAspectRatio: false, 
-                scales: { y: { beginAtZero: false, ticks: { callback: v => (metric === 'power') ? (v/1000).toFixed(1) + 'Bn' : (metric === 'points' || metric === 'quest') ? v.toLocaleString() : v.toFixed(2) } } },
-                plugins: { tooltip: { callbacks: { label: (ctx) => metric === 'power' ? 'Power: ' + (ctx.parsed.y/1000).toFixed(1) + 'Bn' : metric.toUpperCase() + ': ' + ctx.parsed.y.toLocaleString() } } }
-            }
+            data:{ labels:['W1','W2','W3'], datasets:[{ label: metric.toUpperCase(), data: vals, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3, pointRadius: 5 }]},
+            options:{ maintainAspectRatio: false, scales: { y: { beginAtZero: false, ticks: { callback: v => (metric === 'power') ? (v/1000).toFixed(1) + 'Bn' : v.toLocaleString() } } }}
         });
     };
 
