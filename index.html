@@ -165,25 +165,25 @@
                 const pts = parseFloat(e.points) || 0;
                 latestPower = p; latestPoints = pts;
 
-                // 1. Efficiency Gain Math
+                // EFFICIENCY LOGIC
+                // Week 1 is baseline (0 efficiency gain). Gain starts from Week 2 onwards.
                 let wEff = 0;
-                if(w === 'week 1') {
-                    wEff = (pts/p) + (m.M_W1 * pts/p);
-                } else {
-                    const prev = eAll.find(x => x.week === `week ${parseInt(w.split(' ')[1])-1}`);
+                const weekNum = parseInt(w.split(' ')[1]);
+                if(weekNum > 1) {
+                    const prev = eAll.find(x => x.week === `week ${weekNum - 1}`);
                     wEff = prev ? (pts - parseFloat(prev.points))/p : 0;
                 }
                 totalEff += wEff;
 
-                // 2. Participation (Capped at 2.5 per week)
+                // PARTICIPATION LOGIC (Capped at 2.5 per week)
                 const basePart = ((e.esb?1:0)*(1/3)) + ((e.dv?1:0)*(1/3)) + ((e.mon?1:0)*(1/6)) + ((e.wed?1:0)*(1/6));
                 const extraPart = (parseFloat(e.quest||0)*m.M_QUEST) + (parseFloat(e.hunt||0)*m.M_HUNT);
                 totalPart += Math.min(2.5, basePart + extraPart);
 
-                // 3. Activity (Separate)
+                // ACTIVITY LOGIC
                 totalAct += ((e.lava?1:0) + (e.challenge?1:0) + (e.donations?1:0)) * 0.833;
 
-                // 4. Throne & Picks
+                // THRONE & PICKS
                 totalThrone += (p > 0) ? ((parseFloat(e.throne||0))/p) * m.M_THRONE : 0;
                 totalPicks += (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0);
                 if(e.p100) has100 = true;
@@ -232,20 +232,29 @@
         currentOverlayData = entries;
         document.getElementById('modalName').textContent = name;
 
-        // Table update
         document.getElementById('ovTableBody').innerHTML = entries.map(e => {
             const p = parseFloat(e.power) || 1;
             const pts = parseFloat(e.points) || 0;
+            const weekNum = parseInt(e.week.split(' ')[1]);
+            
+            let displayEff = "0.00";
+            if(weekNum > 1) {
+                const prev = entries[weekNum-2];
+                displayEff = prev && prev.points ? ((pts - parseFloat(prev.points))/p).toFixed(2) : "0.00";
+            }
+
             return `<tr>
                 <td>${e.week.toUpperCase()}</td><td>${fmtPower(e.power)}</td>
-                <td>${fmt(e.points)}</td><td>${(pts/p).toFixed(2)}</td>
+                <td>${fmt(e.points)}</td><td>${displayEff}</td>
                 <td>${fmt(e.quest)}</td><td>${fmt(e.hunt)}</td><td>${fmt(e.throne)}</td>
             </tr>`;
         }).join('');
 
-        // Dropdown dynamic options
         const sel = document.getElementById('chartMetricSelect');
-        sel.innerHTML = `<option value="power">Power</option><option value="points">Points</option><option value="quest">Quests</option><option value="eff">Efficiency</option>`;
+        sel.innerHTML = `<option value="power">Power</option><option value="points">Points</option><option value="quest">Quests</option>`;
+        
+        // Only show Efficiency option for W2, W3, or Overall
+        if(view !== 'week 1') sel.innerHTML += `<option value="eff">Efficiency</option>`;
         if(view === 'week 2' || view === 'overall') sel.innerHTML += `<option value="hunt">Ultimate Hunt</option>`;
         if(view === 'week 3' || view === 'overall') sel.innerHTML += `<option value="throne">Throne Score</option>`;
 
@@ -255,10 +264,9 @@
 
     window.updateChartData = () => {
         const metric = document.getElementById('chartMetricSelect').value;
-        const view = document.getElementById('weekSelect').value;
         const ctx = document.getElementById('playerChart').getContext('2d');
 
-        const vals = currentOverlayData.map(e => {
+        const vals = currentOverlayData.map((e, idx) => {
             const p = parseFloat(e.power) || 0;
             const pts = parseFloat(e.points) || 0;
             if(metric === 'power') return p;
@@ -267,11 +275,9 @@
             if(metric === 'hunt') return parseFloat(e.hunt) || 0;
             if(metric === 'throne') return parseFloat(e.throne) || 0;
             if(metric === 'eff') {
-                if(view === 'overall') {
-                    const w1 = currentOverlayData[0];
-                    return p > 0 ? (pts - (parseFloat(w1.points)||0))/p : 0;
-                }
-                return p > 0 ? pts/p : 0;
+                if(idx === 0) return 0; // Week 1 always 0 efficiency
+                const prev = currentOverlayData[idx-1];
+                return (p > 0 && prev.points) ? (pts - parseFloat(prev.points))/p : 0;
             }
             return 0;
         });
