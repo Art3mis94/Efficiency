@@ -102,6 +102,7 @@ const saveAndRender = () => {
 
 const fmt = (v) => (parseFloat(v)||0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 const fmtP = (v) => ((parseFloat(v)||0)/1000).toLocaleString(undefined, {minimumFractionDigits: 1}) + "bn";
+const fmtPoints = (v) => (parseFloat(v)||0).toLocaleString();
 
 window.setSort = (c) => { 
     if(sortCol === c) sortAsc = !sortAsc; 
@@ -120,9 +121,9 @@ window.showDetail = (name) => {
     document.getElementById('modalName').innerText = name;
     document.getElementById('modalGrid').innerHTML = `
         <div class="m-card"><label>Power</label><span>${fmtP(active.power)}</span></div>
-        <div class="m-card"><label>Points</label><span>${(parseFloat(active.points)||0).toLocaleString()}</span></div>
+        <div class="m-card"><label>Points</label><span>${fmtPoints(active.points)}</span></div>
         <div class="m-card"><label>Efficiency</label><span>${active.power > 0 ? fmt(active.points/active.power) : '0.00'}</span></div>
-        <div class="m-card"><label>Quest</label><span>${(parseFloat(active.quest)||0).toLocaleString()}</span></div>
+        <div class="m-card"><label>Quest</label><span>${fmtPoints(active.quest)}</span></div>
     `;
     
     const compSel = document.getElementById('compareWith');
@@ -141,19 +142,49 @@ window.updateGrowthChart = (metric) => {
 
     const getPlayerVals = (targetName) => weeks.map(w => {
         const e = data.find(x => x.name === targetName && x.week === w) || { power:0, points:0, quest:0 };
-        if(metric === 'eff') return e.power > 0 ? (parseFloat(e.points)/parseFloat(e.power)) : 0;
+        if (metric === 'eff') return e.power > 0 ? (parseFloat(e.points)/parseFloat(e.power)) : 0;
+        if (metric === 'power') return (parseFloat(e.power)||0) / 1000; // in billions
         return parseFloat(e[metric]) || 0;
     });
 
     document.querySelectorAll('.c-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${metric}`));
-    const datasets = [{ label: activeName, data: getPlayerVals(activeName), borderColor: '#3b82f6', tension: 0.3, fill: true, backgroundColor: 'rgba(59,130,246,0.1)' }];
-    if(compareName) datasets.push({ label: compareName, data: getPlayerVals(compareName), borderColor: '#ef4444', tension: 0.3, borderDash: [5,5] });
+
+    const datasets = [{
+        label: activeName,
+        data: getPlayerVals(activeName),
+        borderColor: '#3b82f6',
+        tension: 0.3,
+        fill: true,
+        backgroundColor: 'rgba(59,130,246,0.1)'
+    }];
+
+    if(compareName) datasets.push({
+        label: compareName,
+        data: getPlayerVals(compareName),
+        borderColor: '#ef4444',
+        tension: 0.3,
+        borderDash: [5,5]
+    });
 
     if (myChart) myChart.destroy();
+
+    const isPower = metric === 'power';
     myChart = new Chart(document.getElementById('growthChart'), {
         type: 'line',
         data: { labels: ['W1', 'W2', 'W3'], datasets },
-        options: { responsive: true, plugins: { legend: { display: !!compareName } } }
+        options: {
+            responsive: true,
+            plugins: { legend: { display: !!compareName } },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: isPower ? (v) => v + 'bn' : null,
+                        precision: isPower ? 1 : 0
+                    },
+                    title: { display: isPower, text: 'Power (bn)' }
+                }
+            }
+        }
     });
 };
 
@@ -164,10 +195,10 @@ window.render = () => {
     const names = [...new Set(data.map(d => d.name))];
     
     let results = names.map(name => {
-        const e = data.filter(d => d.name === name);
-        const w1 = e.find(x => x.week === 'week 1') || { points:0, power:0 };
-        const w2 = e.find(x => x.week === 'week 2');
-        const w3 = e.find(x => x.week === 'week 3');
+        const entries = data.filter(d => d.name === name);
+        const w1 = entries.find(x => x.week === 'week 1') || { points:0, power:0 };
+        const w2 = entries.find(x => x.week === 'week 2');
+        const w3 = entries.find(x => x.week === 'week 3');
         let active = (view==='week 2') ? (w2||w1) : (view==='week 3'||view==='overall' ? (w3||w2||w1) : w1);
         
         const p = parseFloat(active.power) || 0;
@@ -190,10 +221,23 @@ window.render = () => {
             const r = getStats(active); act = r.a; part = r.p; picks = r.picks; has100 = r.has100;
         }
         
-        const eff = p > 0 ? (pts / p) : 0;
+        let eff = 0;
+        if (view === 'week 1') {
+            eff = 0;
+        } else if (view === 'overall') {
+            const ptsDiff = (parseFloat(w3?.points||0) - parseFloat(w1.points||0));
+            eff = p > 0 ? ptsDiff / p : 0;
+        } else {
+            eff = p > 0 ? pts / p : 0;
+        }
+
         const tEff = p > 0 ? (parseFloat(active.throne||0)/p)*config.THRONE : 0;
 
-        const total = (parseFloat(w1.points)*config.W1) + eff + act + part + ((parseFloat(active.hunt||0))*config.HUNT) + ((parseFloat(active.quest||0))*config.QUEST) + tEff;
+        let total = (parseFloat(w1.points)*config.W1) + act + part + 
+                    ((parseFloat(active.hunt||0))*config.HUNT) + 
+                    ((parseFloat(active.quest||0))*config.QUEST) + tEff;
+        if (view !== 'week 1') total += eff;
+
         return { name, p, pts, eff, act, part, tEff, picks, total, has100 };
     });
 
@@ -203,7 +247,6 @@ window.render = () => {
         return sortAsc ? (parseFloat(vA)||0) - (parseFloat(vB)||0) : (parseFloat(vB)||0) - (parseFloat(vA)||0);
     });
 
-    // Define columns dynamically — hide Eff in Week 1
     let cols = [
         {k:'rank', l:'Rank'},
         {k:'name', l:'Member'},
