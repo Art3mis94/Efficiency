@@ -7,59 +7,52 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--success:#10b981;--dark:#1e40af;--muted:#64748b;}
-    body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);}
-    header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+    body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+    header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;}
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
-    nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
+    nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:700;}
     .container{padding:1.5rem;}
     
-    /* Global Green Logic */
-    .has-100{color:var(--success) !important; font-weight:800;}
-    .pick-badge{padding:2px 8px; border-radius:12px; background:#f1f5f9; font-size:0.75rem; font-weight:700;}
-    .pick-badge.met{background:var(--success); color:white;}
-
+    /* Green Global Logic */
+    .green-glow{color:var(--success) !important; font-weight:800; text-shadow: 0 0 5px rgba(16,185,129,0.1);}
+    
     .table-wrap{background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.05);}
     table{width:100%; border-collapse:collapse; min-width:1000px;}
     th{background:#f8fafc; padding:15px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
-    td{padding:12px 15px; border-bottom:1px solid #f1f5f9; font-size:0.85rem;}
-    tr:hover{background:#f8fafc;}
+    td{padding:15px; border-bottom:1px solid #f1f5f9; font-size:0.85rem; cursor:pointer;}
+    tr:hover{background:#f1f7ff;}
     
-    .btn-edit{padding:6px 12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:700; cursor:pointer;}
-    select, input{padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-weight:600;}
+    /* Overlay Styles */
+    .overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); backdrop-filter:blur(4px); z-index:1000; align-items:center; justify-content:center;}
+    .overlay-content{background:white; width:90%; max-width:600px; border-radius:20px; padding:30px; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);}
+    .overlay-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;}
+    .overlay-stat{background:#f8fafc; padding:15px; border-radius:12px; border-left:4px solid var(--accent);}
+    .overlay-stat label{display:block; font-size:0.65rem; font-weight:800; color:var(--muted); text-transform:uppercase;}
+    .overlay-stat span{font-size:1.2rem; font-weight:800; color:var(--dark);}
+    .close-overlay{position:absolute; top:20px; right:20px; font-size:24px; cursor:pointer; font-weight:800; color:var(--muted);}
   </style>
 </head>
 <body>
   <header><h1>Alliance Dashboard</h1></header>
-  <nav>
-    <a href="index.html">Dashboard</a>
-    <a href="trends.html">Trends</a>
-    <a href="form.html">Manage Data</a>
-  </nav>
+  <nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="form.html">Manage Data</a></nav>
 
   <div class="container">
     <div style="display:flex; gap:15px; margin-bottom:20px;">
-      <select id="weekSelect" style="border:2px solid var(--accent);">
+      <select id="weekSelect" style="padding:10px; border-radius:8px; border:2px solid var(--accent); font-weight:700;">
         <option value="overall">OVERALL SEASON</option>
         <option value="home week">HOME WEEK</option>
         <option value="week 1">WEEK 1</option>
         <option value="week 2">WEEK 2</option>
         <option value="week 3">WEEK 3</option>
       </select>
-      <input type="text" id="dashSearch" placeholder="Filter roster..." style="flex:1;">
+      <input type="text" id="dashSearch" placeholder="Search members..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
     </div>
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Rank</th>
-            <th>Name</th>
-            <th>Power</th>
-            <th>Points</th>
-            <th>Picks (Total)</th>
-            <th>Efficiency</th>
-            <th>Score</th>
-            <th>Actions</th>
+            <th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Picks (Sum)</th><th>Eff</th><th>Score</th><th>Edit</th>
           </tr>
         </thead>
         <tbody id="dashTableBody"></tbody>
@@ -67,19 +60,33 @@
     </div>
   </div>
 
+  <div id="viewOverlay" class="overlay">
+    <div class="overlay-content">
+      <span class="close-overlay" onclick="closeOverlay()">&times;</span>
+      <h2 id="ovName" style="margin:0; color:var(--dark);">Member Detail</h2>
+      <p id="ovWeek" style="color:var(--muted); font-weight:700; text-transform:uppercase; font-size:0.8rem;"></p>
+      
+      <div class="overlay-grid">
+        <div class="overlay-stat"><label>Efficiency</label><span id="ovEff">0.00</span></div>
+        <div class="overlay-stat"><label>Total Score</label><span id="ovScore">0.00</span></div>
+        <div class="overlay-stat"><label>Hero Picks</label><span id="ovPicks">0</span></div>
+        <div class="overlay-stat"><label>Throne Kills</label><span id="ovThrone">0</span></div>
+        <div class="overlay-stat"><label>Quest Score</label><span id="ovQuest">0</span></div>
+        <div class="overlay-stat"><label>Hunt Score</label><span id="ovHunt">0</span></div>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function(){
-      const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
-      const loadMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.1,"M_QUEST":0.0000025,"M_THRONE":3.0,"M_HUNT":0.00001}');
-      const fmtPower = (n) => n ? (n/1000).toFixed(1)+"Bn" : "--";
+      const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
+      const fmt = (n) => n ? (n/1000).toFixed(1)+"Bn" : "--";
 
       function render(){
-        const data = loadData();
-        const m = loadMults();
+        const data = load();
         const view = document.getElementById('weekSelect').value;
         const search = document.getElementById('dashSearch').value.toLowerCase();
         const names = [...new Set(data.map(d => d.name))];
-        
         let results = [];
 
         names.forEach(name => {
@@ -88,67 +95,67 @@
           const w3 = entries.find(d => d.week === 'week 3') || {};
           const cur = view === 'overall' ? w3 : (entries.find(d => d.week === view) || {});
 
-          // Baseline Logic
-          const power = parseFloat(cur.power) || 1;
-          const points = (view === 'home week') ? 0 : (parseFloat(cur.points) || 0);
-
-          // Efficiency Logic (W3 - W1 for Overall)
-          const eff = (view === 'overall') ? ((points - (parseFloat(w1.points)||0))/power) : (view === 'home week' ? 0 : points/power);
-
-          // Hero Picks Sum (Checkbox logic: count each 1 if checked)
-          let pickCount = 0;
-          const has100Global = entries.some(e => e.p100 == 1);
+          // Sum Picks Logic (Treating the "Checkbox" as the value if it were checked, 
+          // but we sum based on the assigned tier values: 100, 40, 20, 5)
+          let pickSum = 0;
+          let has100 = entries.some(e => e.p100 == 1);
 
           if(view === 'overall') {
-            // Sum of all checkboxes checked across all weeks
-            pickCount = entries.reduce((acc, e) => acc + (e.p100||0) + (e.p40||0) + (e.p20||0) + (e.p5||0), 0);
+            pickSum = entries.reduce((s, e) => s + (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0), 0);
           } else {
-            // Checkboxes for the specific week
-            pickCount = (cur.p100||0) + (cur.p40||0) + (cur.p20||0) + (cur.p5||0);
+            pickSum = (cur.p100?100:0) + (cur.p40?40:0) + (cur.p20?20:0) + (cur.p5?5:0);
           }
 
-          // Total Score Logic
-          const act = ((cur.lava||0) + (cur.challenge||0) + (cur.donations||0)) * 0.833;
-          const score = (view === 'home week') ? 0 : eff + act + ((parseFloat(cur.throne||0)/power)*m.M_THRONE);
-
-          results.push({
-            name,
-            power,
-            points,
-            picks: pickCount,
-            eff,
-            score,
-            has100: has100Global,
-            week: cur.week || view
-          });
-        });
-
-        // Sort by Score
-        const sorted = results.sort((a,b) => b.score - a.score);
-        const tbody = document.getElementById('dashTableBody');
-        tbody.innerHTML = '';
-
-        sorted.forEach((r, i) => {
-          if(search && !r.name.toLowerCase().includes(search)) return;
+          const power = parseFloat(cur.power) || 1;
+          const pts = (view === 'home week') ? 0 : (parseFloat(cur.points) || 0);
+          const eff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/power) : (view === 'home week' ? 0 : pts/power);
           
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td style="color:var(--muted); font-weight:700;">#${i+1}</td>
-            <td class="${r.has100 ? 'has-100' : ''}" style="font-weight:700;">${r.name}</td>
-            <td>${fmtPower(r.power)}</td>
-            <td>${r.points.toLocaleString()}</td>
-            <td><span class="pick-badge ${r.has100 ? 'met' : ''}">${r.picks}</span></td>
-            <td>${r.eff.toFixed(4)}</td>
-            <td style="font-weight:800; color:var(--dark);">${r.score.toFixed(2)}</td>
-            <td><button class="btn-edit" onclick="editPlayer('${r.name.replace(/'/g,"\\'")}', '${r.week}')">Edit</button></td>
-          `;
-          tbody.appendChild(tr);
+          // Basic Total Score for Sorting
+          const totalScore = eff + (pickSum * 0.001) + ((parseFloat(cur.throne)||0)/power);
+
+          results.push({name, p:power, pts, picks:pickSum, eff, totalScore, has100, raw:cur});
         });
+
+        const sorted = results.sort((a,b) => b.totalScore - a.totalScore);
+        const tbody = document.getElementById('dashTableBody');
+        tbody.innerHTML = sorted.map((r, i) => {
+          if(search && !r.name.toLowerCase().includes(search)) return '';
+          const isGreen = r.has100 ? 'green-glow' : '';
+          return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
+            <td style="font-weight:700; color:var(--muted);">#${i+1}</td>
+            <td class="${isGreen}">${r.name}</td>
+            <td>${fmt(r.p)}</td>
+            <td>${r.pts.toLocaleString()}</td>
+            <td class="${isGreen}">${r.picks}</td>
+            <td>${r.eff.toFixed(4)}</td>
+            <td style="font-weight:800;">${r.totalScore.toFixed(2)}</td>
+            <td><button style="padding:5px 10px; cursor:pointer;" onclick="event.stopPropagation(); editMember('${r.name}','${view}')">✎</button></td>
+          </tr>`;
+        }).join('');
       }
 
-      window.editPlayer = (name, week) => {
-        localStorage.setItem('editTargetName', name);
-        localStorage.setItem('editTargetWeek', week);
+      window.openOverlay = (name) => {
+        const data = load();
+        const view = document.getElementById('weekSelect').value;
+        const entry = data.find(d => d.name === name && (view === 'overall' ? d.week === 'week 3' : d.week === view)) || {};
+        const p = parseFloat(entry.power) || 1;
+        
+        document.getElementById('ovName').textContent = name;
+        document.getElementById('ovWeek').textContent = view;
+        document.getElementById('ovEff').textContent = ((parseFloat(entry.points)||0)/p).toFixed(4);
+        document.getElementById('ovScore').textContent = "---"; // Placeholder for full calc
+        document.getElementById('ovPicks').textContent = (entry.p100?100:0) + (entry.p40?40:0) + (entry.p20?20:0) + (entry.p5?5:0);
+        document.getElementById('ovThrone').textContent = entry.throne || 0;
+        document.getElementById('ovQuest').textContent = entry.quest || 0;
+        document.getElementById('ovHunt').textContent = entry.hunt || 0;
+        
+        document.getElementById('viewOverlay').style.display = 'flex';
+      };
+
+      window.closeOverlay = () => document.getElementById('viewOverlay').style.display = 'none';
+      window.editMember = (n, w) => {
+        localStorage.setItem('editTargetName', n);
+        localStorage.setItem('editTargetWeek', w === 'overall' ? 'week 3' : w);
         window.location.href = 'form.html';
       };
 
