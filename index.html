@@ -2,309 +2,299 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Alliance Dashboard</title>
+<title>Player Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root{
---bg:#f8fafc;
---text:#1e293b;
---accent:#3b82f6;
---success:#10b981;
---dark:#1e40af;
---muted:#64748b;
---gold:#f59e0b;
---silver:#cbd5e1;
---bronze:#d97706;
+body{
+  font-family:Inter, sans-serif;
+  background:#0f172a;
+  color:white;
+  margin:0;
+  padding:20px;
 }
-
-body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);font-size:.85rem;}
-header{background:var(--dark);color:#fff;padding:1rem 2rem;}
-nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;}
-nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;background:var(--accent);border-radius:6px;font-weight:700;}
-
-.container{padding:1.5rem;}
-
-.top-row{display:grid;grid-template-columns:1fr 3fr;gap:20px;margin-bottom:20px;}
-
-.card{background:white;padding:20px;border-radius:16px;box-shadow:0 6px 10px rgba(0,0,0,.05);}
-.card label{font-size:.7rem;color:var(--muted);font-weight:800;text-transform:uppercase;}
-.card span{font-size:1.8rem;font-weight:800;}
-
-.top-three{display:flex;justify-content:center;gap:20px;align-items:flex-end;}
-
-.leader-card{
-flex:1;
-max-width:260px;
-text-align:center;
-padding:22px;
-border-radius:18px;
-background:white;
-box-shadow:0 10px 20px rgba(0,0,0,.08);
-font-weight:800;
+h1{margin:0 0 20px}
+table{
+  width:100%;
+  border-collapse:collapse;
 }
+th,td{
+  padding:8px;
+  text-align:center;
+}
+th{background:#1e293b}
+tr:nth-child(even){background:#1e293b}
+.leaderboard{
+  display:flex;
+  gap:20px;
+  margin-bottom:20px;
+}
+.medal-card{
+  flex:1;
+  padding:20px;
+  border-radius:10px;
+  text-align:center;
+  font-weight:700;
+}
+.gold{border:4px solid gold}
+.silver{border:4px solid silver}
+.bronze{border:4px solid #cd7f32}
+.score{font-size:26px;margin-top:10px}
 
-.leader-card h2{margin:0;font-size:1.3rem;}
-.leader-card .score{font-size:1.6rem;margin-top:8px;}
-
-.rank-1{border:6px solid var(--gold);transform:scale(1.08);}
-.rank-2{border:5px solid var(--silver);}
-.rank-3{border:5px solid var(--bronze);}
-
-details{background:white;border-radius:12px;margin-bottom:20px;border:1px solid #e2e8f0;}
-summary{padding:12px;cursor:pointer;font-weight:800;color:var(--muted);}
-.config-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;padding:15px;}
-.config-grid input{width:100%;padding:8px;border-radius:6px;border:1px solid #cbd5e1;}
-
-.table-wrap{background:white;border-radius:12px;overflow-x:auto;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);}
-table{width:100%;border-collapse:collapse;min-width:1200px;}
-th{background:#f8fafc;padding:12px;font-size:.65rem;text-transform:uppercase;color:var(--muted);}
-td{padding:12px;border-bottom:1px solid #f1f5f9;cursor:pointer;}
-.status-green{color:var(--success)!important;font-weight:800;}
-.btn-edit{padding:4px 8px;background:var(--success);color:white;border:none;border-radius:4px;font-weight:700;cursor:pointer;font-size:.7rem;}
-
-.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.7);align-items:center;justify-content:center;}
-.modal-content{background:white;padding:25px;width:95%;max-width:1100px;border-radius:16px;max-height:90vh;overflow-y:auto;}
-.ov-table{width:100%;border-collapse:collapse;margin-top:20px;}
-.ov-table th,.ov-table td{border:1px solid #e2e8f0;padding:8px;text-align:center;}
+#profileModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  justify-content:center;
+  align-items:center;
+}
+.modal-content{
+  background:#1e293b;
+  padding:20px;
+  width:90%;
+  max-width:900px;
+  border-radius:12px;
+}
+.modal-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.modal-controls{
+  margin:15px 0;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+select{
+  padding:6px;
+}
+canvas{
+  height:300px !important;
+}
+button{
+  cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<header><h1>Alliance Dashboard</h1></header>
+<h1>Leaderboard</h1>
 
-<nav>
-<a href="index.html">Dashboard</a>
-<a href="trends.html">Trends</a>
-<a href="form.html">Manage Data</a>
-</nav>
+<div class="leaderboard" id="topThree"></div>
 
-<div class="container">
-
-<div class="top-row">
-<div class="card">
-<label>Roster Count</label>
-<span id="stat_total">0</span>
-</div>
-<div class="top-three" id="topThreeList"></div>
-</div>
-
-<details>
-<summary>⚙️ SCORING CONFIGURATION</summary>
-<div class="config-grid">
-<div><label>M_THRONE</label><input type="number" step="0.1" id="m_throne" onchange="saveMults()"></div>
-<div><label>M_QUEST</label><input type="number" step="0.0000001" id="m_quest" onchange="saveMults()"></div>
-<div><label>M_W1</label><input type="number" step="0.1" id="m_w1" onchange="saveMults()"></div>
-<div><label>M_HUNT</label><input type="number" step="0.0000001" id="m_hunt" onchange="saveMults()"></div>
-</div>
-</details>
-
-<div style="display:flex;gap:15px;margin-bottom:15px;">
-<select id="weekSelect" onchange="render()">
-<option value="overall">OVERALL</option>
-<option value="week 1">WEEK 1</option>
-<option value="week 2">WEEK 2</option>
-<option value="week 3">WEEK 3</option>
-</select>
-<input type="text" id="dashSearch" placeholder="Search..." oninput="render()">
-</div>
-
-<div class="table-wrap">
 <table>
 <thead>
 <tr>
-<th>Rank</th><th>Name</th><th>Power</th><th>Points</th>
-<th>Eff</th><th>Act</th><th>Part</th>
-<th>Throne</th><th>Total</th><th>Picks</th><th>Action</th>
+<th>Rank</th>
+<th>Name</th>
+<th>Power</th>
+<th>Points</th>
+<th>Total</th>
 </tr>
 </thead>
-<tbody id="dashTableBody"></tbody>
+<tbody id="tableBody"></tbody>
 </table>
-</div>
 
-</div>
-
-<div id="profileModal" class="modal">
+<!-- Overlay -->
+<div id="profileModal">
 <div class="modal-content">
-<span style="cursor:pointer;font-size:24px;" onclick="closeModal()">✕</span>
+<div class="modal-top">
 <h2 id="modalName"></h2>
-<div style="height:300px;"><canvas id="playerChart"></canvas></div>
-<table class="ov-table">
-<thead><tr><th>Week</th><th>Power</th><th>Points</th><th>Eff</th></tr></thead>
-<tbody id="ovTableBody"></tbody>
-</table>
+<button onclick="closeModal()">Close</button>
+</div>
+
+<div class="modal-controls">
+<select id="weekSelectOverlay"></select>
+<select id="metricSelect"></select>
+</div>
+
+<canvas id="playerChart"></canvas>
+
 </div>
 </div>
 
 <script>
-(function(){
-
 let chartInstance=null;
+const CAP=2.5;
+
+const fmt=(n)=>{
+ const num=parseFloat(n)||0;
+ return num.toLocaleString(undefined,{
+   minimumFractionDigits:0,
+   maximumFractionDigits:2
+ });
+};
 
 const load=()=>JSON.parse(localStorage.getItem('formData')||'[]');
-const getMults=()=>JSON.parse(localStorage.getItem('scoringMultipliers')||'{"M_THRONE":3,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
 
-const fmt=n=>{
-const num=parseFloat(n)||0;
-return num.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});
-};
+function render(){
 
-window.saveMults=()=>{
-const m={
-M_THRONE:parseFloat(m_throne.value),
-M_QUEST:parseFloat(m_quest.value),
-M_W1:parseFloat(m_w1.value),
-M_HUNT:parseFloat(m_hunt.value)
-};
-localStorage.setItem('scoringMultipliers',JSON.stringify(m));
+ const data=load();
+ const names=[...new Set(data.map(d=>d.name))];
+ let results=[];
+
+ names.forEach(name=>{
+   const entries=data.filter(d=>d.name===name);
+   const latest=entries[entries.length-1]||{};
+   let total=0;
+
+   entries.forEach(e=>{
+     const p=parseFloat(e.power)||0;
+     const pts=parseFloat(e.points)||0;
+     if(p>0) total+=pts/p;
+   });
+
+   results.push({
+     name,
+     power:latest.power||0,
+     points:latest.points||0,
+     total
+   });
+ });
+
+ results.sort((a,b)=>b.total-a.total);
+
+ // Top 3 medals
+ const medals=['gold','silver','bronze'];
+ const medalEmoji=['🥇','🥈','🥉'];
+
+ topThree.innerHTML=results.slice(0,3).map((r,i)=>`
+   <div class="medal-card ${medals[i]}">
+     <div style="font-size:40px">${medalEmoji[i]}</div>
+     <div>${r.name}</div>
+     <div class="score">${fmt(r.total)}</div>
+   </div>
+ `).join('');
+
+ // Table
+ tableBody.innerHTML=results.map((r,i)=>`
+   <tr onclick="openOverlay('${r.name}')">
+   <td>${i+1}</td>
+   <td>${r.name}</td>
+   <td>${fmt(r.power)}</td>
+   <td>${fmt(r.points)}</td>
+   <td>${fmt(r.total)}</td>
+   </tr>
+ `).join('');
+}
+
+function openOverlay(name){
+
+ const data=load().filter(d=>d.name===name);
+ modalName.textContent=name;
+
+ profileModal.style.display='flex';
+
+ const weeks=['week 1','week 2','week 3','overall'];
+
+ weekSelectOverlay.innerHTML=weeks.map(w=>`
+   <option value="${w}">${w.toUpperCase()}</option>
+ `).join('');
+
+ weekSelectOverlay.onchange=()=>updateMetricOptions(name);
+ metricSelect.onchange=()=>drawChart(name);
+
+ updateMetricOptions(name);
+}
+
+function updateMetricOptions(name){
+
+ const week=weekSelectOverlay.value;
+ let options=[];
+
+ if(week==='week 1'){
+   options=['power','points','quests'];
+ }
+ if(week==='week 2'){
+   options=['power','points','efficiency','quests','hunt'];
+ }
+ if(week==='week 3'){
+   options=['power','points','efficiency','quests','throne','throne efficiency'];
+ }
+ if(week==='overall'){
+   options=['power','points','efficiency','quests','throne','throne efficiency'];
+ }
+
+ metricSelect.innerHTML=options.map(o=>
+   `<option value="${o}">${o.toUpperCase()}</option>`
+ ).join('');
+
+ drawChart(name);
+}
+
+function drawChart(name){
+
+ const data=load().filter(d=>d.name===name);
+ const week=weekSelectOverlay.value;
+ const metric=metricSelect.value;
+
+ let values=[];
+ let labels=[];
+
+ if(week==='overall'){
+
+   const w1=data.find(d=>d.week==='week 1')||{};
+   const w3=data.find(d=>d.week==='week 3')||{};
+   const latest=data[data.length-1]||{};
+   const power=parseFloat(latest.power)||0;
+
+   if(metric==='power') values=[latest.power||0];
+   if(metric==='points') values=[latest.points||0];
+   if(metric==='quests') values=[latest.quest||0];
+   if(metric==='efficiency'){
+     const diff=(parseFloat(w3.points)||0)-(parseFloat(w1.points)||0);
+     values=[power>0?diff/power:0];
+   }
+   if(metric==='throne') values=[latest.throne||0];
+   if(metric==='throne efficiency'){
+     values=[power>0?(latest.throne||0)/power:0];
+   }
+
+   labels=['Overall'];
+
+ }else{
+
+   const entry=data.find(d=>d.week===week)||{};
+   const p=parseFloat(entry.power)||0;
+   const pts=parseFloat(entry.points)||0;
+
+   if(metric==='power') values=[p];
+   if(metric==='points') values=[pts];
+   if(metric==='quests') values=[entry.quest||0];
+   if(metric==='hunt') values=[entry.hunt||0];
+   if(metric==='throne') values=[entry.throne||0];
+   if(metric==='efficiency') values=[p>0?pts/p:0];
+   if(metric==='throne efficiency') values=[p>0?(entry.throne||0)/p:0];
+
+   labels=[week.toUpperCase()];
+ }
+
+ const ctx=document.getElementById('playerChart').getContext('2d');
+ if(chartInstance) chartInstance.destroy();
+
+ chartInstance=new Chart(ctx,{
+   type:'bar',
+   data:{
+     labels,
+     datasets:[{
+       label:metric.toUpperCase(),
+       data:values
+     }]
+   },
+   options:{maintainAspectRatio:false}
+ });
+}
+
+function closeModal(){
+ profileModal.style.display='none';
+}
+
 render();
-};
-
-window.render=()=>{
-const data=load();
-const m=getMults();
-['m_throne','m_quest','m_w1','m_hunt'].forEach(id=>{
-if(document.getElementById(id)) document.getElementById(id).value=m[id.toUpperCase()];
-});
-
-const view=weekSelect.value;
-const search=dashSearch.value.toLowerCase();
-const names=[...new Set(data.map(d=>d.name))];
-let results=[];
-
-names.forEach(name=>{
-const eAll=data.filter(d=>d.name===name);
-const weeks=view==='overall'?['week 1','week 2','week 3']:[view];
-
-let totalEff=0,totalAct=0,totalPart=0,totalThrone=0,totalPicks=0;
-let latestPower=0,latestPoints=0,has100=false;
-
-weeks.forEach(w=>{
-const e=eAll.find(x=>x.week===w);
-if(!e) return;
-
-const p=parseFloat(e.power)||0;
-const pts=parseFloat(e.points)||0;
-latestPower=p; latestPoints=pts;
-
-let wEff=0;
-if(p>0&&pts>0){
-if(w==='week 1'){
-const base=pts/p;
-wEff=base+(m.M_W1*base);
-}else{
-const prev=eAll.find(x=>x.week===`week ${parseInt(w.split(' ')[1])-1}`);
-if(prev){
-const diff=pts-(parseFloat(prev.points)||0);
-if(diff>0) wEff=diff/p;
-}
-}
-}
-totalEff+=wEff;
-
-const CAP=2.5;
-let weeklyPart=
-(e.esb?CAP/3:0)+
-(e.dv?CAP/3:0)+
-(e.mon?CAP/6:0)+
-(e.wed?CAP/6:0);
-
-weeklyPart+=(parseFloat(e.quest)||0)*m.M_QUEST;
-weeklyPart+=(parseFloat(e.hunt)||0)*m.M_HUNT;
-weeklyPart=Math.min(CAP,weeklyPart);
-totalPart=Math.min(7.5,totalPart+weeklyPart);
-
-totalAct+=((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0))*(CAP/3);
-
-if(p>0) totalThrone+=((parseFloat(e.throne)||0)/p)*m.M_THRONE;
-
-totalPicks+=(e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0);
-if(e.p100) has100=true;
-
-});
-
-results.push({
-name,p:latestPower,pts:latestPoints,
-eff:totalEff,act:totalAct,part:totalPart,
-throne:totalThrone,total:totalEff+totalAct+totalPart+totalThrone,
-picks:totalPicks,has100
-});
-});
-
-results.sort((a,b)=>b.total-a.total);
-stat_total.textContent=names.length;
-
-const medals=["🥇","🥈","🥉"];
-
-topThreeList.innerHTML=results.slice(0,3).map((r,i)=>`
-<div class="leader-card rank-${i+1}">
-<h2>${medals[i]} ${r.name}</h2>
-<div class="score">${fmt(r.total)}</div>
-</div>`).join('');
-
-dashTableBody.innerHTML=results.filter(r=>r.name.toLowerCase().includes(search)).map((r,i)=>{
-const isG=r.has100?'status-green':'';
-return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
-<td>${i+1}</td>
-<td class="${isG}"><strong>${r.name}</strong></td>
-<td>${fmt(r.p)}</td>
-<td>${fmt(r.pts)}</td>
-<td>${fmt(r.eff)}</td>
-<td>${fmt(r.act)}</td>
-<td>${fmt(r.part)}</td>
-<td>${fmt(r.throne)}</td>
-<td style="font-weight:800;">${fmt(r.total)}</td>
-<td>${fmt(r.picks)}</td>
-<td><button class="btn-edit" onclick="event.stopPropagation();editMember('${r.name.replace(/'/g,"\\'")}')">Edit</button></td>
-</tr>`;
-}).join('');
-};
-
-window.editMember=name=>{
-localStorage.setItem('editTargetName',name);
-window.location.href='form.html';
-};
-
-window.openOverlay=name=>{
-const data=load();
-const entries=['week 1','week 2','week 3'].map(w=>data.find(d=>d.name===name&&d.week===w)||{week:w});
-modalName.textContent=name;
-ovTableBody.innerHTML=entries.map(e=>{
-const p=parseFloat(e.power)||0;
-const pts=parseFloat(e.points)||0;
-const eff=(p>0&&pts>0)?pts/p:0;
-return `<tr><td>${e.week.toUpperCase()}</td><td>${fmt(p)}</td><td>${fmt(pts)}</td><td>${fmt(eff)}</td></tr>`;
-}).join('');
-
-const ctx=document.getElementById('playerChart').getContext('2d');
-if(chartInstance) chartInstance.destroy();
-chartInstance=new Chart(ctx,{
-type:'line',
-data:{
-labels:['W1','W2','W3'],
-datasets:[{
-label:'Efficiency',
-data:entries.map(e=>{
-const p=parseFloat(e.power)||0;
-const pts=parseFloat(e.points)||0;
-return(p>0&&pts>0)?pts/p:0;
-}),
-borderColor:'#3b82f6',
-tension:.2
-}]
-},
-options:{maintainAspectRatio:false}
-});
-profileModal.style.display='flex';
-};
-
-window.closeModal=()=>profileModal.style.display='none';
-
-render();
-})();
 </script>
 
 </body>
