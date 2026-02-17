@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Alliance Dashboard - Elite Final</title>
+    <title>Alliance Dashboard - Elite v5</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -36,7 +36,6 @@
         .c-btns { display: flex; gap: 5px; }
         .c-btn { font-size: 0.65rem; padding: 5px 10px; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; font-weight: 700; background: white; }
         .c-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-        .comp-select { font-size: 0.7rem; padding: 5px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; background: white; }
     </style>
 </head>
 <body>
@@ -76,7 +75,7 @@
                 <button class="c-btn" id="btn-eff" onclick="updateGrowthChart('eff')">Efficiency</button>
                 <button class="c-btn" id="btn-quest" onclick="updateGrowthChart('quest')">Quest</button>
             </div>
-            <select id="compareWith" class="comp-select" onchange="updateGrowthChart(currentMetric)"></select>
+            <select id="compareWith" class="c-btn" style="width:150px;" onchange="updateGrowthChart(currentMetric)"></select>
         </div>
         <div style="background:#f8fafc; padding:10px; border-radius:15px; border:1px solid #e2e8f0;"><canvas id="growthChart" height="180"></canvas></div>
         <button onclick="closeOverlay()" style="margin-top:15px; width:100%; background:#64748b; color:white; border:none; padding:12px; border-radius:10px; cursor:pointer; font-weight:700;">Close</button>
@@ -84,7 +83,6 @@
 </div>
 
 <script>
-// Default sort is Total (descending)
 let sortCol = 'total', sortAsc = false, activeName = "", currentMetric = 'points', myChart = null;
 
 const loadConfig = () => JSON.parse(localStorage.getItem('config')) || { W1: 0.2, HUNT: 0.005, QUEST: 0.05, THRONE: 1000000000 };
@@ -126,7 +124,7 @@ window.showDetail = (name) => {
     
     const compSel = document.getElementById('compareWith');
     const names = [...new Set(data.map(d => d.name))].filter(n => n !== name).sort((a,b) => a.localeCompare(b));
-    compSel.innerHTML = '<option value="">Compare with (A-Z)...</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
+    compSel.innerHTML = '<option value="">Compare A-Z</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
 
     document.getElementById('overlay').style.display = 'flex';
     updateGrowthChart('points');
@@ -173,49 +171,39 @@ window.render = () => {
         const pts = parseFloat(active.points) || 0;
 
         const getStats = (entry) => {
-            if(!entry) return { a:0, p:0 };
+            if(!entry) return { a:0, p:0, picks:0, has100: false };
             let a = ((entry.lava?8.33:0)+(entry.challenge?8.33:0)+(entry.donations?8.33:0))/10;
             let pr = ((entry.esb?8.33:0)+(entry.dv?8.33:0)+(entry.mon?4.16:0)+(entry.wed?4.16:0))/10;
-            return { a: Math.min(2.5, Math.round(a * 100) / 100), p: Math.min(2.5, Math.round(pr * 100) / 100) };
+            let pk = (entry.p100?100:0)+(entry.p40?40:0)+(entry.p20?20:0)+(entry.p5?5:0);
+            return { a: Math.min(2.5, Math.round(a * 100) / 100), p: Math.min(2.5, Math.round(pr * 100) / 100), picks: pk, has100: !!entry.p100 };
         };
 
-        let act = 0, part = 0;
-        if(view === 'overall') { [w1, w2, w3].forEach(w => { const r = getStats(w); act += r.a; part += r.p; }); }
-        else { const r = getStats(active); act = r.a; part = r.p; }
+        let act = 0, part = 0, picks = 0, has100 = false;
+        if(view === 'overall') { 
+            [w1, w2, w3].forEach(w => { 
+                const r = getStats(w); act += r.a; part += r.p; picks += r.picks; if(r.has100) has100 = true;
+            }); 
+        } else { 
+            const r = getStats(active); act = r.a; part = r.p; picks = r.picks; has100 = r.has100;
+        }
         
         const eff = p > 0 ? (pts / p) : 0;
         const tEff = p > 0 ? (parseFloat(active.throne||0)/p)*config.THRONE : 0;
-        let picks = 0, has100 = false;
-        e.forEach(we => { picks += (we.p100?100:0)+(we.p40?40:0)+(we.p20?20:0)+(we.p5?5:0); if(we.p100) has100=true; });
 
+        // TOTAL EXCLUDES PICKS
         const total = (parseFloat(w1.points)*config.W1) + eff + act + part + ((parseFloat(active.hunt||0))*config.HUNT) + ((parseFloat(active.quest||0))*config.QUEST) + tEff;
         return { name, p, pts, eff, act, part, tEff, picks, total, has100 };
     });
 
-    // --- FIX: ABSOLUTE NUMERIC SORTING ENGINE ---
     results.sort((a,b) => {
-        let vA = a[sortCol];
-        let vB = b[sortCol];
+        let vA = a[sortCol], vB = b[sortCol];
         if (sortCol === 'name') return sortAsc ? vA.localeCompare(vB) : vB.localeCompare(vA);
-        // Force treat as float for all other columns
-        vA = parseFloat(vA) || 0;
-        vB = parseFloat(vB) || 0;
-        return sortAsc ? vA - vB : vB - vA;
+        return sortAsc ? (parseFloat(vA)||0) - (parseFloat(vB)||0) : (parseFloat(vB)||0) - (parseFloat(vA)||0);
     });
 
-    // Update Headers
-    const cols = [
-        {k:'rank', l:'Rank'}, {k:'name', l:'Member'}, {k:'p', l:'Power'}, 
-        {k:'pts', l:'Points'}, {k:'eff', l:'Eff'}, {k:'act', l:'Act'}, 
-        {k:'part', l:'Part'}, {k:'tEff', l:'Throne'}, {k:'picks', l:'Picks'}, 
-        {k:'total', l:'Total Score'}
-    ];
-    document.getElementById('tableHead').innerHTML = `<tr>${cols.map(c => `
-        <th class="${sortCol===c.k?'active':''}" onclick="setSort('${c.k}')">
-            ${c.l} ${sortCol===c.k ? (sortAsc?'▲':'▼') : ''}
-        </th>`).join('')}<th>Edit</th></tr>`;
+    const cols = [{k:'rank', l:'Rank'}, {k:'name', l:'Member'}, {k:'p', l:'Power'}, {k:'pts', l:'Points'}, {k:'eff', l:'Eff'}, {k:'act', l:'Act'}, {k:'part', l:'Part'}, {k:'tEff', l:'Throne'}, {k:'picks', l:'Picks'}, {k:'total', l:'Total Score'}];
+    document.getElementById('tableHead').innerHTML = `<tr>${cols.map(c => `<th class="${sortCol===c.k?'active':''}" onclick="setSort('${c.k}')">${c.l} ${sortCol===c.k ? (sortAsc?'▲':'▼') : ''}</th>`).join('')}<th>Edit</th></tr>`;
 
-    // Podium
     const pZone = document.getElementById('podium'); pZone.innerHTML = '';
     const top3 = [...results].sort((a,b) => b.total - a.total).slice(0,3);
     if(top3.length > 0) {
@@ -237,7 +225,7 @@ window.render = () => {
             <td>${r.act.toFixed(2)}</td>
             <td>${r.part.toFixed(2)}</td>
             <td>${fmt(r.tEff)}</td>
-            <td>${r.picks}</td>
+            <td style="${sortCol==='picks'?'color:var(--accent)':''}">${r.picks}</td>
             <td style="${sortCol==='total'?'color:var(--accent); font-weight:900':''}">${fmt(r.total)}</td>
             <td><button class="c-btn" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); location.href='form.html'">EDIT</button></td>
         </tr>`).join('');
