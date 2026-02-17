@@ -7,60 +7,75 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--success:#10b981;--dark:#1e40af;--muted:#64748b;}
-    body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);font-size:0.9rem;}
+    :root{--bg:#f1f5f9;--text:#1e293b;--accent:#3b82f6;--success:#10b981;--dark:#1e40af;--muted:#64748b;--card:#ffffff;}
+    body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:0.85rem;}
     header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
-    nav{display:flex;justify-content:center;gap:10px;padding:0.5rem;background:#e2e8f0;}
-    nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;background:var(--accent);border-radius:6px;font-weight:700;font-size:0.8rem;}
-    .container{padding:1.5rem;}
     
-    /* Config Section */
-    .config-bar{background:#fff; padding:15px; border-radius:12px; display:flex; gap:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); align-items:center;}
-    .config-bar label{font-size:0.7rem; font-weight:800; color:var(--muted);}
-    .config-bar input{width:80px; padding:5px; border:1px solid #cbd5e1; border-radius:4px;}
+    /* Stats Bar */
+    .stats-header{display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; padding:1.5rem; background:white; border-bottom:1px solid #e2e8f0;}
+    .stat-box{padding:10px; border-left:4px solid var(--accent); background:#f8fafc; border-radius:8px;}
+    .stat-box label{display:block; font-size:0.65rem; font-weight:800; color:var(--muted); text-transform:uppercase;}
+    .stat-box span{font-size:1.1rem; font-weight:800; color:var(--dark);}
 
-    /* Table */
+    /* Collapsible Config */
+    .config-details{background:#fff; border:1px solid #e2e8f0; border-radius:12px; margin:1rem 1.5rem; overflow:hidden;}
+    summary{padding:12px; background:#f8fafc; cursor:pointer; font-weight:800; color:var(--muted); font-size:0.75rem; list-style:none;}
+    .config-grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px; padding:15px;}
+    .config-grid input{width:100%; padding:6px; border-radius:6px; border:1px solid #cbd5e1;}
+
+    .container{padding:0 1.5rem 1.5rem 1.5rem;}
     .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 4px 15px rgba(0,0,0,0.05);}
     table{width:100%; border-collapse:collapse; white-space:nowrap;}
     th{background:#f8fafc; padding:12px; text-align:left; font-size:0.65rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
     td{padding:10px 12px; border-bottom:1px solid #f1f5f9; cursor:pointer;}
     .green-glow{color:var(--success) !important; font-weight:800;}
-    .btn-edit{padding:4px 8px; background:var(--success); color:white; border:none; border-radius:4px; font-weight:700; cursor:pointer;}
-
+    
     /* Overlay */
-    .overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); z-index:1000; align-items:center; justify-content:center;}
-    .overlay-content{background:white; width:95%; max-width:800px; border-radius:20px; padding:30px; position:relative;}
-    .close-overlay{position:absolute; top:20px; right:20px; font-size:24px; cursor:pointer;}
-    .chart-container{height:300px; margin-top:20px;}
+    .overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); z-index:1000; align-items:center; justify-content:center; overflow-y:auto;}
+    .overlay-content{background:white; width:95%; max-width:850px; border-radius:20px; padding:25px; position:relative; margin:20px;}
+    .close-overlay{position:absolute; top:15px; right:20px; font-size:28px; cursor:pointer; font-weight:800;}
+    .ov-data-table{width:100%; margin-top:20px; border-collapse:collapse; font-size:0.8rem;}
+    .ov-data-table th, .ov-data-table td{border:1px solid #e2e8f0; padding:8px; text-align:center;}
   </style>
 </head>
 <body>
-  <header><h1>Alliance Dashboard</h1></header>
-  <nav><a href="index.html">Dashboard</a><a href="form.html">Manage Data</a></nav>
+  <header>
+    <h1>Alliance Dashboard</h1>
+    <nav><a href="form.html" style="color:white; text-decoration:none; font-weight:700;">+ MANAGE DATA</a></nav>
+  </header>
 
-  <div class="container">
-    <div class="config-bar">
+  <div class="stats-header" id="topStats">
+    <div class="stat-box"><label>Members</label><span id="count_m">0</span></div>
+    <div class="stat-box"><label>Avg Efficiency</label><span id="avg_eff">0.0000</span></div>
+    <div class="stat-box"><label>Season Leaders</label><span id="top_3" style="font-size:0.85rem;">---</span></div>
+  </div>
+
+  <details class="config-details">
+    <summary>⚙️ SCORING CONFIGURATION (Click to Expand)</summary>
+    <div class="config-grid">
       <div><label>M_QUEST</label><input type="number" step="0.0000001" id="m_quest" onchange="saveMults()"></div>
       <div><label>M_THRONE</label><input type="number" step="0.1" id="m_throne" onchange="saveMults()"></div>
       <div><label>M_HUNT</label><input type="number" step="0.0000001" id="m_hunt" onchange="saveMults()"></div>
       <div><label>M_ACT</label><input type="number" step="0.1" id="m_act" onchange="saveMults()"></div>
-      <div style="flex:1; text-align:right;"><small>Multipliers apply live to Total Score</small></div>
     </div>
+  </details>
 
+  <div class="container">
     <div style="display:flex; gap:10px; margin-bottom:15px;">
-      <select id="weekSelect" style="padding:8px; border-radius:6px; font-weight:700;">
-        <option value="overall">OVERALL</option>
-        <option value="week 1">W1</option><option value="week 2">W2</option><option value="week 3">W3</option>
+      <select id="weekSelect" style="padding:10px; border-radius:8px; font-weight:700; border:2px solid var(--accent);" onchange="render()">
+        <option value="overall">OVERALL SEASON</option>
+        <option value="week 1">WEEK 1</option>
+        <option value="week 2">WEEK 2</option>
+        <option value="week 3">WEEK 3</option>
       </select>
-      <input type="text" id="dashSearch" placeholder="Search name..." style="flex:1; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+      <input type="text" id="dashSearch" placeholder="🔍 Search members..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #cbd5e1;" oninput="render()">
     </div>
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Eff</th>
-            <th>Act</th><th>Part</th><th>Throne Eff</th><th>Total</th><th>Hero Picks</th><th>Edit</th>
+            <th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Eff</th><th>Act</th><th>Part</th><th>Throne</th><th>Total</th><th>Picks</th>
           </tr>
         </thead>
         <tbody id="dashTableBody"></tbody>
@@ -71,13 +86,17 @@
   <div id="playerOverlay" class="overlay">
     <div class="overlay-content">
       <span class="close-overlay" onclick="closeOverlay()">&times;</span>
-      <h2 id="ovName">Analysis</h2>
-      <div style="display:flex; gap:10px; margin-bottom:10px;">
+      <h2 id="ovName" style="margin:0;">Analysis</h2>
+      <div style="display:flex; gap:10px; margin:15px 0;">
         <button onclick="updateGraph('power')">Power</button>
         <button onclick="updateGraph('points')">Points</button>
         <button onclick="updateGraph('eff')">Efficiency</button>
       </div>
-      <div class="chart-container"><canvas id="trendChart"></canvas></div>
+      <div style="height:250px;"><canvas id="trendChart"></canvas></div>
+      <table class="ov-data-table">
+        <thead><tr><th>Week</th><th>Power</th><th>Points</th><th>Efficiency</th><th>Throne</th><th>Hunt</th><th>Quest</th></tr></thead>
+        <tbody id="ovTableBody"></tbody>
+      </table>
     </div>
   </div>
 
@@ -100,14 +119,10 @@
         render();
       };
 
-      function render(){
+      window.render = () => {
         const data = load();
         const m = getMults();
-        // Set inputs
-        document.getElementById('m_quest').value = m.M_QUEST;
-        document.getElementById('m_throne').value = m.M_THRONE;
-        document.getElementById('m_hunt').value = m.M_HUNT;
-        document.getElementById('m_act').value = m.M_ACT;
+        ['m_quest','m_throne','m_hunt','m_act'].forEach(id => document.getElementById(id).value = m[id.toUpperCase()]);
 
         const view = document.getElementById('weekSelect').value;
         const search = document.getElementById('dashSearch').value.toLowerCase();
@@ -119,47 +134,51 @@
           const w1 = eAll.find(d => d.week === 'week 1') || {};
           const cur = view === 'overall' ? (eAll.find(d => d.week === 'week 3') || {}) : (eAll.find(d => d.week === view) || {});
 
-          const power = parseFloat(cur.power) || 1;
+          const p = parseFloat(cur.power) || 1;
           const pts = parseFloat(cur.points) || 0;
-          const eff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/power) : (pts/power);
+          const eff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/p) : (pts/p);
           
           const actCount = (cur.lava||0) + (cur.challenge||0) + (cur.donations||0) + (cur.dv||0) + (cur.esb||0) + (cur.mon||0) + (cur.wed||0);
           const actScore = actCount * m.M_ACT;
           const partScore = (parseFloat(cur.quest)||0) * m.M_QUEST + (parseFloat(cur.hunt)||0) * m.M_HUNT;
-          const tEff = ((parseFloat(cur.throne)||0)/power) * m.M_THRONE;
+          const tEff = ((parseFloat(cur.throne)||0)/p) * m.M_THRONE;
           
           const total = eff + actScore + partScore + tEff;
           const picks = (view === 'overall') 
             ? eAll.reduce((s, e) => s + (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0), 0)
             : (cur.p100?100:0) + (cur.p40?40:0) + (cur.p20?20:0) + (cur.p5?5:0);
 
-          results.push({name, power, pts, eff, actScore, partScore, tEff, total, picks, has100: eAll.some(x=>x.p100==1), week:cur.week});
+          results.push({name, p, pts, eff, actScore, partScore, tEff, total, picks, has100: eAll.some(x=>x.p100==1)});
         });
 
         results.sort((a,b) => b.total - a.total);
-        document.getElementById('dashTableBody').innerHTML = results.map((r, i) => {
-          if(search && !r.name.toLowerCase().includes(search)) return '';
+        
+        // Header Stats
+        document.getElementById('count_m').textContent = names.length;
+        document.getElementById('avg_eff').textContent = (results.reduce((s,r)=>s+r.eff,0)/results.length || 0).toFixed(4);
+        document.getElementById('top_3').textContent = results.slice(0,3).map(r => r.name).join(', ');
+
+        document.getElementById('dashTableBody').innerHTML = results.filter(r => r.name.toLowerCase().includes(search)).map((r, i) => {
           const g = r.has100 ? 'green-glow' : '';
           return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
-            <td>#${i+1}</td>
-            <td class="${g}">${r.name}</td>
-            <td>${r.power.toLocaleString()}</td>
-            <td>${r.pts.toLocaleString()}</td>
-            <td>${r.eff.toFixed(4)}</td>
-            <td>${r.actScore.toFixed(2)}</td>
-            <td>${r.partScore.toFixed(2)}</td>
-            <td>${r.tEff.toFixed(2)}</td>
-            <td style="font-weight:800;">${r.total.toFixed(2)}</td>
-            <td class="${g}">${r.picks}</td>
-            <td><button class="btn-edit" onclick="event.stopPropagation(); editP('${r.name}','${r.week}')">Edit</button></td>
+            <td>#${i+1}</td><td class="${g}">${r.name}</td>
+            <td>${r.p.toLocaleString()}</td><td>${r.pts.toLocaleString()}</td>
+            <td>${r.eff.toFixed(4)}</td><td>${r.actScore.toFixed(2)}</td>
+            <td>${r.partScore.toFixed(2)}</td><td>${r.tEff.toFixed(2)}</td>
+            <td style="font-weight:800;">${r.total.toFixed(2)}</td><td class="${g}">${r.picks}</td>
           </tr>`;
         }).join('');
-      }
+      };
 
       window.openOverlay = (name) => {
         const data = load();
-        activeEntries = ['week 1','week 2','week 3'].map(w => data.find(d => d.name === name && d.week === w) || {week:w, power:0, points:0});
+        activeEntries = ['week 1','week 2','week 3'].map(w => data.find(d => d.name === name && d.week === w) || {week:w});
         document.getElementById('ovName').textContent = name;
+        document.getElementById('ovTableBody').innerHTML = activeEntries.map(e => {
+            const ep = parseFloat(e.power)||1;
+            return `<tr><td>${e.week.toUpperCase()}</td><td>${(parseFloat(e.power)||0).toLocaleString()}</td><td>${(parseFloat(e.points)||0).toLocaleString()}</td>
+            <td>${((parseFloat(e.points)||0)/ep).toFixed(4)}</td><td>${e.throne||0}</td><td>${e.hunt||0}</td><td>${e.quest||0}</td></tr>`;
+        }).join('');
         document.getElementById('playerOverlay').style.display = 'flex';
         updateGraph('power');
       };
@@ -172,18 +191,10 @@
           if(type === 'points') return parseFloat(e.points) || 0;
           return (parseFloat(e.points)||0) / (parseFloat(e.power)||1);
         });
-        chartInstance = new Chart(ctx, {
-          type: 'line',
-          data: { labels: ['W1', 'W2', 'W3'], datasets: [{ label: type.toUpperCase(), data: vals, borderColor: '#3b82f6', tension: 0.2 }] },
-          options: { maintainAspectRatio: false }
-        });
+        chartInstance = new Chart(ctx, { type: 'line', data: { labels: ['W1', 'W2', 'W3'], datasets: [{ label: type.toUpperCase(), data: vals, borderColor: '#3b82f6', tension: 0.2 }] }, options: { maintainAspectRatio: false } });
       };
 
       window.closeOverlay = () => document.getElementById('playerOverlay').style.display = 'none';
-      window.editP = (n, w) => { localStorage.setItem('editTargetName', n); localStorage.setItem('editTargetWeek', w); window.location.href = 'form.html'; };
-
-      document.getElementById('weekSelect').onchange = render;
-      document.getElementById('dashSearch').oninput = render;
       render();
     })();
   </script>
