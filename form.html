@@ -10,12 +10,12 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding-bottom:40px;}
     header{background:#1e40af;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
-    nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#cbd5e1;}
+    nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#cbd5e1; border-bottom:1px solid #94a3b8;}
     nav a{color:#fff;text-decoration:none;padding:.5rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;font-size:0.9rem;}
     .main-wrap{ width:100%; padding:1.5rem; display:grid; gap:1.5rem; grid-template-columns:320px 1fr 320px; align-items:start; }
     .section{ background:var(--card); padding:1.5rem; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
     .input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; font-family: inherit;}
-    .btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width:100%; }
+    .btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width:100%; transition: 0.2s; }
     .week-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e2e8f0; padding: 5px; border-radius: 10px; }
     .week-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-weight: 700; color: var(--muted); font-size: 0.7rem; }
     .week-btn.selected { background: white; color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -23,8 +23,8 @@
     .dot.active { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
     .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 6px; margin-bottom: 15px; }
     .tgl-btn input { display: none; }
-    .tgl-btn label { display: block; padding: 8px 2px; background: #f1f5f9; border-radius: 6px; text-align: center; font-size: 0.65rem; font-weight: 800; cursor: pointer; color: var(--muted); }
-    .tgl-btn input:checked + label { background: var(--accent); color: white; }
+    .tgl-btn label { display: block; padding: 8px 2px; background: #f1f5f9; border-radius: 6px; text-align: center; font-size: 0.65rem; font-weight: 800; cursor: pointer; color: var(--muted); border: 1px solid transparent; }
+    .tgl-btn input:checked + label { background: var(--accent); color: white; border-color: #2563eb; }
     .players-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 8px; }
     .players-list li { padding: 12px; border-bottom: 1px solid #f8fafc; cursor: pointer; display: flex; align-items: center; font-size: 0.9rem; }
     .players-list li.active { background: #eff6ff; color: var(--accent); font-weight: 700; border-left: 4px solid var(--accent); }
@@ -47,11 +47,10 @@
 <main class="main-wrap">
     <section class="section">
         <h3>Directory</h3>
-        <input type="text" id="playerSearch" placeholder="🔍 Search..." class="input" oninput="renderList()">
+        <input type="text" id="playerSearch" placeholder="🔍 Search Players..." class="input" oninput="renderList()">
         <ul class="players-list" id="playersList"></ul>
-        <textarea id="bulkInput" placeholder="Bulk Add (One per line)" class="input" style="margin-top:15px;" rows="3"></textarea>
-        <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add Players</button>
-        <button class="btn" style="background:var(--danger); margin-top:10px; font-size:0.7rem;" onclick="deleteAll()">Delete All Data</button>
+        <textarea id="bulkInput" placeholder="Bulk Add (One name per line)" class="input" style="margin-top:15px;" rows="3"></textarea>
+        <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add to Roster</button>
     </section>
 
     <section class="section">
@@ -69,7 +68,8 @@
             <div><label>QUEST</label><input id="quest" type="number" class="input"></div>
             <div><label>HUNT</label><input id="hunt" type="number" class="input" oninput="updateLive()"></div>
         </div>
-        <label style="font-size:0.65rem; font-weight:800; color:var(--muted)">ACTIVITY</label>
+        
+        <label style="font-size:0.65rem; font-weight:800; color:var(--muted)">ACTIVITY TRACKER</label>
         <div class="toggle-grid">
             <div class="tgl-btn"><input type="checkbox" id="lava"><label for="lava">LAVA</label></div>
             <div class="tgl-btn"><input type="checkbox" id="challenge"><label for="challenge">CHALL</label></div>
@@ -79,6 +79,7 @@
             <div class="tgl-btn"><input type="checkbox" id="mon"><label for="mon">MON</label></div>
             <div class="tgl-btn"><input type="checkbox" id="wed"><label for="wed">WED</label></div>
         </div>
+
         <label style="font-size:0.65rem; font-weight:800; color:var(--muted)">HERO PICKS</label>
         <div class="toggle-grid">
             <div class="tgl-btn"><input type="checkbox" id="p100" onchange="renderList()"><label for="p100">100</label></div>
@@ -87,16 +88,16 @@
             <div class="tgl-btn"><input type="checkbox" id="p5"><label for="p5">5</label></div>
         </div>
         <div style="display:flex; gap:10px;">
-            <button class="btn" style="background:var(--success); flex:2;" onclick="performSave()">SAVE PLAYER</button>
+            <button class="btn" style="background:var(--success); flex:2;" onclick="performSave()">SAVE DATA</button>
             <button class="btn" style="background:var(--danger); flex:1;" onclick="deletePlayer()">DELETE</button>
         </div>
     </section>
 
-    <aside class="results-sidebar" style="perspective:1200px; position:sticky; top:1.5rem;">
+    <aside class="results-sidebar">
         <div class="flip-card" id="liveFlip">
             <div class="flip-face flip-front">
-                <h3>📊 Live Analysis</h3>
-                <div class="res-item"><label>Efficiency</label><span id="res_eff">0.00</span></div>
+                <h3>📊 Live Stats</h3>
+                <div class="res-item"><label>Efficiency</label><span id="res_eff">0.0000</span></div>
                 <div class="res-item"><label>Total Score</label><span id="res_total">0</span></div>
                 <button class="flip-trigger" onclick="document.getElementById('liveFlip').classList.add('flipped')">KING PACKS 👑</button>
             </div>
@@ -146,21 +147,21 @@ window.updateLive = () => {
 };
 
 window.performSave = () => {
-    if(!curP) return alert("Select a player");
+    if(!curP) return alert("Please select a player first");
     let d = load();
     const entry = { name: curP, week: curW };
     fields.forEach(f => entry[f] = document.getElementById(f).value);
     toggles.concat(packs).forEach(t => entry[t] = document.getElementById(t).checked ? 1 : 0);
     const i = d.findIndex(x => x.name === curP && x.week === curW);
     if(i>=0) d[i]=entry; else d.push(entry);
-    save(d); renderList(); alert("Saved!");
+    save(d); renderList(); alert("Saved to Database");
 };
 
 window.addNewPlayer = () => {
     const raw = bulkInput.value.trim(); if(!raw) return;
     let d = load();
-    raw.split('\n').forEach(n => {
-        n = n.trim(); if(!n) return;
+    raw.split('\n').forEach(line => {
+        let n = line.trim(); if(!n) return;
         ['home week','week 1','week 2','week 3'].forEach(w => {
             if(!d.find(x=>x.name===n && x.week===w)) d.push({name:n, week:w});
         });
@@ -172,8 +173,6 @@ window.deletePlayer = () => {
     if(!curP || !confirm("Delete " + curP + "?")) return;
     save(load().filter(x => x.name !== curP)); curP = null; renderList();
 };
-
-window.deleteAll = () => { if(confirm("WIPE EVERYTHING?")) { localStorage.removeItem('formData'); location.reload(); }};
 
 window.renderList = () => {
     const d = load();
@@ -187,13 +186,21 @@ window.renderList = () => {
     }).join('');
 };
 
-// AUTO-EDIT LOGIC FROM DASHBOARD
-const targetName = localStorage.getItem('editTargetName');
-const targetWeek = localStorage.getItem('editTargetWeek');
-if(targetName) {
-    localStorage.removeItem('editTargetName'); localStorage.removeItem('editTargetWeek');
-    setWeek(targetWeek || 'week 1'); selectPlayer(targetName);
-} else { setWeek('week 1'); }
+// Index "Edit" Sync logic
+const checkEditTarget = () => {
+    const targetName = localStorage.getItem('editTargetName');
+    const targetWeek = localStorage.getItem('editTargetWeek');
+    if(targetName) {
+        localStorage.removeItem('editTargetName');
+        localStorage.removeItem('editTargetWeek');
+        setWeek(targetWeek || 'week 1');
+        selectPlayer(targetName);
+    } else {
+        setWeek('week 1');
+    }
+};
+
+checkEditTarget();
 </script>
 </body>
 </html>
