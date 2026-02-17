@@ -41,14 +41,16 @@ box-shadow:0 10px 25px rgba(0,0,0,0.05);
 }
 
 .input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-family: inherit; }
-.btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; }
+.btn { padding: 12px 20px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
+.btn:hover { opacity: 0.9; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.week-btn { padding: 8px 15px; border: 1px solid var(--accent); background: white; cursor: pointer; border-radius: 5px; }
+.week-btn { padding: 8px 15px; border: 1px solid var(--accent); background: white; cursor: pointer; border-radius: 5px; font-weight: 600; }
 .week-btn.selected { background: var(--accent); color: white; }
 
-.players-list { list-style: none; padding: 0; margin-top: 10px; max-height: 400px; overflow-y: auto; }
-.players-list li { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
-.players-list li:hover { background: #f8fafc; }
+.players-list { list-style: none; padding: 0; margin-top: 10px; max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+.players-list li { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+.players-list li:hover { background: #f1f5f9; }
+.players-list li.active { background: var(--accent); color: white; font-weight: 700; }
 
 /* ===== RIGHT SIDEBAR FLIP ===== */
 .results-sidebar{ perspective:1200px; position:sticky; top:1.5rem; }
@@ -65,7 +67,6 @@ box-shadow:0 10px 25px rgba(0,0,0,0.05);
 .rank-badge{ background:linear-gradient(135deg,#3b82f6 0%,#1e40af 100%); text-align:center; padding:1.5rem; border-radius:15px; margin-top:1.5rem; }
 .rank-val{ font-size:3.5rem; font-weight:900; display:block; }
 
-/* KING PACK TABLE STYLE */
 .pack-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
 .pack-table th { font-size: 0.6rem; color: #94a3b8; text-align: center; padding-bottom: 10px; }
 .pack-table td { padding: 8px 0; border-bottom: 1px solid #334155; font-size: 0.85rem; }
@@ -110,11 +111,11 @@ box-shadow:0 10px 25px rgba(0,0,0,0.05);
 </div>
 
 <div class="grid-2">
-<div><label>Current Power</label><input id="f_power" type="number" class="input"></div>
-<div><label>Total Points</label><input id="f_points" type="number" class="input"></div>
-<div><label>Throne Kills</label><input id="f_throne" type="number" class="input"></div>
-<div><label>Quest Score</label><input id="f_quest" type="number" class="input"></div>
-<div><label>Ultimate Hunt</label><input id="f_hunt" type="number" class="input"></div>
+<div><label>Current Power</label><input id="f_power" type="number" class="input" oninput="updateLiveAnalysis()"></div>
+<div><label>Total Points</label><input id="f_points" type="number" class="input" oninput="updateLiveAnalysis()"></div>
+<div><label>Throne Kills</label><input id="f_throne" type="number" class="input" oninput="updateLiveAnalysis()"></div>
+<div><label>Quest Score</label><input id="f_quest" type="number" class="input" oninput="updateLiveAnalysis()"></div>
+<div><label>Ultimate Hunt</label><input id="f_hunt" type="number" class="input" oninput="updateLiveAnalysis()"></div>
 </div>
 
 <div style="display:flex;gap:15px;margin-top:30px;">
@@ -137,14 +138,10 @@ box-shadow:0 10px 25px rgba(0,0,0,0.05);
     </div>
 
     <div class="flip-face flip-back">
-        <h3 onclick="document.getElementById('liveFlip').classList.remove('flipped')" style="cursor:pointer">👑 KING PACKS (Back)</h3>
+        <h3 onclick="document.getElementById('liveFlip').classList.remove('flipped')" style="cursor:pointer">👑 KING PACKS</h3>
         <table class="pack-table">
             <thead>
-                <tr>
-                    <th style="text-align: left;">QUALITY</th>
-                    <th>T1</th>
-                    <th>T2</th>
-                </tr>
+                <tr><th style="text-align: left;">QUALITY</th><th>T1</th><th>T2</th></tr>
             </thead>
             <tbody>
                 <tr><td>Legendary</td><td class="center"><input type="checkbox" id="pk_leg_t1"></td><td class="center"><input type="checkbox" id="pk_leg_t2"></td></tr>
@@ -171,6 +168,20 @@ const packFields = ['pk_leg_t1','pk_leg_t2','pk_epi_t1','pk_epi_t2','pk_exc_t1',
 const load=()=>JSON.parse(localStorage.getItem('formData')||'[]');
 const save=d=>localStorage.setItem('formData',JSON.stringify(d));
 
+window.updateLiveAnalysis = function() {
+    const p = parseFloat(f_power.value) || 0;
+    const pts = parseFloat(f_points.value) || 0;
+    const h = parseFloat(f_hunt.value) || 0;
+    const t = parseFloat(f_throne.value) || 0;
+    
+    // Logic: Points per Million Power
+    const eff = p > 0 ? (pts / (p / 1000000)).toFixed(4) : "0.0000";
+    document.getElementById('res_eff').textContent = eff;
+    document.getElementById('res_hunt').textContent = h.toFixed(2);
+    document.getElementById('res_throne').textContent = t.toFixed(2);
+    document.getElementById('res_total').textContent = (pts + h + t).toLocaleString();
+};
+
 window.setWeek=function(w){
     currentWeek=w;
     document.querySelectorAll('.week-btn').forEach(b=>b.classList.remove('selected'));
@@ -181,24 +192,26 @@ window.setWeek=function(w){
 window.selectPlayer=function(n){
     currentPlayer=n;
     document.getElementById('editHeader').textContent=n;
+    renderList(); // Refresh list to show active state
+    
     const d=load();
     const entry = d.find(x=>x.name===n && x.week===currentWeek) || {};
     
-    // Fill Text Inputs
     f_power.value = entry.power || "";
     f_points.value = entry.points || "";
     f_throne.value = entry.throne || "";
     f_quest.value = entry.quest || "";
     f_hunt.value = entry.hunt || "";
 
-    // Fill Checkboxes
     packFields.forEach(id => {
         document.getElementById(id).checked = entry[id] === 1;
     });
+    
+    updateLiveAnalysis();
 };
 
 window.performSave=function(){
-    if(!currentPlayer)return;
+    if(!currentPlayer) return alert("Select a player first");
     let d=load();
     const state={
         name:currentPlayer,
@@ -210,7 +223,6 @@ window.performSave=function(){
         hunt:f_hunt.value
     };
     
-    // Save pack checkboxes
     packFields.forEach(id => {
         state[id] = document.getElementById(id).checked ? 1 : 0;
     });
@@ -218,7 +230,7 @@ window.performSave=function(){
     const i=d.findIndex(x=>x.name===currentPlayer && x.week===currentWeek);
     if(i>=0) d[i]=state; else d.push(state);
     save(d);
-    alert("Data Saved for " + currentPlayer + " (" + currentWeek + ")");
+    alert("Saved: " + currentPlayer);
 };
 
 window.addNewPlayer=function(){
@@ -234,9 +246,10 @@ window.addNewPlayer=function(){
 };
 
 window.deletePlayer=function(){
-    if(!currentPlayer || !confirm("Delete all data for " + currentPlayer + "?")) return;
+    if(!currentPlayer || !confirm("Delete " + currentPlayer + "?")) return;
     let d=load().filter(x=>x.name!==currentPlayer);
     save(d);
+    currentPlayer = null;
     location.reload();
 };
 
@@ -245,7 +258,10 @@ window.renderList=function(){
     const search = playerSearch.value.toLowerCase();
     const names=[...new Set(d.map(x=>x.name))].filter(n => n.toLowerCase().includes(search));
     rosterCount.textContent="Players: "+[...new Set(d.map(x=>x.name))].length;
-    playersList.innerHTML=names.map(n=>`<li onclick="selectPlayer('${n}')">${n}</li>`).join('');
+    playersList.innerHTML=names.map(n=>{
+        const active = n === currentPlayer ? 'active' : '';
+        return `<li class="${active}" onclick="selectPlayer('${n}')">${n}</li>`;
+    }).join('');
 };
 
 renderList();
