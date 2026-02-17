@@ -2,43 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Alliance Dashboard - Elite v3</title>
+    <title>Alliance Dashboard - Pro Elite</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #f1f5f9; --text: #1e293b; --accent: #3b82f6; --dark: #0f172a; --success: #10b981; --gold: #fbbf24; --silver: #94a3b8; --bronze: #b45309; }
+        :root { --bg: #f1f5f9; --text: #1e293b; --accent: #3b82f6; --dark: #0f172a; --success: #10b981; --gold: #fbbf24; }
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 50px; }
-        header { background: var(--dark); color: white; padding: 1.5rem 2rem; border-bottom: 4px solid var(--accent); }
+        header { background: var(--dark); color: white; padding: 1rem 2rem; border-bottom: 4px solid var(--accent); }
         nav { display: flex; justify-content: center; gap: 15px; padding: 1rem; background: #cbd5e1; border-bottom: 1px solid #94a3b8; }
         nav a { text-decoration: none; color: white; background: var(--accent); padding: 0.6rem 1.5rem; border-radius: 10px; font-weight: 800; font-size: 0.9rem; }
         
         .podium-wrap { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin: 10px 0; height: 160px; }
         .podium-card { background: rgba(255,255,255,0.05); color: white; padding: 12px; border-radius: 15px; text-align: center; width: 140px; border: 1px solid rgba(255,255,255,0.1); }
         .podium-card.p1 { height: 150px; border-color: var(--gold); }
-        .podium-score { color: var(--accent); font-weight: 900; }
         
         .container { padding: 1.5rem; max-width: 1600px; margin: 0 auto; }
         .controls { display: grid; grid-template-columns: 1fr auto; gap: 20px; margin-bottom: 1.5rem; background: white; padding: 1.2rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .mult-inputs { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .mult-inputs div { background: #f8fafc; padding: 5px 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 5px; }
-        .mult-inputs label { font-size: 0.6rem; font-weight: 800; color: #64748b; }
-        .mult-inputs input { width: 65px; border: none; background: transparent; font-weight: 700; color: var(--accent); outline: none; }
+        .mult-inputs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .mult-inputs div { background: #f8fafc; padding: 5px 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 800; }
+        .mult-inputs input { width: 60px; border: none; background: transparent; font-weight: 700; color: var(--accent); outline: none; }
 
         .table-wrap { background: white; border-radius: 20px; overflow-x: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; min-width: 1150px; }
-        th { background: #f8fafc; padding: 15px; text-align: left; font-size: 0.65rem; text-transform: uppercase; font-weight: 800; color: #64748b; border-bottom: 2px solid #e2e8f0; cursor: pointer; }
+        th { background: #f8fafc; padding: 15px; text-align: left; font-size: 0.65rem; text-transform: uppercase; font-weight: 900; color: #64748b; border-bottom: 2px solid #e2e8f0; cursor: pointer; user-select: none; }
+        th.active { color: var(--accent); background: #eff6ff; }
         td { padding: 14px 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; font-weight: 600; }
 
         .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #cbd5e1; }
         .dot.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
 
+        /* Enhanced Overlay */
         .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; }
-        .modal { background:white; padding:2rem; border-radius:24px; width:650px; max-width:95%; position:relative; }
-        .m-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:20px; }
-        .m-card { background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #e2e8f0; text-align:center; }
-        .m-card label { display:block; font-size:0.6rem; color:#94a3b8; font-weight:800; text-transform:uppercase; margin-bottom:4px; }
-        .m-card span { font-size:1rem; font-weight:800; color:var(--dark); }
+        .modal { background:white; padding:1.5rem; border-radius:24px; width:750px; max-width:95%; position:relative; }
+        .m-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:15px; }
+        .m-card { background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0; text-align:center; }
+        .m-card label { display:block; font-size:0.55rem; color:#94a3b8; font-weight:800; text-transform:uppercase; }
+        
+        .chart-ctrls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f1f5f9; padding: 8px; border-radius: 12px; }
+        .c-btns { display: flex; gap: 5px; }
+        .c-btn { font-size: 0.65rem; padding: 5px 10px; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; font-weight: 700; background: white; }
+        .c-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        
+        .comp-select { font-size: 0.7rem; padding: 5px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -49,10 +55,10 @@
 <div class="container">
     <div class="controls">
         <div class="mult-inputs">
-            <div><label>W1:</label><input id="M_W1" type="number" step="0.1" oninput="saveAndRender()"></div>
-            <div><label>Hunt:</label><input id="M_HUNT" type="number" step="0.001" oninput="saveAndRender()"></div>
-            <div><label>Quest:</label><input id="M_QUEST" type="number" step="0.01" oninput="saveAndRender()"></div>
-            <div><label>Throne:</label><input id="M_THRONE" type="number" oninput="saveAndRender()"></div>
+            <div>W1: <input id="M_W1" type="number" step="0.1" oninput="saveAndRender()"></div>
+            <div>Hunt: <input id="M_HUNT" type="number" step="0.001" oninput="saveAndRender()"></div>
+            <div>Quest: <input id="M_QUEST" type="number" step="0.01" oninput="saveAndRender()"></div>
+            <div>Throne: <input id="M_THRONE" type="number" oninput="saveAndRender()"></div>
         </div>
         <select id="weekSelect" onchange="render()" style="padding:10px; border-radius:10px; font-weight:800; border:1px solid #cbd5e1;">
             <option value="week 1">Week 1</option><option value="week 2">Week 2</option><option value="week 3" selected>Week 3</option><option value="overall">Overall</option>
@@ -61,52 +67,43 @@
 
     <div class="table-wrap">
         <table>
-            <thead>
-                <tr>
-                    <th onclick="setSort('rank')">Rank</th>
-                    <th onclick="setSort('name')">Member</th>
-                    <th onclick="setSort('p')">Power ▲</th>
-                    <th onclick="setSort('pts')">Points</th>
-                    <th onclick="setSort('eff')">Eff.</th>
-                    <th onclick="setSort('act')">Act.</th>
-                    <th onclick="setSort('part')">Part.</th>
-                    <th onclick="setSort('tEff')">Throne Eff.</th>
-                    <th onclick="setSort('picks')">Picks</th>
-                    <th onclick="setSort('total')">Total Score</th>
-                    <th>Edit</th>
-                </tr>
-            </thead>
+            <thead id="tableHead"></thead>
             <tbody id="dashBody"></tbody>
         </table>
     </div>
 </div>
 
-<div class="overlay" id="overlay" onclick="this.style.display='none'">
+<div class="overlay" id="overlay" onclick="closeOverlay()">
     <div class="modal" onclick="event.stopPropagation()">
-        <h2 id="modalName">Member Stats</h2>
+        <h2 id="modalName" style="margin:0 0 10px 0;">Member Stats</h2>
         <div class="m-grid" id="modalGrid"></div>
-        <div style="background:#f8fafc; padding:15px; border-radius:15px; border:1px solid #e2e8f0;">
-            <canvas id="growthChart" height="150"></canvas>
+        
+        <div class="chart-ctrls">
+            <div class="c-btns">
+                <button class="c-btn active" id="btn-pts" onclick="updateGrowthChart('pts')">Points</button>
+                <button class="c-btn" id="btn-p" onclick="updateGrowthChart('p')">Power</button>
+                <button class="c-btn" id="btn-eff" onclick="updateGrowthChart('eff')">Eff.</button>
+                <button class="c-btn" id="btn-quest" onclick="updateGrowthChart('quest')">Quest</button>
+            </div>
+            <select id="compareWith" class="comp-select" onchange="updateGrowthChart(currentMetric)">
+                <option value="">Compare with...</option>
+            </select>
         </div>
-        <div style="margin-top:20px; display:flex; gap:10px;">
-            <button onclick="deletePlayer()" style="background:#ef4444; color:white; border:none; padding:10px; border-radius:10px; cursor:pointer; font-weight:700;">Delete Member</button>
-            <button onclick="document.getElementById('overlay').style.display='none'" style="background:#64748b; color:white; border:none; padding:10px; border-radius:10px; flex:1; cursor:pointer; font-weight:700;">Close</button>
+
+        <div style="background:#f8fafc; padding:10px; border-radius:15px; border:1px solid #e2e8f0;">
+            <canvas id="growthChart" height="180"></canvas>
+        </div>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            <button onclick="deletePlayer()" style="background:#ef4444; color:white; border:none; padding:10px; border-radius:10px; cursor:pointer; font-weight:700;">Delete</button>
+            <button onclick="closeOverlay()" style="background:#64748b; color:white; border:none; padding:10px; border-radius:10px; flex:1; cursor:pointer; font-weight:700;">Close</button>
         </div>
     </div>
 </div>
 
 <script>
-// DEFAULT SORT SET TO POWER ('p') DESCENDING
-let sortCol = 'p', sortAsc = false, activeName = "", myChart = null;
+let sortCol = 'total', sortAsc = false, activeName = "", currentMetric = 'pts', myChart = null;
 
-const loadConfig = () => {
-    const s = JSON.parse(localStorage.getItem('config')) || { W1: 0.2, HUNT: 0.005, QUEST: 0.05, THRONE: 1000000000 };
-    document.getElementById('M_W1').value = s.W1;
-    document.getElementById('M_HUNT').value = s.HUNT;
-    document.getElementById('M_QUEST').value = s.QUEST;
-    document.getElementById('M_THRONE').value = s.THRONE;
-    return s;
-};
+const loadConfig = () => JSON.parse(localStorage.getItem('config')) || { W1: 0.2, HUNT: 0.005, QUEST: 0.05, THRONE: 1000000000 };
 
 const saveAndRender = () => {
     localStorage.setItem('config', JSON.stringify({
@@ -127,6 +124,8 @@ window.setSort = (c) => {
     render(); 
 };
 
+window.closeOverlay = () => { document.getElementById('overlay').style.display='none'; document.getElementById('compareWith').value=""; };
+
 window.showDetail = (name) => {
     activeName = name;
     const data = JSON.parse(localStorage.getItem('formData') || '[]');
@@ -140,28 +139,38 @@ window.showDetail = (name) => {
         <div class="m-card"><label>Quest</label><span>${(parseFloat(active.quest)||0).toLocaleString()}</span></div>
         <div class="m-card"><label>Throne</label><span>${(parseFloat(active.throne)||0).toLocaleString()}</span></div>
     `;
-    document.getElementById('overlay').style.display = 'flex';
     
+    const compSel = document.getElementById('compareWith');
+    const names = [...new Set(data.map(d => d.name))].filter(n => n !== name);
+    compSel.innerHTML = '<option value="">Compare with...</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
+
+    document.getElementById('overlay').style.display = 'flex';
+    updateGrowthChart('pts');
+};
+
+window.updateGrowthChart = (metric) => {
+    currentMetric = metric;
+    const data = JSON.parse(localStorage.getItem('formData') || '[]');
+    const compareName = document.getElementById('compareWith').value;
     const weeks = ['week 1', 'week 2', 'week 3'];
-    const ptsVals = weeks.map(w => {
-        const entry = data.find(x => x.name === name && x.week === w);
-        return entry ? parseFloat(entry.points) || 0 : 0;
+
+    const getPlayerVals = (targetName) => weeks.map(w => {
+        const e = data.find(x => x.name === targetName && x.week === w) || { power:0, points:0, quest:0 };
+        if(metric === 'eff') return e.power > 0 ? (parseFloat(e.points)/parseFloat(e.power)) : 0;
+        return parseFloat(e[metric === 'pts' ? 'points' : metric === 'p' ? 'power' : metric]) || 0;
     });
+
+    document.querySelectorAll('.c-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${metric}`));
+
+    const datasets = [{ label: activeName, data: getPlayerVals(activeName), borderColor: '#3b82f6', tension: 0.3, fill: true, backgroundColor: 'rgba(59,130,246,0.1)' }];
+    if(compareName) datasets.push({ label: compareName, data: getPlayerVals(compareName), borderColor: '#ef4444', tension: 0.3, borderDash: [5,5] });
 
     if (myChart) myChart.destroy();
     myChart = new Chart(document.getElementById('growthChart'), {
         type: 'line',
-        data: { labels: ['W1', 'W2', 'W3'], datasets: [{ label: 'Points', data: ptsVals, borderColor: '#3b82f6', tension: 0.3, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)' }] },
-        options: { plugins: { legend: { display: false } } }
+        data: { labels: ['W1', 'W2', 'W3'], datasets },
+        options: { responsive: true, plugins: { legend: { display: !!compareName } } }
     });
-};
-
-window.deletePlayer = () => {
-    if(!confirm("Delete " + activeName + "?")) return;
-    const d = JSON.parse(localStorage.getItem('formData') || '[]').filter(x => x.name !== activeName);
-    localStorage.setItem('formData', JSON.stringify(d));
-    document.getElementById('overlay').style.display='none';
-    render();
 };
 
 window.render = () => {
@@ -169,68 +178,61 @@ window.render = () => {
     const view = document.getElementById('weekSelect').value;
     const config = loadConfig();
     const names = [...new Set(data.map(d => d.name))];
-    let results = [];
-
-    names.forEach(name => {
+    
+    let results = names.map(name => {
         const e = data.filter(d => d.name === name);
         const w1 = e.find(x => x.week === 'week 1') || { points:0, power:0 };
         const w2 = e.find(x => x.week === 'week 2');
         const w3 = e.find(x => x.week === 'week 3');
-
         let active = (view==='week 2') ? (w2||w1) : (view==='week 3'||view==='overall' ? (w3||w2||w1) : w1);
+        
         const p = parseFloat(active.power) || 0;
         const pts = parseFloat(active.points) || 0;
 
         const getStats = (entry) => {
             if(!entry) return { a:0, p:0 };
-            // Rounding fix: Use 8.33 and divide by 10 to avoid floating point 0.833 * 3 issues
             let a = ((entry.lava?8.33:0)+(entry.challenge?8.33:0)+(entry.donations?8.33:0))/10;
             let pr = ((entry.esb?8.33:0)+(entry.dv?8.33:0)+(entry.mon?4.16:0)+(entry.wed?4.16:0))/10;
-            // Force 2.5 cap and round to 2 decimals to fix 7.49 issues
             return { a: Math.min(2.5, Math.round(a * 100) / 100), p: Math.min(2.5, Math.round(pr * 100) / 100) };
         };
 
         let act = 0, part = 0;
-        if(view === 'overall') {
-            [w1, w2, w3].forEach(w => { const r = getStats(w); act += r.a; part += r.p; });
-        } else {
-            const r = getStats(active); act = r.a; part = r.p;
-        }
+        if(view === 'overall') { [w1, w2, w3].forEach(w => { const r = getStats(w); act += r.a; part += r.p; }); }
+        else { const r = getStats(active); act = r.a; part = r.p; }
         
-        // Final sanity round for Overall (Total max 7.5)
         act = Math.round(act * 100) / 100;
         part = Math.round(part * 100) / 100;
-
         const eff = p > 0 ? (pts / p) : 0;
         const tEff = p > 0 ? (parseFloat(active.throne||0)/p)*config.THRONE : 0;
-        
         let picks = 0, has100 = false;
         e.forEach(we => { picks += (we.p100?100:0)+(we.p40?40:0)+(we.p20?20:0)+(we.p5?5:0); if(we.p100) has100=true; });
 
         const total = (parseFloat(w1.points)*config.W1) + eff + act + part + ((parseFloat(active.hunt||0))*config.HUNT) + ((parseFloat(active.quest||0))*config.QUEST) + tEff;
-
-        results.push({ name, p, pts, eff, act, part, tEff, picks, total, has100 });
+        return { name, p, pts, eff, act, part, tEff, picks, total, has100 };
     });
 
-    // FIXED NUMERIC SORT
-    results.sort((a,b) => {
-        let valA = a[sortCol];
-        let valB = b[sortCol];
-        return sortAsc ? valA - valB : valB - valA;
-    });
+    results.sort((a,b) => sortAsc ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol]);
 
-    // Podium Logic
-    const pZone = document.getElementById('podium');
-    pZone.innerHTML = '';
-    if(results.length >= 1) {
-        // Find top 3 based on TOTAL score specifically for the podium
-        const top3ForPodium = [...results].sort((a,b) => b.total - a.total).slice(0,3);
-        const podLayout = [top3ForPodium[1], top3ForPodium[0], top3ForPodium[2]];
-        podLayout.forEach((r, i) => { if(!r) return;
+    // Dynamic Headers with Arrows
+    const cols = [
+        {k:'rank', label:'Rank'}, {k:'name', label:'Member'}, {k:'p', label:'Power'}, 
+        {k:'pts', label:'Points'}, {k:'eff', label:'Eff'}, {k:'act', label:'Act'}, 
+        {k:'part', label:'Part'}, {k:'tEff', label:'Throne'}, {k:'picks', label:'Picks'}, 
+        {k:'total', label:'Total Score'}
+    ];
+    document.getElementById('tableHead').innerHTML = `<tr>${cols.map(c => `
+        <th class="${sortCol===c.k?'active':''}" onclick="setSort('${c.k}')">
+            ${c.label} ${sortCol===c.k ? (sortAsc?'▲':'▼') : ''}
+        </th>`).join('')}<th>Edit</th></tr>`;
+
+    // Podium
+    const pZone = document.getElementById('podium'); pZone.innerHTML = '';
+    const top3 = [...results].sort((a,b) => b.total - a.total).slice(0,3);
+    if(top3.length > 0) {
+        [top3[1], top3[0], top3[2]].forEach((r, i) => { if(!r) return;
             pZone.innerHTML += `<div class="podium-card ${i===1?'p1':''}">
-                <span style="font-size:1.8rem">${i===1?'🥇':i===0?'🥈':'🥉'}</span><br>
-                <b style="font-size:0.8rem">${r.name}</b><br>
-                <span class="podium-score">${fmt(r.total)}</span>
+                <span style="font-size:1.5rem">${i===1?'🥇':i===0?'🥈':'🥉'}</span><br>
+                <b style="font-size:0.75rem">${r.name}</b><br><small class="podium-score">${fmt(r.total)}</small>
             </div>`;
         });
     }
@@ -239,19 +241,26 @@ window.render = () => {
         <tr onclick="showDetail('${r.name}')" style="cursor:pointer">
             <td style="color:#94a3b8">#${i+1}</td>
             <td><span class="dot ${r.has100?'active':''}"></span>${r.name}</td>
-            <td style="color:var(--accent); font-weight:800">${fmtP(r.p)}</td>
+            <td style="${sortCol==='p'?'color:var(--accent)':''}">${fmtP(r.p)}</td>
             <td>${r.pts.toLocaleString()}</td>
             <td>${fmt(r.eff)}</td>
             <td>${r.act.toFixed(2)}</td>
             <td>${r.part.toFixed(2)}</td>
             <td>${fmt(r.tEff)}</td>
             <td>${r.picks}</td>
-            <td>${fmt(r.total)}</td>
-            <td><button class="c-btn" style="background:#f1f5f9; color:var(--accent); font-weight:800; border:none; padding:5px 8px; border-radius:5px; cursor:pointer;" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); location.href='form.html'">EDIT</button></td>
+            <td style="${sortCol==='total'?'color:var(--accent); font-weight:900':''}">${fmt(r.total)}</td>
+            <td><button class="c-btn" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); location.href='form.html'">EDIT</button></td>
         </tr>`).join('');
 };
 
-window.onload = () => { render(); };
+window.onload = () => {
+    const c = loadConfig();
+    document.getElementById('M_W1').value = c.W1;
+    document.getElementById('M_HUNT').value = c.HUNT;
+    document.getElementById('M_QUEST').value = c.QUEST;
+    document.getElementById('M_THRONE').value = c.THRONE;
+    render();
+};
 </script>
 </body>
 </html>
