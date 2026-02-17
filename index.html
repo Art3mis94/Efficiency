@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Alliance Dashboard - Personal Growth</title>
+    <title>Alliance Dashboard - Elite</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -10,44 +10,40 @@
         :root { --bg: #f1f5f9; --text: #1e293b; --accent: #3b82f6; --dark: #0f172a; --success: #10b981; --gold: #fbbf24; --silver: #94a3b8; --bronze: #b45309; }
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 50px; }
         
-        header { background: var(--dark); color: white; padding: 2rem; border-bottom: 4px solid var(--accent); }
+        header { background: var(--dark); color: white; padding: 1rem 2rem; border-bottom: 4px solid var(--accent); }
         nav { display: flex; justify-content: center; gap: 15px; padding: 1rem; background: #cbd5e1; border-bottom: 1px solid #94a3b8; }
         nav a { text-decoration: none; color: white; background: var(--accent); padding: 0.6rem 1.5rem; border-radius: 10px; font-weight: 800; font-size: 0.9rem; }
 
-        .podium-wrap { display: flex; justify-content: center; align-items: flex-end; gap: 20px; margin: 20px 0; height: 180px; }
-        .podium-card { background: rgba(255,255,255,0.05); color: white; padding: 15px; border-radius: 15px; text-align: center; width: 160px; position: relative; border: 1px solid rgba(255,255,255,0.1); }
-        .podium-card.p1 { height: 160px; border-color: var(--gold); }
-        .podium-score { color: var(--accent); font-weight: 900; font-size: 1.2rem; }
+        .podium-wrap { display: flex; justify-content: center; align-items: flex-end; gap: 20px; margin: 20px 0; height: 160px; }
+        .podium-card { background: rgba(255,255,255,0.05); color: white; padding: 10px; border-radius: 15px; text-align: center; width: 140px; border: 1px solid rgba(255,255,255,0.1); }
+        .podium-card.p1 { height: 140px; border-color: var(--gold); }
+        .podium-score { color: var(--accent); font-weight: 900; }
 
-        .container { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+        .container { padding: 1.5rem; max-width: 1600px; margin: 0 auto; }
         
-        .controls { display: grid; grid-template-columns: 1fr auto; gap: 20px; margin-bottom: 2rem; background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .controls { display: grid; grid-template-columns: 1fr auto; gap: 20px; margin-bottom: 1.5rem; background: white; padding: 1.2rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .mult-inputs { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .mult-inputs div { background: #f8fafc; padding: 5px 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 5px; }
-        .mult-inputs input { width: 70px; border: none; background: transparent; font-weight: 700; color: var(--accent); outline: none; }
+        .mult-inputs label { font-size: 0.6rem; font-weight: 800; }
+        .mult-inputs input { width: 80px; border: none; background: transparent; font-weight: 700; color: var(--accent); outline: none; }
 
-        .table-wrap { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; padding: 15px; text-align: left; font-size: 0.7rem; text-transform: uppercase; font-weight: 800; color: #64748b; border-bottom: 2px solid #e2e8f0; cursor: pointer; }
-        td { padding: 14px 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; font-weight: 600; }
+        .table-wrap { background: white; border-radius: 20px; overflow-x: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        th { background: #f8fafc; padding: 12px; text-align: left; font-size: 0.65rem; text-transform: uppercase; font-weight: 800; color: #64748b; border-bottom: 2px solid #e2e8f0; cursor: pointer; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.8rem; font-weight: 600; }
         
         .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #cbd5e1; }
         .dot.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
 
-        /* Modal / Overlay */
         .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; }
-        .modal { background:white; padding:2rem; border-radius:24px; width:600px; max-width:95%; position:relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .m-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:20px; }
-        .m-card { background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0; text-align:center; }
-        .m-card label { display:block; font-size:0.55rem; color:#94a3b8; font-weight:800; text-transform:uppercase; }
-        .m-card span { font-size:1rem; font-weight:800; }
+        .modal { background:white; padding:1.5rem; border-radius:24px; width:650px; max-width:95%; position:relative; }
+        .m-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:15px; }
+        .m-card { background:#f8fafc; padding:8px; border-radius:10px; border:1px solid #e2e8f0; text-align:center; }
+        .m-card label { display:block; font-size:0.5rem; color:#94a3b8; font-weight:800; }
+        .m-card span { font-size:0.85rem; font-weight:800; }
 
-        .chart-box { background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; }
-        .chart-btns { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
-        .c-btn { font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; border: 1px solid #cbd5e1; cursor: pointer; font-weight: 700; }
+        .c-btn { font-size: 0.65rem; padding: 5px 12px; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; font-weight: 700; }
         .c-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-
-        .btn-red { background:#ef4444; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:700; flex:1; }
     </style>
 </head>
 <body>
@@ -70,23 +66,26 @@
             <div><label>Quest:</label><input id="M_QUEST" type="number" step="0.01" oninput="saveConfig()"></div>
             <div><label>Throne:</label><input id="M_THRONE" type="number" oninput="saveConfig()"></div>
         </div>
-        <div style="display:flex; gap:10px;">
-            <select id="weekSelect" onchange="render()" style="padding:10px; border-radius:10px; font-weight:800; border:1px solid #cbd5e1;">
-                <option value="week 1">Week 1</option><option value="week 2">Week 2</option><option value="week 3" selected>Week 3</option><option value="overall">Overall</option>
-            </select>
-        </div>
+        <select id="weekSelect" onchange="render()" style="padding:10px; border-radius:10px; font-weight:800; border:1px solid #cbd5e1;">
+            <option value="week 1">Week 1</option><option value="week 2">Week 2</option><option value="week 3" selected>Week 3</option><option value="overall">Overall</option>
+        </select>
     </div>
 
     <div class="table-wrap">
         <table>
             <thead>
                 <tr>
+                    <th onclick="setSort('rank')">Rank</th>
                     <th onclick="setSort('name')">Member</th>
                     <th onclick="setSort('p')">Power</th>
                     <th onclick="setSort('pts')">Points</th>
-                    <th onclick="setSort('eff')">Efficiency</th>
+                    <th onclick="setSort('eff')">Eff.</th>
+                    <th onclick="setSort('act')">Act.</th>
+                    <th onclick="setSort('part')">Part.</th>
+                    <th onclick="setSort('tEff')">Throne Eff.</th>
+                    <th onclick="setSort('picks')">Hero Picks</th>
                     <th onclick="setSort('total')">Total Score ▲</th>
-                    <th>Action</th>
+                    <th>Edit</th>
                 </tr>
             </thead>
             <tbody id="dashBody"></tbody>
@@ -96,22 +95,19 @@
 
 <div class="overlay" id="overlay" onclick="this.style.display='none'">
     <div class="modal" onclick="event.stopPropagation()">
-        <h2 id="modalName" style="margin:0 0 15px 0; color:var(--dark)">Player Growth</h2>
-        
+        <h2 id="modalName" style="margin:0 0 10px 0;">Growth Track</h2>
         <div class="m-grid" id="modalGrid"></div>
-
-        <div class="chart-box">
-            <div class="chart-btns">
-                <button class="c-btn active" onclick="updateGrowthChart('pts')">Points</button>
-                <button class="c-btn" onclick="updateGrowthChart('p')">Power</button>
-                <button class="c-btn" onclick="updateGrowthChart('eff')">Eff.</button>
+        <div style="background:#f8fafc; padding:15px; border-radius:15px; border:1px solid #e2e8f0;">
+            <div style="display:flex; justify-content:center; gap:8px; margin-bottom:10px;">
+                <button class="c-btn active" onclick="updateGrowthChart('points')">Points</button>
+                <button class="c-btn" onclick="updateGrowthChart('power')">Power</button>
                 <button class="c-btn" onclick="updateGrowthChart('quest')">Quest</button>
+                <button class="c-btn" onclick="updateGrowthChart('throne')">Throne</button>
             </div>
-            <canvas id="growthChart" height="180"></canvas>
+            <canvas id="growthChart" height="150"></canvas>
         </div>
-
-        <div style="margin-top:20px; display:flex; gap:10px;">
-            <button class="btn-red" onclick="deletePlayer()">Delete Member</button>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            <button onclick="deletePlayer()" style="background:#ef4444; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:700;">Delete</button>
             <button onclick="document.getElementById('overlay').style.display='none'" style="background:#64748b; color:white; border:none; padding:10px; border-radius:8px; flex:1; cursor:pointer; font-weight:700;">Close</button>
         </div>
     </div>
@@ -131,10 +127,10 @@ const loadConfig = () => {
 
 const saveConfig = () => {
     localStorage.setItem('config', JSON.stringify({
-        W1: parseFloat(document.getElementById('M_W1').value),
-        HUNT: parseFloat(document.getElementById('M_HUNT').value),
-        QUEST: parseFloat(document.getElementById('M_QUEST').value),
-        THRONE: parseFloat(document.getElementById('M_THRONE').value)
+        W1: parseFloat(document.getElementById('M_W1').value)||0,
+        HUNT: parseFloat(document.getElementById('M_HUNT').value)||0,
+        QUEST: parseFloat(document.getElementById('M_QUEST').value)||0,
+        THRONE: parseFloat(document.getElementById('M_THRONE').value)||0
     }));
     render();
 };
@@ -142,7 +138,6 @@ const saveConfig = () => {
 const fmt = (v) => (parseFloat(v)||0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 const fmtP = (v) => {
     const val = parseFloat(v)||0;
-    if(val === 0) return "0.0bn";
     return (val/1000).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "bn";
 };
 
@@ -152,57 +147,37 @@ window.showDetail = (name) => {
     activeName = name;
     const data = JSON.parse(localStorage.getItem('formData') || '[]');
     const view = document.getElementById('weekSelect').value;
-    const currentWeek = view === 'overall' ? 'week 3' : view;
-    const p = data.find(x => x.name === name && x.week === currentWeek) || { power:0, points:0, quest:0, throne:0 };
+    const active = data.find(x => x.name === name && x.week === (view==='overall'?'week 3':view)) || { power:0, points:0, quest:0, throne:0 };
     
-    document.getElementById('modalName').innerText = name + " Progress";
+    document.getElementById('modalName').innerText = name;
     document.getElementById('modalGrid').innerHTML = `
-        <div class="m-card"><label>Power</label><span>${fmtP(p.power)}</span></div>
-        <div class="m-card"><label>Points</label><span>${(parseFloat(p.points)||0).toLocaleString()}</span></div>
-        <div class="m-card"><label>Eff.</label><span>${fmt(p.power > 0 ? p.points/p.power : 0)}</span></div>
+        <div class="m-card"><label>Power</label><span>${fmtP(active.power)}</span></div>
+        <div class="m-card"><label>Points</label><span>${(parseFloat(active.points)||0).toLocaleString()}</span></div>
+        <div class="m-card"><label>Quest</label><span>${(parseFloat(active.quest)||0).toLocaleString()}</span></div>
+        <div class="m-card"><label>Throne</label><span>${(parseFloat(active.throne)||0).toLocaleString()}</span></div>
     `;
-    
     document.getElementById('overlay').style.display = 'flex';
-    updateGrowthChart('pts'); // Initialize chart with Points
+    updateGrowthChart('points');
 };
 
 window.updateGrowthChart = (metric) => {
     const data = JSON.parse(localStorage.getItem('formData') || '[]');
     const weeks = ['week 1', 'week 2', 'week 3'];
     const values = weeks.map(w => {
-        const entry = data.find(x => x.name === activeName && x.week === w) || { power:0, points:0, quest:0 };
-        if (metric === 'eff') return entry.power > 0 ? (entry.points / entry.power) : 0;
+        const entry = data.find(x => x.name === activeName && x.week === w) || { power:0, points:0, quest:0, throne:0 };
         return parseFloat(entry[metric]) || 0;
     });
 
-    // Toggle button UI
-    document.querySelectorAll('.c-btn').forEach(b => {
-        b.classList.toggle('active', b.innerText.toLowerCase().includes(metric));
-    });
+    document.querySelectorAll('.c-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === metric));
 
     if (myChart) myChart.destroy();
-    const ctx = document.getElementById('growthChart').getContext('2d');
-    myChart = new Chart(ctx, {
+    myChart = new Chart(document.getElementById('growthChart'), {
         type: 'line',
         data: {
             labels: ['Week 1', 'Week 2', 'Week 3'],
-            datasets: [{
-                label: metric.toUpperCase(),
-                data: values,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 6,
-                pointBackgroundColor: '#fff',
-                pointBorderWidth: 3
-            }]
+            datasets: [{ label: metric.toUpperCase(), data: values, borderColor: '#3b82f6', tension: 0.3, fill:true, backgroundColor:'rgba(59,130,246,0.1)' }]
         },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
-        }
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
     });
 };
 
@@ -217,23 +192,28 @@ window.deletePlayer = () => {
 window.render = () => {
     const data = JSON.parse(localStorage.getItem('formData') || '[]');
     const view = document.getElementById('weekSelect').value;
-    const m = JSON.parse(localStorage.getItem('config')) || defaultM;
+    const config = JSON.parse(localStorage.getItem('config')) || defaultM;
     const names = [...new Set(data.map(d => d.name))];
     let results = [];
 
     names.forEach(name => {
         const e = data.filter(d => d.name === name);
-        const w1 = e.find(x => x.week === 'week 1') || { points:0, power:0 };
+        const w1 = e.find(x => x.week === 'week 1') || { points: 0, power: 0 };
         const w2 = e.find(x => x.week === 'week 2');
         const w3 = e.find(x => x.week === 'week 3');
 
         let active = (view==='week 2') ? (w2||w1) : (view==='week 3'||view==='overall' ? (w3||w2||w1) : w1);
         
-        const pVal = parseFloat(active.power) || 0;
-        const ptVal = parseFloat(active.points) || 0;
-        let eff = pVal > 0 ? (ptVal / pVal) : 0;
+        const p = parseFloat(active.power) || 0;
+        const pts = parseFloat(active.points) || 0;
+        const qScore = parseFloat(active.quest) || 0;
+        const tScore = parseFloat(active.throne) || 0;
+
+        // Correct Calculations
+        const eff = p > 0 ? (pts / p) : 0;
+        const tEffValue = p > 0 ? (tScore / p) : 0; // Raw Throne Eff
+        const tEffScore = tEffValue * config.THRONE; // Weighted Throne Eff
         
-        let w1S = (parseFloat(w1.points)||0) * m.W1;
         let act = 0, part = 0;
         const period = (view==='overall'||view==='week 3') ? [w1,w2,w3] : (view==='week 2'?[w1,w2]:[w1]);
         period.filter(x=>x).forEach(x => { 
@@ -241,33 +221,39 @@ window.render = () => {
             part += Math.min(2.5, ((x.esb?1:0)*(0.833)) + ((x.dv?1:0)*(0.833)) + ((x.mon?1:0)*(0.416)) + ((x.wed?1:0)*(0.416)));
         });
 
-        let has100 = e.some(we => we.p100 == 1);
+        let totalPicks = 0, has100 = false;
+        e.forEach(we => { totalPicks += (we.p100?100:0)+(we.p40?40:0)+(we.p20?20:0)+(we.p5?5:0); if(we.p100==1) has100 = true; });
 
-        const total = w1S + eff + act + part + ((parseFloat(active.hunt)||0)*m.HUNT) + ((parseFloat(active.quest)||0)*m.QUEST);
+        const total = (parseFloat(w1.points)*config.W1) + eff + act + part + (qScore*config.QUEST) + ((parseFloat(active.hunt)||0)*config.HUNT) + tEffScore;
 
-        results.push({ name, p: pVal, pts: ptVal, eff, total, has100 });
+        results.push({ name, p, pts, eff, act, part, tEff: tEffScore, picks: totalPicks, total, has100 });
     });
 
     results.sort((a,b) => sortAsc ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol]);
 
-    // Build Podium
+    // Update Podium
     const pZone = document.getElementById('podium');
     pZone.innerHTML = '';
     if(results.length >= 1) {
         const pod = [results[1], results[0], results[2]];
         pod.forEach((r, i) => { if(!r) return;
-            pZone.innerHTML += `<div class="podium-card ${i===1?'p1':''}"><span style="font-size:1.8rem">${i===1?'🥇':i===0?'🥈':'🥉'}</span><span class="podium-name">${r.name}</span><span class="podium-score">${fmt(r.total)}</span></div>`;
+            pZone.innerHTML += `<div class="podium-card ${i===1?'p1':''}"><span style="font-size:1.8rem">${i===1?'🥇':i===0?'🥈':'🥉'}</span><span style="display:block;font-weight:800;font-size:0.75rem">${r.name}</span><span class="podium-score">${fmt(r.total)}</span></div>`;
         });
     }
 
     document.getElementById('dashBody').innerHTML = results.map((r, i) => `
         <tr onclick="showDetail('${r.name}')" style="cursor:pointer">
+            <td>#${i+1}</td>
             <td><span class="dot ${r.has100?'active':''}"></span>${r.name} ${i===0?'🥇':i===1?'🥈':i===2?'🥉':''}</td>
             <td>${fmtP(r.p)}</td>
             <td>${r.pts.toLocaleString()}</td>
             <td>${fmt(r.eff)}</td>
+            <td>${r.act.toFixed(1)}</td>
+            <td>${r.part.toFixed(1)}</td>
+            <td>${fmt(r.tEff)}</td>
+            <td>${r.picks}</td>
             <td style="color:var(--accent); font-weight:900">${fmt(r.total)}</td>
-            <td><button class="edit-btn" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); location.href='form.html'">EDIT</button></td>
+            <td><button class="c-btn" style="background:#f1f5f9" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); location.href='form.html'">EDIT</button></td>
         </tr>`).join('');
 };
 
