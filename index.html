@@ -34,7 +34,7 @@
     .status-green{color:var(--success) !important; font-weight:800;}
     
     .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); align-items:center; justify-content:center;}
-    .modal-content{background:white; padding:25px; width:95%; max-width:950px; border-radius:16px; position:relative; max-height:90vh; overflow-y:auto;}
+    .modal-content{background:white; padding:25px; width:95%; max-width:1000px; border-radius:16px; position:relative; max-height:90vh; overflow-y:auto;}
     .ov-table{width:100%; border-collapse:collapse; margin-top:20px; font-size:0.8rem;}
     .ov-table th, .ov-table td{border:1px solid #e2e8f0; padding:8px; text-align:center;}
   </style>
@@ -47,7 +47,7 @@
     <div class="top-row">
       <div class="card"><label>Roster Count</label><span id="stat_total">0</span></div>
       <div class="card">
-        <label>🏆 Seasonal Leaders (Overall Score)</label>
+        <label>🏆 Seasonal Leaders</label>
         <div id="topThreeList" style="display:flex; gap:10px; margin-top:5px;"></div>
       </div>
     </div>
@@ -55,10 +55,10 @@
     <details>
       <summary>⚙️ SCORING CONFIGURATION</summary>
       <div class="config-grid">
-        <div><label>M_QUEST</label><input type="number" step="0.0000001" id="m_quest" onchange="saveMults()"></div>
         <div><label>M_THRONE</label><input type="number" step="0.1" id="m_throne" onchange="saveMults()"></div>
+        <div><label>M_QUEST</label><input type="number" step="0.0000001" id="m_quest" onchange="saveMults()"></div>
+        <div><label>M_W1_BASE</label><input type="number" step="0.1" id="m_w1" onchange="saveMults()"></div>
         <div><label>M_HUNT</label><input type="number" step="0.0000001" id="m_hunt" onchange="saveMults()"></div>
-        <div><label>M_ACT</label><input type="number" step="0.1" id="m_act" onchange="saveMults()"></div>
       </div>
     </details>
 
@@ -91,7 +91,7 @@
             <button onclick="updateGraph('points')">Points</button>
             <button onclick="updateGraph('eff')">Eff</button>
           </div>
-          <div style="height:250px;"><canvas id="playerChart"></canvas></div>
+          <div style="height:280px;"><canvas id="playerChart"></canvas></div>
         </div>
         <div style="overflow-x:auto;">
           <table class="ov-table">
@@ -109,14 +109,23 @@
       let activeEntries = [];
 
       const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
-      const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_QUEST":0.0000025,"M_THRONE":3.0,"M_HUNT":0.00001,"M_ACT":0.833}');
+      const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
       
+      // Formatting for Power: 8,121,100 -> 8,121.1Bn
+      const fmtPower = (n) => {
+        if(!n) return "0.0Bn";
+        const val = parseFloat(n) / 1000;
+        return val.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "Bn";
+      };
+
+      const fmtNum = (n) => parseFloat(n || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+
       window.saveMults = () => {
         const m = {
-          M_QUEST: parseFloat(document.getElementById('m_quest').value),
           M_THRONE: parseFloat(document.getElementById('m_throne').value),
-          M_HUNT: parseFloat(document.getElementById('m_hunt').value),
-          M_ACT: parseFloat(document.getElementById('m_act').value)
+          M_QUEST: parseFloat(document.getElementById('m_quest').value),
+          M_W1: parseFloat(document.getElementById('m_w1').value),
+          M_HUNT: parseFloat(document.getElementById('m_hunt').value)
         };
         localStorage.setItem('scoringMultipliers', JSON.stringify(m));
         render();
@@ -125,7 +134,10 @@
       window.render = () => {
         const data = load();
         const m = getMults();
-        ['m_quest','m_throne','m_hunt','m_act'].forEach(id => document.getElementById(id).value = m[id.toUpperCase()]);
+        ['m_throne','m_quest','m_w1','m_hunt'].forEach(id => {
+            const key = id === 'm_w1' ? 'M_W1' : id.toUpperCase();
+            document.getElementById(id).value = m[key];
+        });
 
         const view = document.getElementById('weekSelect').value;
         const search = document.getElementById('dashSearch').value.toLowerCase();
@@ -139,11 +151,13 @@
 
           const p = parseFloat(cur.power) || 1;
           const pts = parseFloat(cur.points) || 0;
-          const eff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/p) : (pts/p);
           
-          const actCount = (cur.lava||0) + (cur.challenge||0) + (cur.donations||0) + (cur.dv||0) + (cur.esb||0) + (cur.mon||0) + (cur.wed||0);
-          const actScore = actCount * m.M_ACT;
-          const partScore = (parseFloat(cur.quest)||0) * m.M_QUEST + (parseFloat(cur.hunt)||0) * m.M_HUNT;
+          const rawEff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/p) : (pts/p);
+          const eff = (view === 'overall') ? rawEff + (m.M_W1 * (parseFloat(w1.points)||0)/p) : rawEff;
+          
+          const partRaw = ((cur.esb?1:0)*(1/3)) + ((cur.dv?1:0)*(1/3)) + ((cur.mon?1:0)*(1/6)) + ((cur.wed?1:0)*(1/6)); 
+          const partScore = Math.min(2.5, partRaw + (parseFloat(cur.quest||0)*m.M_QUEST) + (parseFloat(cur.hunt||0)*m.M_HUNT));
+          const actScore = ((cur.lava?1:0) + (cur.challenge?1:0) + (cur.donations?1:0)) * 0.833;
           const tEff = ((parseFloat(cur.throne)||0)/p) * m.M_THRONE;
           
           const total = eff + actScore + partScore + tEff;
@@ -155,8 +169,6 @@
         });
 
         results.sort((a,b) => b.total - a.total);
-        
-        // Headers
         document.getElementById('stat_total').textContent = names.length;
         document.getElementById('topThreeList').innerHTML = results.slice(0,3).map((r,i) => 
           `<div class="leader-pill"><b>#${i+1}</b> ${r.name}</div>`).join('');
@@ -165,7 +177,7 @@
           const isG = r.has100 ? 'status-green' : '';
           return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
             <td>#${i+1}</td><td class="${isG}"><strong>${r.name}</strong></td>
-            <td>${r.p.toLocaleString()}</td><td>${r.pts.toLocaleString()}</td>
+            <td>${fmtPower(r.p)}</td><td>${fmtNum(r.pts)}</td>
             <td>${r.eff.toFixed(4)}</td><td>${r.actScore.toFixed(2)}</td>
             <td>${r.partScore.toFixed(2)}</td><td>${r.tEff.toFixed(2)}</td>
             <td style="font-weight:800;">${r.total.toFixed(2)}</td><td class="${isG}">${r.picks}</td>
@@ -179,8 +191,15 @@
         document.getElementById('modalName').textContent = name;
         document.getElementById('ovTableBody').innerHTML = activeEntries.map(e => {
             const p = parseFloat(e.power)||1;
-            return `<tr><td>${e.week.toUpperCase()}</td><td>${(parseFloat(e.power)||0).toLocaleString()}</td><td>${(parseFloat(e.points)||0).toLocaleString()}</td>
-            <td>${((parseFloat(e.points)||0)/p).toFixed(4)}</td><td>${e.throne||0}</td><td>${e.quest||0}</td><td>${e.hunt||0}</td></tr>`;
+            return `<tr>
+              <td>${e.week.toUpperCase()}</td>
+              <td>${fmtPower(e.power)}</td>
+              <td>${fmtNum(e.points)}</td>
+              <td>${((parseFloat(e.points)||0)/p).toFixed(4)}</td>
+              <td>${fmtNum(e.throne)}</td>
+              <td>${fmtNum(e.quest)}</td>
+              <td>${fmtNum(e.hunt)}</td>
+            </tr>`;
         }).join('');
         document.getElementById('profileModal').style.display = 'flex';
         updateGraph('power');
