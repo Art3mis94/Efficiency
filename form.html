@@ -40,93 +40,7 @@ border-radius:16px;
 box-shadow:0 10px 25px rgba(0,0,0,0.05);
 }
 
-.players-list{
-margin-top:10px;
-padding:0;
-list-style:none;
-height:550px;
-overflow-y:auto;
-border:1px solid #e2e8f0;
-border-radius:12px;
-background:#fff;
-}
-.players-list li{
-padding:.85rem;
-border-bottom:1px solid #f1f5f9;
-cursor:pointer;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
-.players-list li.selected{
-background:#eff6ff;
-border-left:5px solid var(--accent);
-font-weight:700;
-color:var(--accent);
-}
-
-.input{
-width:100%;
-padding:.75rem;
-border-radius:10px;
-border:1px solid #cbd5e1;
-font-size:1rem;
-outline:none;
-}
-
-.grid-2{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:1rem;
-}
-
-label{
-font-size:.85rem;
-font-weight:700;
-color:var(--muted);
-display:block;
-margin-top:10px;
-}
-
-.checkbox-group{
-display:flex;
-gap:1rem;
-flex-wrap:wrap;
-padding:15px;
-background:#f8fafc;
-border:1px solid #e2e8f0;
-border-radius:12px;
-margin-top:5px;
-}
-
-.btn{
-padding:.8rem 1.5rem;
-border-radius:10px;
-border:0;
-color:#fff;
-font-weight:700;
-cursor:pointer;
-width:100%;
-margin-top:10px;
-}
-
-.week-btn{
-padding:12px;
-border:2px solid #e2e8f0;
-background:#fff;
-color:var(--muted);
-border-radius:10px;
-cursor:pointer;
-flex:1;
-font-weight:800;
-}
-.week-btn.selected{
-background:var(--accent);
-color:white;
-border-color:var(--accent);
-}
-
-/* ===== FLIP CARD SIDEBAR ===== */
+/* ===== RIGHT SIDEBAR FLIP ===== */
 
 .results-sidebar{
 perspective:1200px;
@@ -137,7 +51,7 @@ top:1.5rem;
 .flip-card{
 position:relative;
 width:100%;
-min-height:520px;
+min-height:620px;
 transform-style:preserve-3d;
 transition:transform .6s;
 cursor:pointer;
@@ -214,17 +128,6 @@ color:white;
 .pack-column input{
 transform:scale(1.2);
 }
-
-.pick-status{
-width:12px;
-height:12px;
-border-radius:50%;
-background:#e2e8f0;
-}
-.pick-status.has-hundred{
-background:var(--success);
-box-shadow:0 0 8px var(--success);
-}
 </style>
 </head>
 
@@ -243,8 +146,7 @@ box-shadow:0 0 8px var(--success);
 
 <main class="main-wrap">
 
-<!-- LEFT + CENTER unchanged (kept intact) -->
-
+<!-- LEFT COLUMN (UNCHANGED) -->
 <section class="section">
 <h3>Directory</h3>
 <input type="text" id="playerSearch" placeholder="🔍 Search players..." class="input" style="margin-bottom:10px;" oninput="renderList()">
@@ -252,20 +154,39 @@ box-shadow:0 0 8px var(--success);
 
 <div style="margin-top:20px;padding-top:20px;border-top:2px solid #f1f5f9;">
 <input id="playerNameInput" placeholder="Enter name + hit Enter..." class="input" style="border:2px solid var(--accent);">
-<button id="addPlayerBtn" class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add to Roster</button>
+<button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add to Roster</button>
 </div>
 </section>
 
+<!-- MIDDLE COLUMN (FULLY RESTORED) -->
 <section class="section">
 <h2 id="editHeader">Select a Player</h2>
-<!-- your middle form untouched -->
+
+<div style="display:flex;gap:10px;margin-bottom:20px;">
+<button onclick="setWeek('week 1')" class="week-btn selected" id="btn-week1">W1</button>
+<button onclick="setWeek('week 2')" class="week-btn" id="btn-week2">W2</button>
+<button onclick="setWeek('week 3')" class="week-btn" id="btn-week3">W3</button>
+</div>
+
+<div class="grid-2">
+<div><label>Current Power</label><input id="f_power" type="number" class="input"></div>
+<div><label>Total Points</label><input id="f_points" type="number" class="input"></div>
+<div><label>Throne Kills</label><input id="f_throne" type="number" class="input"></div>
+<div><label>Quest Score</label><input id="f_quest" type="number" class="input"></div>
+<div><label>Ultimate Hunt</label><input id="f_hunt" type="number" class="input"></div>
+</div>
+
+<div style="display:flex;gap:15px;margin-top:30px;">
+<button class="btn" style="background:var(--success);flex:2;" onclick="performSave()">SAVE DATA</button>
+<button class="btn" style="background:var(--danger);flex:1;" onclick="deletePlayer()">DELETE</button>
+</div>
+
 </section>
 
 <!-- RIGHT SIDEBAR FLIP -->
 <aside class="results-sidebar">
 <div class="flip-card" id="liveFlip" onclick="this.classList.toggle('flipped')">
 
-<!-- FRONT = LIVE ANALYSIS -->
 <div class="flip-face flip-front">
 <h3>Live Analysis</h3>
 <div class="res-item"><label>Efficiency Score</label><span id="res_eff">0.0000</span></div>
@@ -275,10 +196,8 @@ box-shadow:0 0 8px var(--success);
 <div class="rank-badge"><span class="rank-val" id="res_rank">#--</span></div>
 </div>
 
-<!-- BACK = KING PACK -->
 <div class="flip-face flip-back">
 <h3>KING PACK</h3>
-
 <div class="pack-column">
 <label>Legendary <input type="radio" name="pack"></label>
 <label>Epic <input type="radio" name="pack"></label>
@@ -287,13 +206,11 @@ box-shadow:0 0 8px var(--success);
 <label>Rare (Hero) <input type="radio" name="pack"></label>
 <label>Rare (Units) <input type="radio" name="pack"></label>
 </div>
-
 <div style="margin-top:30px;">
-<label style="display:flex;justify-content:space-between;color:white;">Throne 1 <input type="checkbox" id="king_throne1"></label>
-<label style="display:flex;justify-content:space-between;color:white;margin-top:10px;">Throne 2 <input type="checkbox" id="king_throne2"></label>
+<label style="display:flex;justify-content:space-between;color:white;">Throne 1 <input type="checkbox"></label>
+<label style="display:flex;justify-content:space-between;color:white;margin-top:10px;">Throne 2 <input type="checkbox"></label>
 </div>
-
-<p style="margin-top:40px;font-size:.75rem;color:#94a3b8;">Tap anywhere to return</p>
+<p style="margin-top:40px;font-size:.75rem;color:#94a3b8;">Tap to return</p>
 </div>
 
 </div>
@@ -303,28 +220,65 @@ box-shadow:0 0 8px var(--success);
 
 <script>
 (function(){
-let currentPlayer=null;
-const loadData=()=>JSON.parse(localStorage.getItem('formData')||'[]');
-window.renderList=function(){
-const data=loadData();
-const names=[...new Set(data.map(d=>d.name))];
-document.getElementById('rosterCount').textContent=`Players: ${names.length}`;
-document.getElementById('playersList').innerHTML=
-names.map(n=>`<li onclick="selectPlayer('${n}')">${n}</li>`).join('');
-}
+let currentPlayer=null,currentWeek='week 1';
+const load=()=>JSON.parse(localStorage.getItem('formData')||'[]');
+const save=d=>localStorage.setItem('formData',JSON.stringify(d));
+
+window.setWeek=function(w){
+currentWeek=w;
+document.querySelectorAll('.week-btn').forEach(b=>b.classList.remove('selected'));
+document.getElementById('btn-'+w.replace(' ','')).classList.add('selected');
+};
+
 window.selectPlayer=function(n){
 currentPlayer=n;
 document.getElementById('editHeader').textContent=n;
-}
+};
+
+window.performSave=function(){
+if(!currentPlayer)return;
+let d=load();
+const state={
+name:currentPlayer,
+week:currentWeek,
+power:f_power.value,
+points:f_points.value,
+throne:f_throne.value,
+quest:f_quest.value,
+hunt:f_hunt.value
+};
+const i=d.findIndex(x=>x.name===currentPlayer&&x.week===currentWeek);
+if(i>=0)d[i]=state;else d.push(state);
+save(d);
+alert("Saved");
+};
+
 window.addNewPlayer=function(){
-const input=document.getElementById('playerNameInput');
-if(!input.value.trim())return;
-let d=loadData();
-d.push({name:input.value.trim(),week:'week 1'});
-localStorage.setItem('formData',JSON.stringify(d));
-input.value="";
+const n=playerNameInput.value.trim();
+if(!n)return;
+let d=load();
+['week 1','week 2','week 3'].forEach(w=>{
+if(!d.find(x=>x.name===n&&x.week===w))d.push({name:n,week:w});
+});
+save(d);
+playerNameInput.value="";
 renderList();
-}
+};
+
+window.deletePlayer=function(){
+if(!currentPlayer)return;
+let d=load().filter(x=>x.name!==currentPlayer);
+save(d);
+location.reload();
+};
+
+window.renderList=function(){
+const d=load();
+const names=[...new Set(d.map(x=>x.name))];
+rosterCount.textContent="Players: "+names.length;
+playersList.innerHTML=names.map(n=>`<li onclick="selectPlayer('${n}')">${n}</li>`).join('');
+};
+
 renderList();
 })();
 </script>
