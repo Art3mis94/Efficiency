@@ -38,7 +38,6 @@
     .rank-badge{background:linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); text-align:center; padding:1.5rem; border-radius:15px; margin-top:1.5rem;}
     .rank-val{font-size:3.5rem; font-weight:900; display:block;}
 
-    /* Green Pick Highlight */
     .pick-status{width:12px; height:12px; border-radius:50%; background:#e2e8f0;}
     .pick-status.has-hundred{background:var(--success); box-shadow: 0 0 8px var(--success);}
   </style>
@@ -59,7 +58,7 @@
       
       <div style="margin-top:20px; padding-top:20px; border-top: 2px solid #f1f5f9;">
         <input id="playerNameInput" placeholder="Enter name + hit Enter..." class="input" style="border: 2px solid var(--accent);">
-        <button id="addPlayerBtn" class="btn" style="background:var(--success)">Add to Roster</button>
+        <button id="addPlayerBtn" class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add to Roster</button>
       </div>
     </section>
 
@@ -93,7 +92,7 @@
         </div>
 
         <div style="grid-column: span 2">
-          <label>Hero Picks (Check if earned this week)</label>
+          <label>Hero Picks</label>
           <div class="checkbox-group" style="background:#fff7ed;">
             <label><input type="checkbox" id="pick_100"> 100 Pick</label>
             <label><input type="checkbox" id="pick_40"> 40 Pick</label>
@@ -111,7 +110,7 @@
 
     <aside class="results-sidebar">
       <h3>Live Analysis</h3>
-      <div class="res-item"><label>Efficiency</label><span id="res_eff">0.0000</span></div>
+      <div class="res-item"><label>Efficiency Score</label><span id="res_eff">0.0000</span></div>
       <div class="res-item"><label>Hunt Score</label><span id="res_hunt">0.00</span></div>
       <div class="res-item"><label>Throne Score</label><span id="res_throne">0.00</span></div>
       <div class="res-item"><label>Total Score</label><span id="res_total">0.00</span></div>
@@ -125,7 +124,7 @@
 
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
-      const loadMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.1,"M_QUEST":0.0000025,"M_THRONE":3.0,"M_HUNT":0.00001}');
+      const loadMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
 
       window.setWeek = function(w) {
         currentWeek = w;
@@ -141,28 +140,67 @@
           document.getElementById('res_rank').textContent = "#--";
           return;
         }
+        
         const m = loadMults();
         const data = loadData();
         const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
         const getC = (id) => document.getElementById(id).checked ? 1 : 0;
         
         const p = getV('f_power') || 1;
-        const eff = getV('f_points') / p;
-        const act = ((getC('chk_lava') + getC('chk_challenge') + getC('chk_donations')) * 0.833) + (getC('chk_dv')*0.833) + (getC('chk_esb')*0.833);
-        const score = eff + act + ((getV('f_throne')/p)*m.M_THRONE) + (getV('f_hunt')*m.M_HUNT) + (getV('f_quest')*m.M_QUEST);
+        const pts = getV('f_points');
+        const playerEntries = data.filter(d => d.name === currentPlayer);
+        const w1 = playerEntries.find(d => d.week === 'week 1');
+        
+        // 1. Efficiency: (Current Points - W1 Points) / Current Power
+        let effScore = (currentWeek !== 'week 1' && w1) ? ((pts - parseFloat(w1.points)) / p) : 0;
+        
+        // 2. Snapshots & Multipliers
+        const huntS = getV('f_hunt') * m.M_HUNT;
+        const questS = getV('f_quest') * m.M_QUEST;
+        const throneS = (getV('f_throne') / p) * m.M_THRONE;
+        const w1BaseS = w1 ? (parseFloat(w1.points) * (m.M_W1 || 0.1)) : 0;
 
-        document.getElementById('res_eff').textContent = eff.toFixed(4);
-        document.getElementById('res_hunt').textContent = (getV('f_hunt')*m.M_HUNT).toFixed(2);
-        document.getElementById('res_throne').textContent = ((getV('f_throne')/p)*m.M_THRONE).toFixed(2);
-        document.getElementById('res_total').textContent = score.toFixed(2);
+        // 3. Activity (Snapshot) + Participation (Timeline)
+        const actS = ((getC('chk_lava') + getC('chk_challenge') + getC('chk_donations')) * 0.833);
+        const partS = Math.min(2.5, (getC('chk_esb')*(2.5/3)) + (getC('chk_dv')*(2.5/3)) + (getC('chk_mon')*(2.5/6)) + (getC('chk_wed')*(2.5/6)));
 
-        // Simple Rank Calc for Sidebar
-        const weekScores = data.filter(d => d.week === currentWeek).map(d => {
-            const dp = parseFloat(d.power) || 1;
-            return { name: d.name, s: (parseFloat(d.points)/dp) };
-        }).sort((a,b) => b.s - a.s);
-        const r = weekScores.findIndex(x => x.name === currentPlayer) + 1;
-        document.getElementById('res_rank').textContent = r > 0 ? "#"+r : "#--";
+        const totalScore = w1BaseS + effScore + actS + partS + huntS + questS + throneS;
+
+        document.getElementById('res_eff').textContent = effScore.toFixed(4);
+        document.getElementById('res_hunt').textContent = huntS.toFixed(2);
+        document.getElementById('res_throne').textContent = throneS.toFixed(2);
+        document.getElementById('res_total').textContent = totalScore.toFixed(2);
+
+        // --- ALLIANCE RANKING CALCULATION ---
+        const names = [...new Set(data.map(d => d.name))];
+        const ranking = names.map(n => {
+            const eAll = data.filter(d => d.name === n);
+            const playerW1 = eAll.find(x => x.week === 'week 1');
+            
+            // Use live form data for current player, otherwise stored data
+            const target = (n === currentPlayer) ? {
+                power: p, points: pts, quest: getV('f_quest'), throne: getV('f_throne'), hunt: getV('f_hunt'),
+                lava: getC('chk_lava'), challenge: getC('chk_challenge'), donations: getC('chk_donations'),
+                dv: getC('chk_dv'), esb: getC('chk_esb'), mon: getC('chk_mon'), wed: getC('chk_wed')
+            } : eAll.find(x => x.week === currentWeek);
+
+            if (!target) return { name: n, total: -1 };
+
+            const tp = parseFloat(target.power) || 1;
+            const tpts = parseFloat(target.points) || 0;
+            
+            let eScore = (currentWeek !== 'week 1' && playerW1) ? ((tpts - parseFloat(playerW1.points)) / tp) : 0;
+            let aScore = (((target.lava?1:0) + (target.challenge?1:0) + (target.donations?1:0)) * 0.833);
+            let pScore = Math.min(2.5, ((target.esb?1:0)*(2.5/3)) + ((target.dv?1:0)*(2.5/3)) + ((target.mon?1:0)*(2.5/6)) + ((target.wed?1:0)*(2.5/6)));
+            let bScore = playerW1 ? (parseFloat(playerW1.points) * (m.M_W1 || 0.1)) : 0;
+
+            const total = bScore + eScore + aScore + pScore + (parseFloat(target.quest||0)*m.M_QUEST) + ((parseFloat(target.throne||0)/tp)*m.M_THRONE) + (parseFloat(target.hunt||0)*m.M_HUNT);
+            return { name: n, total: total };
+        });
+
+        ranking.sort((a, b) => b.total - a.total);
+        const finalRank = ranking.findIndex(x => x.name === currentPlayer) + 1;
+        document.getElementById('res_rank').textContent = finalRank > 0 ? "#" + finalRank : "#--";
       }
 
       window.selectPlayer = function(name){
@@ -211,7 +249,9 @@
         const n = input.value.trim();
         if(!n) return;
         let d = loadData();
-        ['home week','week 1','week 2','week 3'].forEach(w => d.push({name: n, week: w}));
+        ['home week','week 1','week 2','week 3'].forEach(w => {
+           if(!d.find(x => x.name === n && x.week === w)) d.push({name: n, week: w});
+        });
         saveData(d);
         input.value = ""; renderList(); selectPlayer(n);
       }
