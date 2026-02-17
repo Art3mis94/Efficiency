@@ -12,29 +12,23 @@
     header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;background:var(--accent);border-radius:6px;font-weight:700;}
-    
     .container{padding:1.5rem;}
     .top-row{display:grid; grid-template-columns: 1fr 2.5fr; gap:20px; margin-bottom:20px;}
     .card{background:white; padding:15px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-left:4px solid var(--accent);}
     .card label{display:block; font-size:0.7rem; color:var(--muted); text-transform:uppercase; font-weight:800; margin-bottom:5px;}
     .card span{font-size:1.4rem; font-weight:800;}
-    
     .leader-pill{background:#f1f5f9; padding:5px 12px; border-radius:20px; font-weight:700; font-size:0.8rem; border:1px solid #e2e8f0;}
     .leader-pill b{color:var(--gold);}
-
     details{background:white; border-radius:12px; margin-bottom:20px; border:1px solid #e2e8f0;}
     summary{padding:12px; cursor:pointer; font-weight:800; color:var(--muted); font-size:0.75rem;}
     .config-grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; padding:15px;}
     .config-grid input{width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;}
-
     .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
     table{width:100%; border-collapse:collapse; min-width:1200px;}
     th{background:#f8fafc; padding:12px; text-align:left; font-size:0.65rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
     td{padding:12px; border-bottom:1px solid #f1f5f9; cursor:pointer;}
     .status-green{color:var(--success) !important; font-weight:800;}
-    
     .btn-edit{padding:4px 8px; background:var(--success); color:white; border:none; border-radius:4px; font-weight:700; cursor:pointer; font-size:0.7rem;}
-
     .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); align-items:center; justify-content:center;}
     .modal-content{background:white; padding:25px; width:95%; max-width:1100px; border-radius:16px; position:relative; max-height:90vh; overflow-y:auto;}
     .ov-table{width:100%; border-collapse:collapse; margin-top:20px; font-size:0.8rem;}
@@ -43,19 +37,12 @@
 </head>
 <body>
   <header><h1>Alliance Dashboard</h1></header>
-  <nav>
-    <a href="index.html">Dashboard</a>
-    <a href="trends.html">Trends</a>
-    <a href="form.html">Manage Data</a>
-  </nav>
+  <nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="form.html">Manage Data</a></nav>
 
   <div class="container">
     <div class="top-row">
       <div class="card"><label>Roster Count</label><span id="stat_total">0</span></div>
-      <div class="card">
-        <label>🏆 Seasonal Leaders</label>
-        <div id="topThreeList" style="display:flex; gap:10px; margin-top:5px;"></div>
-      </div>
+      <div class="card"><label>🏆 Seasonal Leaders</label><div id="topThreeList" style="display:flex; gap:10px; margin-top:5px;"></div></div>
     </div>
 
     <details>
@@ -99,12 +86,7 @@
           </div>
           <div style="height:280px;"><canvas id="playerChart"></canvas></div>
         </div>
-        <div style="overflow-x:auto;">
-          <table class="ov-table">
-            <thead><tr><th>Week</th><th>Power</th><th>Points</th><th>Eff</th><th>Throne</th><th>Quest</th><th>Hunt</th></tr></thead>
-            <tbody id="ovTableBody"></tbody>
-          </table>
-        </div>
+        <div style="overflow-x:auto;"><table class="ov-table"><thead><tr><th>Week</th><th>Power</th><th>Points</th><th>Eff</th><th>Throne</th><th>Quest</th><th>Hunt</th></tr></thead><tbody id="ovTableBody"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -113,25 +95,13 @@
     (function(){
       let chartInstance = null;
       let activeEntries = [];
-
       const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
-      
-      const fmtPower = (n) => {
-        if(!n) return "0.0Bn";
-        const val = parseFloat(n) / 1000;
-        return val.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "Bn";
-      };
-
-      const fmtNum = (n) => parseFloat(n || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+      const fmtPower = (n) => n ? (parseFloat(n)/1000).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1})+"Bn" : "0.0Bn";
+      const fmtNum = (n) => parseFloat(n||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});
 
       window.saveMults = () => {
-        const m = {
-          M_THRONE: parseFloat(document.getElementById('m_throne').value),
-          M_QUEST: parseFloat(document.getElementById('m_quest').value),
-          M_W1: parseFloat(document.getElementById('m_w1').value),
-          M_HUNT: parseFloat(document.getElementById('m_hunt').value)
-        };
+        const m = { M_THRONE: parseFloat(document.getElementById('m_throne').value), M_QUEST: parseFloat(document.getElementById('m_quest').value), M_W1: parseFloat(document.getElementById('m_w1').value), M_HUNT: parseFloat(document.getElementById('m_hunt').value) };
         localStorage.setItem('scoringMultipliers', JSON.stringify(m));
         render();
       };
@@ -139,11 +109,7 @@
       window.render = () => {
         const data = load();
         const m = getMults();
-        ['m_throne','m_quest','m_w1','m_hunt'].forEach(id => {
-            const key = id === 'm_w1' ? 'M_W1' : id.toUpperCase();
-            if(document.getElementById(id)) document.getElementById(id).value = m[key];
-        });
-
+        ['m_throne','m_quest','m_w1','m_hunt'].forEach(id => { const key = id==='m_w1'?'M_W1':id.toUpperCase(); if(document.getElementById(id)) document.getElementById(id).value = m[key]; });
         const view = document.getElementById('weekSelect').value;
         const search = document.getElementById('dashSearch').value.toLowerCase();
         const names = [...new Set(data.map(d => d.name))];
@@ -151,33 +117,50 @@
 
         names.forEach(name => {
           const eAll = data.filter(d => d.name === name);
-          const w1 = eAll.find(d => d.week === 'week 1') || {};
-          const cur = view === 'overall' ? (eAll.find(d => d.week === 'week 3') || {}) : (eAll.find(d => d.week === view) || {});
+          const targetWeeks = view === 'overall' ? ['week 1', 'week 2', 'week 3'] : [view];
+          
+          let totalEff = 0, totalAct = 0, totalPart = 0, totalThrone = 0, totalPicks = 0;
+          let latestPower = 1, latestPoints = 0, has100 = false;
 
-          const p = parseFloat(cur.power) || 1;
-          const pts = parseFloat(cur.points) || 0;
-          
-          const rawEff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/p) : (pts/p);
-          const eff = (view === 'overall') ? rawEff + (m.M_W1 * (parseFloat(w1.points)||0)/p) : rawEff;
-          
-          const partRaw = ((cur.esb?1:0)*(1/3)) + ((cur.dv?1:0)*(1/3)) + ((cur.mon?1:0)*(1/6)) + ((cur.wed?1:0)*(1/6)); 
-          const partScore = Math.min(2.5, partRaw + (parseFloat(cur.quest||0)*m.M_QUEST) + (parseFloat(cur.hunt||0)*m.M_HUNT));
-          const actScore = ((cur.lava?1:0) + (cur.challenge?1:0) + (cur.donations?1:0)) * 0.833;
-          const tEff = ((parseFloat(cur.throne)||0)/p) * m.M_THRONE;
-          
-          const total = eff + actScore + partScore + tEff;
-          const picks = (view === 'overall') 
-            ? eAll.reduce((s, e) => s + (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0), 0)
-            : (cur.p100?100:0) + (cur.p40?40:0) + (cur.p20?20:0) + (cur.p5?5:0);
+          targetWeeks.forEach(w => {
+            const e = eAll.find(x => x.week === w);
+            if(!e) return;
+            const p = parseFloat(e.power) || 1;
+            const pts = parseFloat(e.points) || 0;
+            latestPower = p; latestPoints = pts;
+            
+            // Efficiency
+            let wEff = 0;
+            if(w === 'week 1') {
+              wEff = (pts/p) + (m.M_W1 * pts/p);
+            } else {
+              const prev = eAll.find(x => x.week === `week ${parseInt(w.split(' ')[1])-1}`);
+              wEff = prev ? (pts - parseFloat(prev.points))/p : pts/p;
+            }
+            totalEff += wEff;
 
-          results.push({name, p, pts, eff, actScore, partScore, tEff, total, picks, has100: eAll.some(x=>x.p100==1), targetWeek: cur.week || 'week 1'});
+            // Participation Logic (1/3 ESB, 1/3 DV, 1/6 Mon/Wed) + Quest/Hunt
+            const pRaw = ((e.esb?1:0)*(1/3)) + ((e.dv?1:0)*(1/3)) + ((e.mon?1:0)*(1/6)) + ((e.wed?1:0)*(1/6));
+            const wPart = Math.min(2.5, pRaw + (parseFloat(e.quest||0)*m.M_QUEST) + (parseFloat(e.hunt||0)*m.M_HUNT));
+            totalPart += wPart;
+
+            // Activity & Throne
+            totalAct += ((e.lava?1:0) + (e.challenge?1:0) + (e.donations?1:0)) * 0.833;
+            totalThrone += ((parseFloat(e.throne||0))/p) * m.M_THRONE;
+            totalPicks += (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0);
+            if(e.p100) has100 = true;
+          });
+
+          results.push({
+            name, p: latestPower, pts: latestPoints, eff: totalEff, actScore: totalAct, 
+            partScore: totalPart, tEff: totalThrone, total: totalEff + totalAct + totalPart + totalThrone, 
+            picks: totalPicks, has100, targetWeek: view === 'overall' ? 'week 3' : view
+          });
         });
 
         results.sort((a,b) => b.total - a.total);
         document.getElementById('stat_total').textContent = names.length;
-        document.getElementById('topThreeList').innerHTML = results.slice(0,3).map((r,i) => 
-          `<div class="leader-pill"><b>#${i+1}</b> ${r.name}</div>`).join('');
-
+        document.getElementById('topThreeList').innerHTML = results.slice(0,3).map((r,i) => `<div class="leader-pill"><b>#${i+1}</b> ${r.name}</div>`).join('');
         document.getElementById('dashTableBody').innerHTML = results.filter(r => r.name.toLowerCase().includes(search)).map((r, i) => {
           const isG = r.has100 ? 'status-green' : '';
           return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
@@ -191,27 +174,14 @@
         }).join('');
       };
 
-      window.editMember = (name, week) => {
-        localStorage.setItem('editTargetName', name);
-        localStorage.setItem('editTargetWeek', week);
-        window.location.href = 'form.html';
-      };
-
+      window.editMember = (name, week) => { localStorage.setItem('editTargetName', name); localStorage.setItem('editTargetWeek', week); window.location.href = 'form.html'; };
       window.openOverlay = (name) => {
         const data = load();
         activeEntries = ['week 1','week 2','week 3'].map(w => data.find(d => d.name === name && d.week === w) || {week:w});
         document.getElementById('modalName').textContent = name;
         document.getElementById('ovTableBody').innerHTML = activeEntries.map(e => {
             const p = parseFloat(e.power)||1;
-            return `<tr>
-              <td>${e.week.toUpperCase()}</td>
-              <td>${fmtPower(e.power)}</td>
-              <td>${fmtNum(e.points)}</td>
-              <td>${((parseFloat(e.points)||0)/p).toFixed(2)}</td>
-              <td>${fmtNum(e.throne)}</td>
-              <td>${fmtNum(e.quest)}</td>
-              <td>${fmtNum(e.hunt)}</td>
-            </tr>`;
+            return `<tr><td>${e.week.toUpperCase()}</td><td>${fmtPower(e.power)}</td><td>${fmtNum(e.points)}</td><td>${((parseFloat(e.points)||0)/p).toFixed(2)}</td><td>${fmtNum(e.throne)}</td><td>${fmtNum(e.quest)}</td><td>${fmtNum(e.hunt)}</td></tr>`;
         }).join('');
         document.getElementById('profileModal').style.display = 'flex';
         updateGraph('power');
@@ -227,7 +197,6 @@
         });
         chartInstance = new Chart(ctx, { type: 'line', data: { labels: ['W1', 'W2', 'W3'], datasets: [{ label: type.toUpperCase(), data: vals, borderColor: '#3b82f6', tension: 0.2 }] }, options: { maintainAspectRatio: false } });
       };
-
       window.closeModal = () => document.getElementById('profileModal').style.display = 'none';
       render();
     })();
