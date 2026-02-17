@@ -75,8 +75,8 @@
 
     <div style="display:flex; gap:15px; margin-bottom:15px;">
         <select id="weekSelect" style="padding: 10px; border-radius: 8px; font-weight: 800; border: 2px solid var(--accent);">
-            <option value="overall">OVERALL (Season Total)</option>
-            <option value="week 1">WEEK 1 (Base)</option>
+            <option value="overall">OVERALL</option>
+            <option value="week 1">WEEK 1</option>
             <option value="week 2">WEEK 2</option>
             <option value="week 3">WEEK 3</option>
         </select>
@@ -124,9 +124,8 @@
     const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
     const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
     const fmt = n => parseFloat(n || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
-    const fmtPower = n => n ? (parseFloat(n)/1000000).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1})+"Bn" : "0.0Bn";
+    const fmtPower = n => n ? (parseFloat(n)/1000).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1})+"Bn" : "0.0Bn";
 
-    // Multipliers
     const mConfig = getMults();
     document.getElementById('m_throne').value = mConfig.M_THRONE;
     document.getElementById('m_quest').value = mConfig.M_QUEST;
@@ -160,47 +159,38 @@
             const w2 = eAll.find(x => x.week === 'week 2');
             const w3 = eAll.find(x => x.week === 'week 3');
 
-            // Find current selection context
-            const activeData = view === 'overall' ? [w1, w2, w3].filter(x => x) : [eAll.find(x => x.week === view)].filter(x => x);
+            const activeData = (view === 'overall') ? [w1, w2, w3].filter(x => x) : [eAll.find(x => x.week === view)].filter(x => x);
             if (activeData.length === 0) return;
 
+            // SNAPSHOT (For Quest, Throne, Power, Points display)
             const latest = activeData[activeData.length - 1];
             const pCurr = parseFloat(latest.power) || 1;
 
             // 1. [Multiplier * Week 1 Points]
-            let w1Score = 0;
-            if (w1) {
-                w1Score = (parseFloat(w1.points) / (parseFloat(w1.power) || 1)) * mults.M_W1;
-            }
+            let w1Score = w1 ? (parseFloat(w1.points) * mults.M_W1) : 0;
 
-            // 2. [Efficiency (Current - W1) / Power] - No Efficiency in W1
+            // 2. Efficiency (Latest - W1) / Latest Power
             let effScore = 0;
             if (view !== 'week 1' && w1) {
-                const pointsDiff = parseFloat(latest.points) - parseFloat(w1.points);
-                effScore = pointsDiff / pCurr;
+                effScore = (parseFloat(latest.points) - parseFloat(w1.points)) / pCurr;
             }
 
-            // 3. Act & Part (Accumulated based on selection)
-            let actScore = 0, partScore = 0, huntScore = 0, throneScore = 0, questScore = 0, picks = 0, has100 = false;
+            // 3. Quests & Throne (Snapshots - Only from the selected/latest week)
+            let questScore = (parseFloat(latest.quest || 0) * mults.M_QUEST);
+            let throneScore = (parseFloat(latest.throne || 0) / pCurr) * mults.M_THRONE;
+
+            // 4. Accumulated Metrics (Activity, Participation, Hunt)
+            let actScore = 0, partScore = 0, huntScore = 0, picks = 0, has100 = false;
             
             activeData.forEach(e => {
-                // Act (0.833 per check)
                 actScore += ((e.lava?1:0) + (e.challenge?1:0) + (e.donations?1:0)) * 0.833;
-                
-                // Part (1/3 and 1/6 of 2.5)
-                const basePart = ((e.esb?1:0)*(2.5/3)) + ((e.dv?1:0)*(2.5/3)) + ((e.mon?1:0)*(2.5/6)) + ((e.wed?1:0)*(2.5/6));
-                partScore += Math.min(2.5, basePart);
-
-                // Hunt/Throne/Quest standalone
+                partScore += Math.min(2.5, ((e.esb?1:0)*(2.5/3)) + ((e.dv?1:0)*(2.5/3)) + ((e.mon?1:0)*(2.5/6)) + ((e.wed?1:0)*(2.5/6)));
                 huntScore += (parseFloat(e.hunt || 0) * mults.M_HUNT);
-                throneScore += (parseFloat(e.throne || 0) / pCurr) * mults.M_THRONE;
-                questScore += (parseFloat(e.quest || 0) * mults.M_QUEST);
-
                 picks += (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0);
                 if(e.p100) has100 = true;
             });
 
-            const total = w1Score + effScore + actScore + partScore + huntScore + throneScore + questScore;
+            const total = w1Score + effScore + actScore + partScore + huntScore + questScore + throneScore;
 
             results.push({
                 name, p: pCurr, pts: latest.points, w1S: w1Score, eff: effScore, 
@@ -250,7 +240,7 @@
             return `<tr><td>${e.week.toUpperCase()}</td><td>${fmtPower(e.power)}</td><td>${fmt(e.points)}</td><td>${fmt(e.quest)}</td><td>${fmt(e.hunt)}</td><td>${fmt(e.throne)}</td></tr>`;
         });
         const sel = document.getElementById('chartMetricSelect');
-        sel.innerHTML = `<option value="power">Power</option><option value="points">Points</option><option value="quest">Quest</option><option value="throne">Throne</option>`;
+        sel.innerHTML = `<option value="power">Power</option><option value="points">Points</option><option value="throne">Throne</option>`;
         document.getElementById('profileModal').style.display = 'flex';
         updateChartData();
     };
@@ -260,11 +250,10 @@
         const vals = currentOverlayData.map(e => parseFloat(e[metric]) || 0);
         if(chartInstance) chartInstance.destroy();
         chartInstance = new Chart(document.getElementById('playerChart'), {
-            type:'line', 
-            data:{ labels:['W1','W2','W3'], datasets:[{label:metric.toUpperCase(), data:vals, borderColor:'#3b82f6', tension:0.3}]},
+            type:'line', data:{ labels:['W1','W2','W3'], datasets:[{label:metric.toUpperCase(), data:vals, borderColor:'#3b82f6', tension:0.3}]},
             options:{
                 maintainAspectRatio:false,
-                scales: { y: { ticks: { callback: v => (metric==='power'||metric==='points') ? (v/1000000).toFixed(1)+'Bn' : v } } }
+                scales: { y: { ticks: { callback: v => (metric==='power'||metric==='points') ? (v/1000).toFixed(1)+'Bn' : v } } }
             }
         });
     };
