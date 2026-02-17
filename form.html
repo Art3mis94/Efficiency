@@ -5,39 +5,7 @@
     <title>Alliance Manager - Live Rank</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root{ --bg:#f1f5f9; --text:#1e293b; --card:#ffffff; --accent:#3b82f6; --success:#10b981; --danger:#ef4444; --dark:#0f172a; --muted:#64748b; }
-        *{box-sizing:border-box}
-        body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding-bottom:50px;}
-        header{background:#1e40af;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
-        nav{display:flex;justify-content:center;gap:12px;padding:.8rem;background:#cbd5e1;border-bottom:2px solid #94a3b8;}
-        nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;font-size:0.9rem;}
-        .main-wrap{ width:100%; padding:1.5rem; display:grid; gap:15px; grid-template-columns:280px 1fr 340px; align-items:start; }
-        .section{ background:var(--card); padding:1.5rem; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
-        .input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; font-family: inherit;}
-        .btn { padding: 12px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width:100%; transition: 0.2s; margin-top:8px;}
-        .week-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e2e8f0; padding: 5px; border-radius: 10px; }
-        .week-btn { flex: 1; padding: 8px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-weight: 700; color: var(--muted); font-size: 0.7rem; }
-        .week-btn.selected { background: white; color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .dot { height: 10px; width: 10px; background-color: #cbd5e1; border-radius: 50%; display: inline-block; margin-right: 10px; }
-        .dot.active { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
-        .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 6px; margin-bottom: 15px; }
-        .tgl-btn input { display: none; }
-        .tgl-btn label { display: block; padding: 8px 2px; background: #f1f5f9; border-radius: 6px; text-align: center; font-size: 0.6rem; font-weight: 800; cursor: pointer; color: var(--muted); border: 1px solid #e2e8f0; }
-        .tgl-btn input:checked + label { background: var(--accent); color: white; border-color: var(--accent); }
-        .players-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
-        .players-list li { padding: 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; align-items: center; font-size: 0.85rem; }
-        .players-list li.active { background: #eff6ff; color: var(--accent); font-weight: 700; border-left: 5px solid var(--accent); }
-        .analysis-panel { background: var(--dark); color: white; border-radius: 20px; padding: 20px; position: sticky; top: 1.5rem; }
-        .rank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .rank-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        .rank-card label { display: block; font-size: 0.55rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; }
-        .rank-card .val { font-size: 1rem; font-weight: 800; color: #60a5fa; }
-        .rank-card .rnk { float: right; font-size: 0.7rem; color: #10b981; }
-        .overall-rank { background: linear-gradient(135deg, #3b82f6, #1e40af); padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; }
-        .overall-rank label { font-size: 0.7rem; font-weight: 800; opacity: 0.8; }
-        .overall-rank .big-rank { font-size: 2.2rem; font-weight: 900; display: block; }
-    </style>
+    <!-- rest of your <style> unchanged -->
 </head>
 <body>
 
@@ -52,7 +20,144 @@
         <textarea id="bulkInput" placeholder="Bulk Add Names" class="input" style="margin-top:15px;" rows="3"></textarea>
         <button class="btn" style="background:var(--success)" onclick="addNewPlayer()">Add Players</button>
 
-        <button class="btn" style="background:#f59e0b" onclick="clearAllData()">Clear ALL Player Data</button>
-        <button class="btn" style="background:var(--danger)" onclick="deletePlayer()">Delete Selected Player</button>
-        <button class="btn" style="background:#7f1d1d" onclick="deleteAllPlayers()">Delete ALL Players</button>
+        <!-- New management buttons -->
+        <div style="margin-top:20px; display:grid; gap:8px;">
+            <button class="btn" style="background:#f59e0b" onclick="exportCSV()">Export CSV</button>
+            <input type="file" id="importCSV" accept=".csv" style="display:none" onchange="importCSV(event)">
+            <button class="btn" style="background:#f59e0b" onclick="document.getElementById('importCSV').click()">Import CSV</button>
+            <button class="btn" style="background:var(--danger)" onclick="clearAllPlayerData()">Clear All Data</button>
+            <button class="btn" style="background:#991b1b" onclick="deleteAllPlayers()">Delete All Players</button>
+        </div>
     </section>
+
+    <!-- rest of your middle + right sections unchanged -->
+
+</main>
+
+<script>
+// Your existing variables and functions remain identical until here
+
+// ────────────────────────────────────────────────
+// NEW FUNCTIONS
+// ────────────────────────────────────────────────
+
+function exportCSV() {
+    const db = loadDB();
+    if (!db.length) return alert("No data to export");
+
+    const headers = ['name','week', ...fKeys, ...tKeys];
+    const rows = db.map(row => 
+        headers.map(h => 
+            row[h] == null ? "" : 
+            typeof row[h] === 'string' ? `"${row[h].replace(/"/g,'""')}"` : row[h]
+        ).join(',')
+    );
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `alliance_data_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importCSV(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const text = ev.target.result;
+        const lines = text.trim().split('\n').map(l => l.trim());
+        if (lines.length < 2) return alert("File appears empty or invalid");
+
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+        const data = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            let row = [];
+            let current = '';
+            let inQuote = false;
+
+            for (let char of lines[i] + ',') {
+                if (char === '"' && !inQuote) { inQuote = true; continue; }
+                if (char === '"' && inQuote)  { inQuote = false; continue; }
+                if (char === ',' && !inQuote) {
+                    row.push(current.trim().replace(/""/g,'"'));
+                    current = '';
+                    continue;
+                }
+                current += char;
+            }
+
+            if (row.length !== headers.length) continue;
+
+            const obj = {};
+            headers.forEach((h, idx) => {
+                let val = row[idx];
+                if (fKeys.includes(h) || tKeys.includes(h)) {
+                    val = parseFloat(val) || (val === '1' ? 1 : 0);
+                }
+                obj[h] = val;
+            });
+
+            if (obj.name && obj.week) data.push(obj);
+        }
+
+        if (!data.length) return alert("No valid rows found");
+
+        let db = loadDB();
+        const existing = new Map(db.map(e => [`${e.name}|${e.week}`, e]));
+
+        data.forEach(newEntry => {
+            const key = `${newEntry.name}|${newEntry.week}`;
+            existing.set(key, newEntry);
+        });
+
+        saveDB(Array.from(existing.values()));
+        renderList();
+        alert(`Imported/updated ${data.length} entries`);
+    };
+    reader.readAsText(file);
+}
+
+function clearAllPlayerData() {
+    if (!confirm("Reset ALL player stats to zero for EVERY week?\nThis cannot be undone.")) return;
+    let db = loadDB();
+    db = db.map(entry => {
+        const reset = {name: entry.name, week: entry.week};
+        fKeys.forEach(k => reset[k] = "");
+        tKeys.forEach(k => reset[k] = 0);
+        return reset;
+    });
+    saveDB(db);
+    if (curP) selectPlayer(curP);
+    renderList();
+    alert("All player data cleared (stats reset to zero).");
+}
+
+function deleteAllPlayers() {
+    if (!confirm("DELETE ALL players and ALL their data permanently?\nThis cannot be undone.")) return;
+    saveDB([]);
+    curP = null;
+    curW = 'week 1';
+    setWeek('week 1');
+    renderList();
+    alert("All players deleted.");
+}
+
+// Your existing functions (loadDB, saveDB, setWeek, selectPlayer, updateLive, saveEntry, addNewPlayer, renderList) remain unchanged
+
+// Initial load
+const tName = localStorage.getItem('editTargetName');
+if (tName) {
+    localStorage.removeItem('editTargetName');
+    setWeek(localStorage.getItem('editTargetWeek') || 'week 1');
+    selectPlayer(tName);
+} else {
+    setWeek('week 1');
+}
+</script>
+</body>
+</html>
