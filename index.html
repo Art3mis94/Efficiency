@@ -9,16 +9,24 @@
 
 <style>
 :root{
---bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;
---success:#10b981;--dark:#1e40af;--muted:#64748b;
---gold:#f59e0b;--silver:#cbd5e1;--bronze:#d97706;
+--bg:#f8fafc;
+--text:#1e293b;
+--accent:#3b82f6;
+--success:#10b981;
+--dark:#1e40af;
+--muted:#64748b;
+--gold:#f59e0b;
+--silver:#cbd5e1;
+--bronze:#d97706;
 }
+
 body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);font-size:.85rem;}
 header{background:var(--dark);color:#fff;padding:1rem 2rem;}
 nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;}
 nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;background:var(--accent);border-radius:6px;font-weight:700;}
 
 .container{padding:1.5rem;}
+
 .top-row{display:grid;grid-template-columns:1fr 3fr;gap:20px;margin-bottom:20px;}
 
 .card{background:white;padding:20px;border-radius:16px;box-shadow:0 6px 10px rgba(0,0,0,.05);}
@@ -26,9 +34,21 @@ nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;background:var(--accent
 .card span{font-size:1.8rem;font-weight:800;}
 
 .top-three{display:flex;justify-content:center;gap:20px;align-items:flex-end;}
-.leader-card{flex:1;max-width:250px;text-align:center;padding:20px;border-radius:18px;background:white;box-shadow:0 10px 20px rgba(0,0,0,.08);font-weight:800;}
-.leader-card h2{margin:0;font-size:1.4rem;}
-.leader-card .score{font-size:1.6rem;margin-top:6px;}
+
+.leader-card{
+flex:1;
+max-width:260px;
+text-align:center;
+padding:22px;
+border-radius:18px;
+background:white;
+box-shadow:0 10px 20px rgba(0,0,0,.08);
+font-weight:800;
+}
+
+.leader-card h2{margin:0;font-size:1.3rem;}
+.leader-card .score{font-size:1.6rem;margin-top:8px;}
+
 .rank-1{border:6px solid var(--gold);transform:scale(1.08);}
 .rank-2{border:5px solid var(--silver);}
 .rank-3{border:5px solid var(--bronze);}
@@ -55,6 +75,7 @@ td{padding:12px;border-bottom:1px solid #f1f5f9;cursor:pointer;}
 <body>
 
 <header><h1>Alliance Dashboard</h1></header>
+
 <nav>
 <a href="index.html">Dashboard</a>
 <a href="trends.html">Trends</a>
@@ -106,7 +127,6 @@ td{padding:12px;border-bottom:1px solid #f1f5f9;cursor:pointer;}
 
 </div>
 
-<!-- MODAL -->
 <div id="profileModal" class="modal">
 <div class="modal-content">
 <span style="cursor:pointer;font-size:24px;" onclick="closeModal()">✕</span>
@@ -123,9 +143,14 @@ td{padding:12px;border-bottom:1px solid #f1f5f9;cursor:pointer;}
 (function(){
 
 let chartInstance=null;
+
 const load=()=>JSON.parse(localStorage.getItem('formData')||'[]');
 const getMults=()=>JSON.parse(localStorage.getItem('scoringMultipliers')||'{"M_THRONE":3,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
-const fmt=n=>parseFloat(n||0).toFixed(2);
+
+const fmt=n=>{
+const num=parseFloat(n)||0;
+return num.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});
+};
 
 window.saveMults=()=>{
 const m={
@@ -165,9 +190,8 @@ const p=parseFloat(e.power)||0;
 const pts=parseFloat(e.points)||0;
 latestPower=p; latestPoints=pts;
 
-/* Efficiency */
 let wEff=0;
-if(p>0 && pts>0){
+if(p>0&&pts>0){
 if(w==='week 1'){
 const base=pts/p;
 wEff=base+(m.M_W1*base);
@@ -181,7 +205,6 @@ if(diff>0) wEff=diff/p;
 }
 totalEff+=wEff;
 
-/* Participation scaled from 2.5 */
 const CAP=2.5;
 let weeklyPart=
 (e.esb?CAP/3:0)+
@@ -191,14 +214,11 @@ let weeklyPart=
 
 weeklyPart+=(parseFloat(e.quest)||0)*m.M_QUEST;
 weeklyPart+=(parseFloat(e.hunt)||0)*m.M_HUNT;
-
 weeklyPart=Math.min(CAP,weeklyPart);
 totalPart=Math.min(7.5,totalPart+weeklyPart);
 
-/* Activity */
 totalAct+=((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0))*(CAP/3);
 
-/* Throne */
 if(p>0) totalThrone+=((parseFloat(e.throne)||0)/p)*m.M_THRONE;
 
 totalPicks+=(e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0);
@@ -212,22 +232,23 @@ eff:totalEff,act:totalAct,part:totalPart,
 throne:totalThrone,total:totalEff+totalAct+totalPart+totalThrone,
 picks:totalPicks,has100
 });
-
 });
 
 results.sort((a,b)=>b.total-a.total);
 stat_total.textContent=names.length;
 
+const medals=["🥇","🥈","🥉"];
+
 topThreeList.innerHTML=results.slice(0,3).map((r,i)=>`
 <div class="leader-card rank-${i+1}">
-<h2>#${i+1} ${r.name}</h2>
+<h2>${medals[i]} ${r.name}</h2>
 <div class="score">${fmt(r.total)}</div>
 </div>`).join('');
 
 dashTableBody.innerHTML=results.filter(r=>r.name.toLowerCase().includes(search)).map((r,i)=>{
 const isG=r.has100?'status-green':'';
 return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
-<td>#${i+1}</td>
+<td>${i+1}</td>
 <td class="${isG}"><strong>${r.name}</strong></td>
 <td>${fmt(r.p)}</td>
 <td>${fmt(r.pts)}</td>
@@ -236,27 +257,47 @@ return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
 <td>${fmt(r.part)}</td>
 <td>${fmt(r.throne)}</td>
 <td style="font-weight:800;">${fmt(r.total)}</td>
-<td>${r.picks}</td>
+<td>${fmt(r.picks)}</td>
 <td><button class="btn-edit" onclick="event.stopPropagation();editMember('${r.name.replace(/'/g,"\\'")}')">Edit</button></td>
 </tr>`;
 }).join('');
 };
 
-window.editMember=(name)=>{
+window.editMember=name=>{
 localStorage.setItem('editTargetName',name);
 window.location.href='form.html';
 };
 
-window.openOverlay=(name)=>{
+window.openOverlay=name=>{
 const data=load();
 const entries=['week 1','week 2','week 3'].map(w=>data.find(d=>d.name===name&&d.week===w)||{week:w});
 modalName.textContent=name;
 ovTableBody.innerHTML=entries.map(e=>{
 const p=parseFloat(e.power)||0;
 const pts=parseFloat(e.points)||0;
-const eff=(p>0&&pts>0)?(pts/p):0;
-return `<tr><td>${e.week}</td><td>${fmt(p)}</td><td>${fmt(pts)}</td><td>${fmt(eff)}</td></tr>`;
+const eff=(p>0&&pts>0)?pts/p:0;
+return `<tr><td>${e.week.toUpperCase()}</td><td>${fmt(p)}</td><td>${fmt(pts)}</td><td>${fmt(eff)}</td></tr>`;
 }).join('');
+
+const ctx=document.getElementById('playerChart').getContext('2d');
+if(chartInstance) chartInstance.destroy();
+chartInstance=new Chart(ctx,{
+type:'line',
+data:{
+labels:['W1','W2','W3'],
+datasets:[{
+label:'Efficiency',
+data:entries.map(e=>{
+const p=parseFloat(e.power)||0;
+const pts=parseFloat(e.points)||0;
+return(p>0&&pts>0)?pts/p:0;
+}),
+borderColor:'#3b82f6',
+tension:.2
+}]
+},
+options:{maintainAspectRatio:false}
+});
 profileModal.style.display='flex';
 };
 
@@ -265,5 +306,6 @@ window.closeModal=()=>profileModal.style.display='none';
 render();
 })();
 </script>
+
 </body>
 </html>
