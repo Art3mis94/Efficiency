@@ -1,237 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Alliance Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg: #f8fafc; --text: #1e293b; --accent: #3b82f6; --success: #10b981;
-            --dark: #1e40af; --muted: #64748b; --gold: #f59e0b; --silver: #94a3b8; --bronze: #d97706;
-        }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: .85rem; }
-        header { background: var(--dark); color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-        nav { display: flex; justify-content: center; gap: 10px; padding: .75rem; background: #e2e8f0; }
-        nav a { color: #fff; text-decoration: none; padding: .5rem 1rem; background: var(--accent); border-radius: 6px; font-weight: 700; }
-        .container { padding: 1.5rem; max-width: 1400px; margin: auto; }
-        
-        .top-row { display: grid; grid-template-columns: 1fr 3fr; gap: 20px; margin-bottom: 20px; align-items: end; }
-        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,.05); text-align: center; height: fit-content; }
-        .card label { font-size: .7rem; color: var(--muted); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; display: block; }
-        .card span { font-size: 2.5rem; font-weight: 800; color: var(--accent); }
-        
-        .top-three { display: flex; justify-content: center; gap: 15px; align-items: flex-end; }
-        .leader-card { flex: 1; text-align: center; padding: 15px; border-radius: 18px; background: white; box-shadow: 0 10px 15px rgba(0,0,0,.05); font-weight: 800; border: 2px solid #e2e8f0; }
-        .leader-card h2 { margin: 5px 0; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .leader-card .score { font-size: 1.5rem; color: var(--accent); }
-        .rank-1 { border-color: var(--gold); transform: scale(1.1); z-index: 2; box-shadow: 0 15px 25px rgba(245, 158, 11, 0.15); }
-        .rank-2 { border-color: var(--silver); }
-        .rank-3 { border-color: var(--bronze); }
-
-        details { background: white; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        summary { padding: 12px; cursor: pointer; font-weight: 800; color: var(--muted); }
-        .config-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 15px; }
-        .config-grid input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; }
-        
-        .table-wrap { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-        th { background: #f8fafc; padding: 15px 12px; font-size: .65rem; text-transform:uppercase; color: var(--muted); border-bottom: 2px solid #e2e8f0; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
-        .status-green { color: var(--success) !important; font-weight: 800; }
-        
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 25px; width: 95%; max-width: 1100px; border-radius: 20px; max-height: 90vh; overflow-y: auto; }
-        .ov-table { width: 100%; border-collapse: collapse; margin-top: 20px; text-align: center; }
-        .ov-table th, .ov-table td { border: 1px solid #e2e8f0; padding: 10px; }
-        .btn-edit { padding: 6px 12px; background: var(--success); color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: .7rem; }
-    </style>
-</head>
-<body>
-
-<header><h1>Alliance Dashboard</h1></header>
-<nav>
-    <a href="index.html">Dashboard</a>
-    <a href="trends.html">Trends</a>
-    <a href="form.html">Manage Data</a>
-</nav>
-
-<div class="container">
-    <div class="top-row">
-        <div class="card"><label>Roster Count</label><span id="stat_total">0</span></div>
-        <div class="top-three" id="topThreeList"></div>
-    </div>
-
-    <details>
-        <summary>⚙️ SCORING CONFIGURATION</summary>
-        <div class="config-grid">
-            <div><label>M_THRONE</label><input type="number" step="0.1" id="m_throne"></div>
-            <div><label>M_QUEST</label><input type="number" step="0.0000001" id="m_quest"></div>
-            <div><label>M_W1_BASE</label><input type="number" step="0.1" id="m_w1"></div>
-            <div><label>M_HUNT</label><input type="number" step="0.0000001" id="m_hunt"></div>
-        </div>
-    </details>
-
-    <div style="display:flex; gap:15px; margin-bottom:15px;">
-        <select id="weekSelect" style="padding: 10px; border-radius: 8px; font-weight: 800; border: 2px solid var(--accent);">
-            <option value="overall">OVERALL</option>
-            <option value="week 1">WEEK 1</option>
-            <option value="week 2">WEEK 2</option>
-            <option value="week 3">WEEK 3</option>
-        </select>
-        <input type="text" id="dashSearch" placeholder="Search members..." style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
-    </div>
-
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Rank</th><th>Name</th><th>Power</th><th>Points</th>
-                    <th>W1 Multi</th><th>Efficiency</th><th>Act</th><th>Part</th><th>Hunt</th><th>Quest</th><th>Throne</th>
-                    <th>Total</th><th>Picks</th><th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="dashTableBody"></tbody>
-        </table>
-    </div>
-</div>
-
-<div id="profileModal" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 id="modalName"></h2>
-            <div>
-                <select id="chartMetricSelect" style="padding:5px;"></select>
-                <button onclick="closeModal()" style="font-size:20px; border:none; background:none; cursor:pointer; margin-left:15px;">✕</button>
-            </div>
-        </div>
-        <div style="height:300px;"><canvas id="playerChart"></canvas></div>
-        <table class="ov-table">
-            <thead>
-                <tr><th>Week</th><th>Power</th><th>Points</th><th>Quest</th><th>Hunt</th><th>Throne</th></tr>
-            </thead>
-            <tbody id="ovTableBody"></tbody>
-        </table>
-    </div>
-</div>
-
-<script>
-(function(){
-    let chartInstance = null;
-    let currentOverlayData = [];
-
-    const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
-    const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
-    const fmt = n => parseFloat(n || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
-    const fmtPower = n => n ? (parseFloat(n)/1000).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1})+"Bn" : "0.0Bn";
-
-    const mConfig = getMults();
-    document.getElementById('m_throne').value = mConfig.M_THRONE;
-    document.getElementById('m_quest').value = mConfig.M_QUEST;
-    document.getElementById('m_w1').value = mConfig.M_W1;
-    document.getElementById('m_hunt').value = mConfig.M_HUNT;
-
-    ['m_throne','m_quest','m_w1','m_hunt'].forEach(id => {
-        document.getElementById(id).addEventListener('input', () => {
-            const val = {
-                M_THRONE: parseFloat(document.getElementById('m_throne').value),
-                M_QUEST: parseFloat(document.getElementById('m_quest').value),
-                M_W1: parseFloat(document.getElementById('m_w1').value),
-                M_HUNT: parseFloat(document.getElementById('m_hunt').value)
-            };
-            localStorage.setItem('scoringMultipliers', JSON.stringify(val));
-            render();
-        });
-    });
-
-    window.render = () => {
-        const data = load();
-        const mults = getMults();
-        const view = document.getElementById('weekSelect').value;
-        const search = document.getElementById('dashSearch').value.toLowerCase();
-        const names = [...new Set(data.map(d => d.name))];
-        let results = [];
-
-        names.forEach(name => {
-            const eAll = data.filter(d => d.name === name);
-            const w1 = eAll.find(x => x.week === 'week 1');
-            const w2 = eAll.find(x => x.week === 'week 2');
-            const w3 = eAll.find(x => x.week === 'week 3');
-
-            const current = (view === 'overall' || view === 'week 3') ? w3 : (view === 'week 2' ? w2 : w1);
-            if (!current) return;
-
-            const pCurr = parseFloat(current.power) || 1;
-            let w1Score = w1 ? (parseFloat(w1.points) * mults.M_W1) : 0;
-            let effScore = (view !== 'week 1' && w1) ? ((parseFloat(current.points) - parseFloat(w1.points)) / pCurr) : 0;
-            
-            let questScore = (parseFloat(current.quest || 0) * mults.M_QUEST);
-            let throneScore = (parseFloat(current.throne || 0) / pCurr) * mults.M_THRONE;
-            let huntScore = (parseFloat(current.hunt || 0) * mults.M_HUNT);
-
-            let actScore = 0, partScore = 0, picks = 0, has100 = false;
-            const periodData = (view === 'overall' || view === 'week 3') ? [w1, w2, w3] : (view === 'week 2' ? [w1, w2] : [w1]);
-            
-            periodData.filter(x => x).forEach(e => {
-                actScore += ((e.lava?1:0) + (e.challenge?1:0) + (e.donations?1:0)) * 0.833;
-                partScore += Math.min(2.5, ((e.esb?1:0)*(2.5/3)) + ((e.dv?1:0)*(2.5/3)) + ((e.mon?1:0)*(2.5/6)) + ((e.wed?1:0)*(2.5/6)));
-                picks += (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0);
-                if(e.p100) has100 = true;
-            });
-
-            const total = w1Score + effScore + actScore + partScore + huntScore + questScore + throneScore;
-
-            results.push({
-                name, p: pCurr, pts: current.points, w1S: w1Score, eff: effScore, 
-                act: actScore, part: partScore, hunt: huntScore, quest: questScore, 
-                throne: throneScore, total, picks, has100, targetWeek: current.week
-            });
-        });
-
-        results.sort((a,b) => b.total - a.total);
-        document.getElementById('stat_total').textContent = results.length;
-
-        const meds = ["🥇", "🥈", "🥉"];
-        const top3 = results.slice(0,3);
-        const podiumData = [top3[1], top3[0], top3[2]].filter(x => x);
-        document.getElementById('topThreeList').innerHTML = podiumData.map((r) => {
-            const actualRank = results.indexOf(r);
-            return `<div class="leader-card rank-${actualRank+1}">
-                <div style="font-size:1.5rem">${meds[actualRank]}</div>
-                <h2>${r.name}</h2>
-                <div class="score">${fmt(r.total)}</div>
-            </div>`;
-        }).join('');
-
-        document.getElementById('dashTableBody').innerHTML = results.filter(r => r.name.toLowerCase().includes(search)).map((r, i) => `
-            <tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
-                <td>#${i+1}</td>
-                <td class="${r.has100?'status-green':''}"><strong>${r.name}</strong></td>
-                <td>${fmtPower(r.p)}</td><td>${fmt(r.pts)}</td>
-                <td>${fmt(r.w1S)}</td><td>${fmt(r.eff)}</td>
-                <td>${fmt(r.act)}</td><td>${fmt(r.part)}</td>
-                <td>${fmt(r.hunt)}</td><td>${fmt(r.quest)}</td><td>${fmt(r.throne)}</td>
-                <td style="font-weight:800">${fmt(r.total)}</td>
-                <td>${r.picks}</td>
-                <td><button class="btn-edit" onclick="event.stopPropagation(); editMember('${r.name.replace(/'/g,"\\'")}', '${r.targetWeek}')">Edit</button></td>
-            </tr>`).join('');
-    };
-
-    window.editMember = (name, week) => {
-        localStorage.setItem('editTargetName', name);
-        localStorage.setItem('editTargetWeek', week);
-        window.location.href = 'form.html';
-    };
-
     window.openOverlay = (name) => {
         const data = load();
+        const mults = getMults();
         const entries = ['week 1', 'week 2', 'week 3'].map(w => data.find(d => d.name === name && d.week === w) || { week: w });
-        currentOverlayData = entries;
+        
+        // Calculate Efficiency for each week to plot in the graph
+        const w1 = entries[0];
+        currentOverlayData = entries.map(e => {
+            let eff = 0;
+            if (e.points && w1.points && e.power && e.week !== 'week 1') {
+                eff = (parseFloat(e.points) - parseFloat(w1.points)) / parseFloat(e.power);
+            }
+            return { ...e, efficiency: eff };
+        });
+
         document.getElementById('modalName').textContent = name;
-        document.getElementById('ovTableBody').innerHTML = entries.map(e => `<tr><td>${e.week.toUpperCase()}</td><td>${fmtPower(e.power)}</td><td>${fmt(e.points)}</td><td>${fmt(e.quest)}</td><td>${fmt(e.hunt)}</td><td>${fmt(e.throne)}</td></tr>`).join('');
+        document.getElementById('ovTableBody').innerHTML = currentOverlayData.map(e => `
+            <tr>
+                <td>${e.week.toUpperCase()}</td>
+                <td>${fmtPower(e.power)}</td>
+                <td>${fmt(e.points)}</td>
+                <td>${fmt(e.quest)}</td>
+                <td>${fmt(e.efficiency)}</td>
+                <td>${fmt(e.throne)}</td>
+            </tr>`).join('');
+
         const sel = document.getElementById('chartMetricSelect');
-        sel.innerHTML = `<option value="power">Power</option><option value="points">Points</option>`;
+        // Added Efficiency and Quest to the dropdown
+        sel.innerHTML = `
+            <option value="power">Power</option>
+            <option value="points">Points</option>
+            <option value="efficiency">Efficiency</option>
+            <option value="quest">Quests</option>
+        `;
+        sel.onchange = updateChartData; // Ensure it triggers on change
         document.getElementById('profileModal').style.display = 'flex';
         updateChartData();
     };
@@ -239,17 +40,31 @@
     window.updateChartData = () => {
         const metric = document.getElementById('chartMetricSelect').value;
         const vals = currentOverlayData.map(e => parseFloat(e[metric]) || 0);
+        
         if(chartInstance) chartInstance.destroy();
         chartInstance = new Chart(document.getElementById('playerChart'), {
-            type:'line', data:{ labels:['W1','W2','W3'], datasets:[{label:metric.toUpperCase(), data:vals, borderColor:'#3b82f6', tension:0.3}]},
-            options:{ maintainAspectRatio:false, scales: { y: { ticks: { callback: v => (v/1000).toFixed(1)+'Bn' } } } }
+            type:'line', 
+            data:{ 
+                labels:['W1','W2','W3'], 
+                datasets:[{
+                    label: metric.toUpperCase(), 
+                    data: vals, 
+                    borderColor: '#3b82f6', 
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options:{ 
+                maintainAspectRatio: false, 
+                scales: { 
+                    y: { 
+                        beginAtZero: false,
+                        ticks: { 
+                            callback: v => (metric === 'power' || metric === 'points') ? (v/1000).toFixed(1) + 'Bn' : v.toFixed(2)
+                        } 
+                    } 
+                } 
+            }
         });
     };
-
-    document.getElementById('weekSelect').addEventListener('change', render);
-    window.closeModal = () => document.getElementById('profileModal').style.display = 'none';
-    render();
-})();
-</script>
-</body>
-</html>
