@@ -166,7 +166,6 @@
             let w1Score = w1 ? (parseFloat(w1.points) * mults.M_W1) : 0;
             let effScore = (view !== 'week 1' && w1) ? ((parseFloat(current.points) - parseFloat(w1.points)) / pCurr) : 0;
             
-            // Quest/Throne from the Current selection (Snapshot)
             let questScore = (parseFloat(current.quest || 0) * mults.M_QUEST);
             let throneScore = (parseFloat(current.throne || 0) / pCurr) * mults.M_THRONE;
             let huntScore = (parseFloat(current.hunt || 0) * mults.M_HUNT);
@@ -222,9 +221,8 @@
     window.openOverlay = (name) => {
         const data = load();
         const entries = ['week 1', 'week 2', 'week 3'].map(w => data.find(d => d.name === name && d.week === w) || { week: w });
-        
-        // Calculate Efficiency on the fly for each week for the graph
         const w1 = entries[0];
+        
         currentOverlayData = entries.map(e => {
             let eff = 0;
             if (e.points && w1.points && e.power && e.week !== 'week 1') {
@@ -281,10 +279,28 @@
                     y: { 
                         beginAtZero: false,
                         ticks: { 
-                            callback: v => (metric === 'power' || metric === 'points') ? (v/1000).toFixed(1) + 'Bn' : v.toFixed(2)
+                            callback: v => {
+                                // Power: Keep Billion conversion
+                                if (metric === 'power') return (v/1000).toFixed(1) + 'Bn';
+                                // Points & Quest: Thousand Separators
+                                if (metric === 'points' || metric === 'quest') return v.toLocaleString();
+                                // Efficiency: Regular 2-decimal rounding
+                                return v.toFixed(2);
+                            }
                         } 
                     } 
-                } 
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                let v = ctx.parsed.y;
+                                if (metric === 'power') return 'Power: ' + (v/1000).toFixed(1) + 'Bn';
+                                return metric.toUpperCase() + ': ' + v.toLocaleString();
+                            }
+                        }
+                    }
+                }
             }
         });
     };
