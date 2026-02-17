@@ -15,7 +15,7 @@
         nav a:hover{transform:translateY(-1px);box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
         .main-wrap{width:100%;padding:2rem;display:grid;gap:1.5rem;grid-template-columns:300px 1fr 360px;align-items:start;}
         .section{background:var(--card);padding:1.75rem;border-radius:1.25rem;box-shadow:var(--shadow);border:1px solid var(--border);}
-        .input{width:100%;padding:0.75rem 1rem;border-radius:0.75rem;border:1px solid var(--border);margin-bottom:0.75rem;font-family:inherit;background:#f8fafc;}
+        .input{width:100%;padding:0.75rem 1rem;border-radius:0.75rem;border:1px solid var(--border);margin-bottom:0.75rem;font-family:inherit;background:#f8fafc;font-size:1.1rem;text-align:center;}
         .btn{padding:0.9rem;border:none;border-radius:0.75rem;color:white;font-weight:700;cursor:pointer;width:100%;transition:0.2s;}
         .week-tabs{display:flex;gap:0.5rem;margin-bottom:1.5rem;background:#e2e8f0;padding:0.5rem;border-radius:0.75rem;}
         .week-btn{flex:1;padding:0.75rem;border:none;background:transparent;cursor:pointer;border-radius:0.5rem;font-weight:700;color:var(--muted);font-size:0.8rem;transition:0.2s;}
@@ -39,6 +39,8 @@
         .overall-rank{background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:1.25rem;border-radius:1.25rem;text-align:center;margin-bottom:1.25rem;box-shadow:0 10px 25px rgba(37,99,235,0.3);}
         .overall-rank label{font-size:0.75rem;font-weight:800;opacity:0.9;}
         .overall-rank .big-rank{font-size:2.8rem;font-weight:900;display:block;}
+        .counter-btn{width:36px;height:36px;background:#e2e8f0;border:none;cursor:pointer;font-size:1.1rem;border-radius:0.5rem;}
+        .counter-wrap{display:flex;align-items:center;gap:6px;}
     </style>
 </head>
 <body>
@@ -80,29 +82,29 @@
             <div><label>HUNT</label><input id="hunt" type="number" class="input" oninput="updateLive()"></div>
         </div>
 
-        <div style="display:flex; gap:15px; margin-bottom:15px;">
+        <div style="display:flex; gap:12px; margin-bottom:15px;">
             <div style="flex:1;">
                 <label>LANE</label>
-                <div style="display:flex; align-items:center;">
-                    <button style="width:40px; height:40px; background:#e2e8f0; border:none; cursor:pointer; font-size:1.2rem;" onclick="changeVal('lane', -1)">-</button>
-                    <input id="lane" type="number" class="input" oninput="updateLive()" style="text-align:center;">
-                    <button style="width:40px; height:40px; background:#e2e8f0; border:none; cursor:pointer; font-size:1.2rem;" onclick="changeVal('lane', 1)">+</button>
+                <div class="counter-wrap">
+                    <button class="counter-btn" onclick="changeVal('lane', -1)">-</button>
+                    <input id="lane" type="number" class="input" oninput="updateLive()" style="flex:1;max-width:80px;">
+                    <button class="counter-btn" onclick="changeVal('lane', 1)">+</button>
                 </div>
             </div>
-            <div style="flex:1; font-size:0.85rem;">
+            <div style="flex:1;">
                 <label>EMBLEM</label>
-                <div style="display:flex; align-items:center;">
-                    <button style="width:30px; height:30px; background:#e2e8f0; border:none; cursor:pointer; font-size:1rem;" onclick="changeVal('emblem', -1)">-</button>
-                    <input id="emblem" type="number" class="input" oninput="updateLive()" style="text-align:center; font-size:0.85rem;">
-                    <button style="width:30px; height:30px; background:#e2e8f0; border:none; cursor:pointer; font-size:1rem;" onclick="changeVal('emblem', 1)">+</button>
+                <div class="counter-wrap">
+                    <button class="counter-btn" onclick="changeVal('emblem', -1)">-</button>
+                    <input id="emblem" type="number" class="input" oninput="updateLive()" style="flex:1;max-width:60px;">
+                    <button class="counter-btn" onclick="changeVal('emblem', 1)">+</button>
                 </div>
             </div>
-            <div style="flex:1; font-size:0.85rem;">
+            <div style="flex:1;">
                 <label>CHEST</label>
-                <div style="display:flex; align-items:center;">
-                    <button style="width:30px; height:30px; background:#e2e8f0; border:none; cursor:pointer; font-size:1rem;" onclick="changeVal('chest', -1)">-</button>
-                    <input id="chest" type="number" class="input" oninput="updateLive()" style="text-align:center; font-size:0.85rem;">
-                    <button style="width:30px; height:30px; background:#e2e8f0; border:none; cursor:pointer; font-size:1rem;" onclick="changeVal('chest', 1)">+</button>
+                <div class="counter-wrap">
+                    <button class="counter-btn" onclick="changeVal('chest', -1)">-</button>
+                    <input id="chest" type="number" class="input" oninput="updateLive()" style="flex:1;max-width:60px;">
+                    <button class="counter-btn" onclick="changeVal('chest', 1)">+</button>
                 </div>
             </div>
         </div>
@@ -163,7 +165,7 @@
             <div class="rank-card"><label>Efficiency</label><span class="rnk" id="r_eff">#--</span><span class="val" id="val_eff">0.00</span></div>
             <div class="rank-card"><label>Quest</label><span class="rnk" id="r_qst">#--</span><span class="val" id="val_qst">0</span></div>
             <div class="rank-card"><label>Throne</label><span class="rnk" id="r_thr">#--</span><span class="val" id="val_thr">0</span></div>
-            <div class="rank-card"><label>Throne Eff</label><span class="rnk" id="r_tef">#--</span><span class="val" id="val_tef">0.000000</span></div>
+            <div class="rank-card"><label>Throne Eff</label><span class="rnk" id="r_tef">#--</span><span class="val" id="val_tef">0.00</span></div>
         </div>
     </aside>
 </main>
@@ -216,7 +218,7 @@ window.updateLive = () => {
     document.getElementById('val_eff').innerText = eff.toFixed(2);
     document.getElementById('val_qst').innerText = q.toLocaleString();
     document.getElementById('val_thr').innerText = t.toLocaleString();
-    document.getElementById('val_tef').innerText = tef.toFixed(6);
+    document.getElementById('val_tef').innerText = tef.toFixed(2);
 
     const weekData = db.filter(x => x.week === curW);
     const getRank = (val, keyOrCalc, desc=true) => {
