@@ -155,37 +155,37 @@
 
         names.forEach(name => {
             const eAll = data.filter(d => d.name === name);
+            const home = eAll.find(x => x.week === 'home week');
             const w1 = eAll.find(x => x.week === 'week 1');
             const w2 = eAll.find(x => x.week === 'week 2');
             const w3 = eAll.find(x => x.week === 'week 3');
 
-            // Find the data specific to the week chosen in the dropdown
+            // Logic to pick the data for the selected week
             const activeEntry = (view === 'overall' || view === 'week 3') ? (w3 || w2 || w1) : (view === 'week 2' ? (w2 || w1) : w1);
             if (!activeEntry) return;
 
             const pCurr = parseFloat(activeEntry.power) || 1;
-            
-            // 1. W1 Multiplier
             let w1Score = w1 ? (parseFloat(w1.points) * mults.M_W1) : 0;
-            
-            // 2. Efficiency: (Selected Week Points - Week 1 Points) / Selected Week Power
             let effScore = (view !== 'week 1' && w1) ? ((parseFloat(activeEntry.points) - parseFloat(w1.points)) / pCurr) : 0;
-            
-            // 3. Snapshots (Quest, Throne, Hunt from the selected week only)
             let questScore = (parseFloat(activeEntry.quest || 0) * mults.M_QUEST);
             let throneScore = (parseFloat(activeEntry.throne || 0) / pCurr) * mults.M_THRONE;
             let huntScore = (parseFloat(activeEntry.hunt || 0) * mults.M_HUNT);
 
-            // 4. Accumulated metrics (Act/Part sum up based on the timeline)
-            let actScore = 0, partScore = 0, picks = 0, has100 = false;
+            let actScore = 0, partScore = 0;
             const periodData = (view === 'overall' || view === 'week 3') ? [w1, w2, w3] : (view === 'week 2' ? [w1, w2] : [w1]);
             
             periodData.filter(x => x).forEach(e => {
                 actScore += ((e.lava?1:0) + (e.challenge?1:0) + (e.donations?1:0)) * 0.833;
                 partScore += Math.min(2.5, ((e.esb?1:0)*(2.5/3)) + ((e.dv?1:0)*(2.5/3)) + ((e.mon?1:0)*(2.5/6)) + ((e.wed?1:0)*(2.5/6)));
-                picks += (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0);
-                if(e.p100) has100 = true;
             });
+
+            // --- HERO PICKS TARGETING HOME WEEK ---
+            let picks = 0;
+            let has100 = false;
+            if (home) {
+                picks = (home.p100?100:0) + (home.p40?40:0) + (home.p20?20:0) + (home.p5?5:0);
+                if(home.p100 == 1) has100 = true;
+            }
 
             const total = w1Score + effScore + actScore + partScore + huntScore + questScore + throneScore;
 
@@ -196,11 +196,9 @@
             });
         });
 
-        // CRITICAL SORT: Sorting results globally based on the calculated 'total'
         results.sort((a,b) => b.total - a.total);
         document.getElementById('stat_total').textContent = results.length;
 
-        // PODIUM SYNC: Always uses the first 3 items in the sorted results array
         const meds = ["🥇", "🥈", "🥉"];
         const top3 = results.slice(0,3);
         const podiumArr = [top3[1], top3[0], top3[2]].filter(x => x); 
@@ -214,7 +212,6 @@
             </div>`;
         }).join('');
 
-        // Table Render
         document.getElementById('dashTableBody').innerHTML = results.filter(r => r.name.toLowerCase().includes(search)).map((r, i) => `
             <tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
                 <td>#${i+1}</td>
