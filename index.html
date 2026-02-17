@@ -1,56 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
+<meta charset="UTF-8">
 <title>Alliance Dashboard</title>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root{
---bg:#f8fafc;
---text:#1e293b;
---accent:#3b82f6;
---success:#10b981;
---dark:#1e40af;
---muted:#64748b;
---gold:#f59e0b;
---silver:#cbd5e1;
---bronze:#d97706;
+--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;
+--success:#10b981;--dark:#1e40af;--muted:#64748b;
+--gold:#f59e0b;--silver:#cbd5e1;--bronze:#d97706;
 }
-
 body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);font-size:.85rem;}
-header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+header{background:var(--dark);color:#fff;padding:1rem 2rem;}
 nav{display:flex;justify-content:center;gap:10px;padding:.75rem;background:#e2e8f0;}
 nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;background:var(--accent);border-radius:6px;font-weight:700;}
 
 .container{padding:1.5rem;}
-
 .top-row{display:grid;grid-template-columns:1fr 3fr;gap:20px;margin-bottom:20px;}
 
-.card{background:white;padding:20px;border-radius:16px;box-shadow:0 6px 10px rgba(0,0,0,0.05);border-left:5px solid var(--accent);}
-.card label{display:block;font-size:.7rem;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:5px;}
+.card{background:white;padding:20px;border-radius:16px;box-shadow:0 6px 10px rgba(0,0,0,.05);}
+.card label{font-size:.7rem;color:var(--muted);font-weight:800;text-transform:uppercase;}
 .card span{font-size:1.8rem;font-weight:800;}
 
-.top-three{
-display:flex;
-justify-content:center;
-gap:20px;
-align-items:flex-end;
-}
-
-.leader-card{
-flex:1;
-max-width:250px;
-text-align:center;
-padding:20px;
-border-radius:18px;
-background:white;
-box-shadow:0 10px 20px rgba(0,0,0,.08);
-font-weight:800;
-}
-
+.top-three{display:flex;justify-content:center;gap:20px;align-items:flex-end;}
+.leader-card{flex:1;max-width:250px;text-align:center;padding:20px;border-radius:18px;background:white;box-shadow:0 10px 20px rgba(0,0,0,.08);font-weight:800;}
 .leader-card h2{margin:0;font-size:1.4rem;}
 .leader-card .score{font-size:1.6rem;margin-top:6px;}
 .rank-1{border:6px solid var(--gold);transform:scale(1.08);}
@@ -58,25 +34,26 @@ font-weight:800;
 .rank-3{border:5px solid var(--bronze);}
 
 details{background:white;border-radius:12px;margin-bottom:20px;border:1px solid #e2e8f0;}
-summary{padding:12px;cursor:pointer;font-weight:800;color:var(--muted);font-size:.75rem;}
-
+summary{padding:12px;cursor:pointer;font-weight:800;color:var(--muted);}
 .config-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;padding:15px;}
 .config-grid input{width:100%;padding:8px;border-radius:6px;border:1px solid #cbd5e1;}
 
-.table-wrap{background:white;border-radius:12px;overflow-x:auto;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
+.table-wrap{background:white;border-radius:12px;overflow-x:auto;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);}
 table{width:100%;border-collapse:collapse;min-width:1200px;}
-th{background:#f8fafc;padding:12px;text-align:left;font-size:.65rem;text-transform:uppercase;color:var(--muted);border-bottom:2px solid #e2e8f0;}
+th{background:#f8fafc;padding:12px;font-size:.65rem;text-transform:uppercase;color:var(--muted);}
 td{padding:12px;border-bottom:1px solid #f1f5f9;cursor:pointer;}
 .status-green{color:var(--success)!important;font-weight:800;}
 .btn-edit{padding:4px 8px;background:var(--success);color:white;border:none;border-radius:4px;font-weight:700;cursor:pointer;font-size:.7rem;}
-.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
-.modal-content{background:white;padding:25px;width:95%;max-width:1100px;border-radius:16px;position:relative;max-height:90vh;overflow-y:auto;}
-.ov-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:.8rem;}
+
+.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.7);align-items:center;justify-content:center;}
+.modal-content{background:white;padding:25px;width:95%;max-width:1100px;border-radius:16px;max-height:90vh;overflow-y:auto;}
+.ov-table{width:100%;border-collapse:collapse;margin-top:20px;}
 .ov-table th,.ov-table td{border:1px solid #e2e8f0;padding:8px;text-align:center;}
 </style>
 </head>
 
 <body>
+
 <header><h1>Alliance Dashboard</h1></header>
 <nav>
 <a href="index.html">Dashboard</a>
@@ -91,18 +68,27 @@ td{padding:12px;border-bottom:1px solid #f1f5f9;cursor:pointer;}
 <label>Roster Count</label>
 <span id="stat_total">0</span>
 </div>
-
 <div class="top-three" id="topThreeList"></div>
 </div>
 
+<details>
+<summary>⚙️ SCORING CONFIGURATION</summary>
+<div class="config-grid">
+<div><label>M_THRONE</label><input type="number" step="0.1" id="m_throne" onchange="saveMults()"></div>
+<div><label>M_QUEST</label><input type="number" step="0.0000001" id="m_quest" onchange="saveMults()"></div>
+<div><label>M_W1</label><input type="number" step="0.1" id="m_w1" onchange="saveMults()"></div>
+<div><label>M_HUNT</label><input type="number" step="0.0000001" id="m_hunt" onchange="saveMults()"></div>
+</div>
+</details>
+
 <div style="display:flex;gap:15px;margin-bottom:15px;">
-<select id="weekSelect" style="font-weight:700;padding:10px;border-radius:8px;border:2px solid var(--accent);" onchange="render()">
+<select id="weekSelect" onchange="render()">
 <option value="overall">OVERALL</option>
 <option value="week 1">WEEK 1</option>
 <option value="week 2">WEEK 2</option>
 <option value="week 3">WEEK 3</option>
 </select>
-<input type="text" id="dashSearch" placeholder="Search members..." style="flex:1;padding:10px;border-radius:8px;border:1px solid #cbd5e1;" oninput="render()">
+<input type="text" id="dashSearch" placeholder="Search..." oninput="render()">
 </div>
 
 <div class="table-wrap">
@@ -117,25 +103,51 @@ td{padding:12px;border-bottom:1px solid #f1f5f9;cursor:pointer;}
 <tbody id="dashTableBody"></tbody>
 </table>
 </div>
+
+</div>
+
+<!-- MODAL -->
+<div id="profileModal" class="modal">
+<div class="modal-content">
+<span style="cursor:pointer;font-size:24px;" onclick="closeModal()">✕</span>
+<h2 id="modalName"></h2>
+<div style="height:300px;"><canvas id="playerChart"></canvas></div>
+<table class="ov-table">
+<thead><tr><th>Week</th><th>Power</th><th>Points</th><th>Eff</th></tr></thead>
+<tbody id="ovTableBody"></tbody>
+</table>
+</div>
 </div>
 
 <script>
 (function(){
 
-let activeEntries=[];
+let chartInstance=null;
 const load=()=>JSON.parse(localStorage.getItem('formData')||'[]');
-const getMults=()=>JSON.parse(localStorage.getItem('scoringMultipliers')||'{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
-const fmtPower=n=>n?(parseFloat(n)/1000).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1})+"Bn":"0.0Bn";
-const fmtNum=n=>parseFloat(n||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});
+const getMults=()=>JSON.parse(localStorage.getItem('scoringMultipliers')||'{"M_THRONE":3,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
+const fmt=n=>parseFloat(n||0).toFixed(2);
+
+window.saveMults=()=>{
+const m={
+M_THRONE:parseFloat(m_throne.value),
+M_QUEST:parseFloat(m_quest.value),
+M_W1:parseFloat(m_w1.value),
+M_HUNT:parseFloat(m_hunt.value)
+};
+localStorage.setItem('scoringMultipliers',JSON.stringify(m));
+render();
+};
 
 window.render=()=>{
-
 const data=load();
 const m=getMults();
-const view=document.getElementById('weekSelect').value;
-const search=document.getElementById('dashSearch').value.toLowerCase();
-const names=[...new Set(data.map(d=>d.name))];
+['m_throne','m_quest','m_w1','m_hunt'].forEach(id=>{
+if(document.getElementById(id)) document.getElementById(id).value=m[id.toUpperCase()];
+});
 
+const view=weekSelect.value;
+const search=dashSearch.value.toLowerCase();
+const names=[...new Set(data.map(d=>d.name))];
 let results=[];
 
 names.forEach(name=>{
@@ -169,13 +181,13 @@ if(diff>0) wEff=diff/p;
 }
 totalEff+=wEff;
 
-/* Participation (fractions of 2.5) */
+/* Participation scaled from 2.5 */
 const CAP=2.5;
 let weeklyPart=
-(e.esb?CAP*(1/3):0)+
-(e.dv?CAP*(1/3):0)+
-(e.mon?CAP*(1/6):0)+
-(e.wed?CAP*(1/6):0);
+(e.esb?CAP/3:0)+
+(e.dv?CAP/3:0)+
+(e.mon?CAP/6:0)+
+(e.wed?CAP/6:0);
 
 weeklyPart+=(parseFloat(e.quest)||0)*m.M_QUEST;
 weeklyPart+=(parseFloat(e.hunt)||0)*m.M_HUNT;
@@ -187,11 +199,8 @@ totalPart=Math.min(7.5,totalPart+weeklyPart);
 totalAct+=((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0))*(CAP/3);
 
 /* Throne */
-if(p>0){
-totalThrone+=((parseFloat(e.throne)||0)/p)*m.M_THRONE;
-}
+if(p>0) totalThrone+=((parseFloat(e.throne)||0)/p)*m.M_THRONE;
 
-/* Picks */
 totalPicks+=(e.p100?100:0)+(e.p40?40:0)+(e.p20?20:0)+(e.p5?5:0);
 if(e.p100) has100=true;
 
@@ -199,46 +208,59 @@ if(e.p100) has100=true;
 
 results.push({
 name,p:latestPower,pts:latestPoints,
-eff:totalEff,actScore:totalAct,
-partScore:totalPart,tEff:totalThrone,
-total:totalEff+totalAct+totalPart+totalThrone,
+eff:totalEff,act:totalAct,part:totalPart,
+throne:totalThrone,total:totalEff+totalAct+totalPart+totalThrone,
 picks:totalPicks,has100
 });
 
 });
 
 results.sort((a,b)=>b.total-a.total);
-document.getElementById('stat_total').textContent=names.length;
+stat_total.textContent=names.length;
 
-/* Top 3 Large Cards */
-document.getElementById('topThreeList').innerHTML=
-results.slice(0,3).map((r,i)=>{
-return `
+topThreeList.innerHTML=results.slice(0,3).map((r,i)=>`
 <div class="leader-card rank-${i+1}">
 <h2>#${i+1} ${r.name}</h2>
-<div class="score">${r.total.toFixed(2)}</div>
-</div>`;
-}).join('');
+<div class="score">${fmt(r.total)}</div>
+</div>`).join('');
 
-document.getElementById('dashTableBody').innerHTML=
-results.filter(r=>r.name.toLowerCase().includes(search)).map((r,i)=>{
+dashTableBody.innerHTML=results.filter(r=>r.name.toLowerCase().includes(search)).map((r,i)=>{
 const isG=r.has100?'status-green':'';
-return `<tr>
+return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
 <td>#${i+1}</td>
 <td class="${isG}"><strong>${r.name}</strong></td>
-<td>${fmtPower(r.p)}</td>
-<td>${fmtNum(r.pts)}</td>
-<td>${r.eff.toFixed(2)}</td>
-<td>${r.actScore.toFixed(2)}</td>
-<td>${r.partScore.toFixed(2)}</td>
-<td>${r.tEff.toFixed(2)}</td>
-<td style="font-weight:800;">${r.total.toFixed(2)}</td>
-<td class="${isG}">${r.picks}</td>
-<td><button class="btn-edit">Edit</button></td>
+<td>${fmt(r.p)}</td>
+<td>${fmt(r.pts)}</td>
+<td>${fmt(r.eff)}</td>
+<td>${fmt(r.act)}</td>
+<td>${fmt(r.part)}</td>
+<td>${fmt(r.throne)}</td>
+<td style="font-weight:800;">${fmt(r.total)}</td>
+<td>${r.picks}</td>
+<td><button class="btn-edit" onclick="event.stopPropagation();editMember('${r.name.replace(/'/g,"\\'")}')">Edit</button></td>
 </tr>`;
 }).join('');
-
 };
+
+window.editMember=(name)=>{
+localStorage.setItem('editTargetName',name);
+window.location.href='form.html';
+};
+
+window.openOverlay=(name)=>{
+const data=load();
+const entries=['week 1','week 2','week 3'].map(w=>data.find(d=>d.name===name&&d.week===w)||{week:w});
+modalName.textContent=name;
+ovTableBody.innerHTML=entries.map(e=>{
+const p=parseFloat(e.power)||0;
+const pts=parseFloat(e.points)||0;
+const eff=(p>0&&pts>0)?(pts/p):0;
+return `<tr><td>${e.week}</td><td>${fmt(p)}</td><td>${fmt(pts)}</td><td>${fmt(eff)}</td></tr>`;
+}).join('');
+profileModal.style.display='flex';
+};
+
+window.closeModal=()=>profileModal.style.display='none';
 
 render();
 })();
