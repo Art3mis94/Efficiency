@@ -17,18 +17,18 @@
         nav a { color: #fff; text-decoration: none; padding: .5rem 1rem; background: var(--accent); border-radius: 6px; font-weight: 700; }
         .container { padding: 1.5rem; max-width: 1400px; margin: auto; }
         
-        .top-row { display: grid; grid-template-columns: 1fr 3fr; gap: 20px; margin-bottom: 20px; align-items: flex-end; }
+        .top-row { display: grid; grid-template-columns: 1fr 3fr; gap: 20px; margin-bottom: 30px; align-items: flex-end; }
         .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,.05); text-align: center; height: fit-content; }
         .card label { font-size: .7rem; color: var(--muted); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; display: block; }
         .card span { font-size: 2.5rem; font-weight: 800; color: var(--accent); }
         
-        .top-three { display: flex; justify-content: center; gap: 15px; align-items: flex-end; }
-        .leader-card { flex: 1; text-align: center; padding: 15px; border-radius: 18px; background: white; box-shadow: 0 10px 15px rgba(0,0,0,.05); font-weight: 800; border: 2px solid #e2e8f0; }
-        .leader-card h2 { margin: 5px 0; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .leader-card .score { font-size: 1.5rem; color: var(--accent); }
-        .rank-1 { border-color: var(--gold); transform: scale(1.1); z-index: 2; box-shadow: 0 15px 25px rgba(245, 158, 11, 0.15); }
-        .rank-2 { border-color: var(--silver); }
-        .rank-3 { border-color: var(--bronze); }
+        .top-three { display: flex; justify-content: center; gap: 15px; align-items: flex-end; height: 160px; }
+        .leader-card { flex: 1; text-align: center; padding: 15px; border-radius: 18px; background: white; box-shadow: 0 10px 15px rgba(0,0,0,.05); font-weight: 800; border: 2px solid #e2e8f0; max-width: 200px; }
+        .leader-card h2 { margin: 5px 0; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .leader-card .score { font-size: 1.3rem; color: var(--accent); }
+        .rank-1 { border-color: var(--gold); height: 100%; transform: scale(1.05); z-index: 2; box-shadow: 0 15px 25px rgba(245, 158, 11, 0.2); }
+        .rank-2 { border-color: var(--silver); height: 85%; }
+        .rank-3 { border-color: var(--bronze); height: 75%; }
 
         details { background: white; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
         summary { padding: 12px; cursor: pointer; font-weight: 800; color: var(--muted); }
@@ -159,24 +159,24 @@
             const w2 = eAll.find(x => x.week === 'week 2');
             const w3 = eAll.find(x => x.week === 'week 3');
 
-            // The 'target' is the entry for the selected week.
-            const target = (view === 'overall' || view === 'week 3') ? w3 : (view === 'week 2' ? w2 : w1);
-            if (!target) return;
+            // Find the data specific to the week chosen in the dropdown
+            const activeEntry = (view === 'overall' || view === 'week 3') ? (w3 || w2 || w1) : (view === 'week 2' ? (w2 || w1) : w1);
+            if (!activeEntry) return;
 
-            const pCurr = parseFloat(target.power) || 1;
+            const pCurr = parseFloat(activeEntry.power) || 1;
             
-            // 1. W1 Multiplier: Always based on Week 1 data
+            // 1. W1 Multiplier
             let w1Score = w1 ? (parseFloat(w1.points) * mults.M_W1) : 0;
             
-            // 2. Efficiency: (Target Pts - W1 Pts) / Target Power
-            let effScore = (view !== 'week 1' && w1) ? ((parseFloat(target.points) - parseFloat(w1.points)) / pCurr) : 0;
+            // 2. Efficiency: (Selected Week Points - Week 1 Points) / Selected Week Power
+            let effScore = (view !== 'week 1' && w1) ? ((parseFloat(activeEntry.points) - parseFloat(w1.points)) / pCurr) : 0;
             
-            // 3. Snapshots (Selected week only)
-            let questScore = (parseFloat(target.quest || 0) * mults.M_QUEST);
-            let throneScore = (parseFloat(target.throne || 0) / pCurr) * mults.M_THRONE;
-            let huntScore = (parseFloat(target.hunt || 0) * mults.M_HUNT);
+            // 3. Snapshots (Quest, Throne, Hunt from the selected week only)
+            let questScore = (parseFloat(activeEntry.quest || 0) * mults.M_QUEST);
+            let throneScore = (parseFloat(activeEntry.throne || 0) / pCurr) * mults.M_THRONE;
+            let huntScore = (parseFloat(activeEntry.hunt || 0) * mults.M_HUNT);
 
-            // 4. Accumulated metrics
+            // 4. Accumulated metrics (Act/Part sum up based on the timeline)
             let actScore = 0, partScore = 0, picks = 0, has100 = false;
             const periodData = (view === 'overall' || view === 'week 3') ? [w1, w2, w3] : (view === 'week 2' ? [w1, w2] : [w1]);
             
@@ -190,30 +190,31 @@
             const total = w1Score + effScore + actScore + partScore + huntScore + questScore + throneScore;
 
             results.push({
-                name, p: pCurr, pts: target.points, w1S: w1Score, eff: effScore, 
+                name, p: pCurr, pts: activeEntry.points, w1S: w1Score, eff: effScore, 
                 act: actScore, part: partScore, hunt: huntScore, quest: questScore, 
-                throne: throneScore, total, picks, has100, targetWeek: target.week
+                throne: throneScore, total, picks, has100, targetWeek: activeEntry.week
             });
         });
 
-        // SORTING: This determines the rank for both table and podium
+        // CRITICAL SORT: Sorting results globally based on the calculated 'total'
         results.sort((a,b) => b.total - a.total);
         document.getElementById('stat_total').textContent = results.length;
 
-        // UPDATED PODIUM LOGIC: Slice AFTER sorting based on current view scores
+        // PODIUM SYNC: Always uses the first 3 items in the sorted results array
         const meds = ["🥇", "🥈", "🥉"];
         const top3 = results.slice(0,3);
-        const podiumData = [top3[1], top3[0], top3[2]].filter(x => x); // Display 2-1-3 layout
-        
-        document.getElementById('topThreeList').innerHTML = podiumData.map((r) => {
-            const actualRank = results.indexOf(r);
+        const podiumArr = [top3[1], top3[0], top3[2]].filter(x => x); 
+
+        document.getElementById('topThreeList').innerHTML = podiumArr.map((r) => {
+            const actualRank = results.indexOf(r); 
             return `<div class="leader-card rank-${actualRank+1}">
-                <div style="font-size:1.5rem">${meds[actualRank]}</div>
+                <div style="font-size:1.2rem">${meds[actualRank]}</div>
                 <h2>${r.name}</h2>
                 <div class="score">${fmt(r.total)}</div>
             </div>`;
         }).join('');
 
+        // Table Render
         document.getElementById('dashTableBody').innerHTML = results.filter(r => r.name.toLowerCase().includes(search)).map((r, i) => `
             <tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
                 <td>#${i+1}</td>
@@ -253,12 +254,7 @@
             </tr>`).join('');
 
         const sel = document.getElementById('chartMetricSelect');
-        sel.innerHTML = `
-            <option value="power">Power</option>
-            <option value="points">Points</option>
-            <option value="efficiency">Efficiency</option>
-            <option value="quest">Quests</option>
-        `;
+        sel.innerHTML = `<option value="power">Power</option><option value="points">Points</option><option value="efficiency">Efficiency</option><option value="quest">Quests</option>`;
         sel.onchange = updateChartData;
         document.getElementById('profileModal').style.display = 'flex';
         updateChartData();
@@ -267,47 +263,17 @@
     window.updateChartData = () => {
         const metric = document.getElementById('chartMetricSelect').value;
         const vals = currentOverlayData.map(e => parseFloat(e[metric]) || 0);
-        
         if(chartInstance) chartInstance.destroy();
         chartInstance = new Chart(document.getElementById('playerChart'), {
             type:'line', 
             data:{ 
                 labels:['W1','W2','W3'], 
-                datasets:[{
-                    label: metric.toUpperCase(), 
-                    data: vals, 
-                    borderColor: '#3b82f6', 
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 5
-                }]
+                datasets:[{ label: metric.toUpperCase(), data: vals, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3, pointRadius: 5 }]
             },
             options:{ 
                 maintainAspectRatio: false, 
-                scales: { 
-                    y: { 
-                        beginAtZero: false,
-                        ticks: { 
-                            callback: v => {
-                                if (metric === 'power') return (v/1000).toFixed(1) + 'Bn';
-                                if (metric === 'points' || metric === 'quest') return v.toLocaleString();
-                                return v.toFixed(2);
-                            }
-                        } 
-                    } 
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => {
-                                let v = ctx.parsed.y;
-                                if (metric === 'power') return 'Power: ' + (v/1000).toFixed(1) + 'Bn';
-                                return metric.toUpperCase() + ': ' + v.toLocaleString();
-                            }
-                        }
-                    }
-                }
+                scales: { y: { beginAtZero: false, ticks: { callback: v => (metric === 'power') ? (v/1000).toFixed(1) + 'Bn' : (metric === 'points' || metric === 'quest') ? v.toLocaleString() : v.toFixed(2) } } },
+                plugins: { tooltip: { callbacks: { label: (ctx) => metric === 'power' ? 'Power: ' + (ctx.parsed.y/1000).toFixed(1) + 'Bn' : metric.toUpperCase() + ': ' + ctx.parsed.y.toLocaleString() } } }
             }
         });
     };
