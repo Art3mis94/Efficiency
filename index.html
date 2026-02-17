@@ -17,16 +17,16 @@
         nav a { color: #fff; text-decoration: none; padding: .5rem 1rem; background: var(--accent); border-radius: 6px; font-weight: 700; }
         .container { padding: 1.5rem; max-width: 1400px; margin: auto; }
         
-        .top-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
-        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,.05); text-align: center; }
+        .top-row { display: grid; grid-template-columns: 1fr 3fr; gap: 20px; margin-bottom: 20px; align-items: end; }
+        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,.05); text-align: center; height: fit-content; }
         .card label { font-size: .7rem; color: var(--muted); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; display: block; }
-        .card span { font-size: 2rem; font-weight: 800; }
+        .card span { font-size: 2.5rem; font-weight: 800; color: var(--accent); }
         
-        .top-three { display: flex; justify-content: center; gap: 15px; align-items: flex-end; margin-bottom: 30px; }
-        .leader-card { flex: 1; text-align: center; padding: 15px; border-radius: 18px; background: white; box-shadow: 0 10px 15px rgba(0,0,0,.05); font-weight: 800; border: 2px solid #e2e8f0; position: relative; }
-        .leader-card h2 { margin: 5px 0; font-size: 1.1rem; }
+        .top-three { display: flex; justify-content: center; gap: 15px; align-items: flex-end; }
+        .leader-card { flex: 1; text-align: center; padding: 15px; border-radius: 18px; background: white; box-shadow: 0 10px 15px rgba(0,0,0,.05); font-weight: 800; border: 2px solid #e2e8f0; }
+        .leader-card h2 { margin: 5px 0; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .leader-card .score { font-size: 1.5rem; color: var(--accent); }
-        .rank-1 { border-color: var(--gold); transform: scale(1.1); z-index: 2; }
+        .rank-1 { border-color: var(--gold); transform: scale(1.1); z-index: 2; box-shadow: 0 15px 25px rgba(245, 158, 11, 0.15); }
         .rank-2 { border-color: var(--silver); }
         .rank-3 { border-color: var(--bronze); }
 
@@ -60,10 +60,8 @@
 <div class="container">
     <div class="top-row">
         <div class="card"><label>Roster Count</label><span id="stat_total">0</span></div>
-        <div class="card"><label>Avg Efficiency</label><span id="stat_avg_eff" style="color:var(--success)">0.00</span></div>
+        <div class="top-three" id="topThreeList"></div>
     </div>
-
-    <div class="top-three" id="topThreeList"></div>
 
     <details>
         <summary>⚙️ SCORING CONFIGURATION</summary>
@@ -154,7 +152,6 @@
         const search = document.getElementById('dashSearch').value.toLowerCase();
         const names = [...new Set(data.map(d => d.name))];
         let results = [];
-        let totalEff = 0;
 
         names.forEach(name => {
             const eAll = data.filter(d => d.name === name);
@@ -162,28 +159,17 @@
             const w2 = eAll.find(x => x.week === 'week 2');
             const w3 = eAll.find(x => x.week === 'week 3');
 
-            // Find current week entry
             const current = (view === 'overall' || view === 'week 3') ? w3 : (view === 'week 2' ? w2 : w1);
             if (!current) return;
 
             const pCurr = parseFloat(current.power) || 1;
-
-            // 1. FIXED [multiplier * week 1 points]
             let w1Score = w1 ? (parseFloat(w1.points) * mults.M_W1) : 0;
-
-            // 2. Efficiency: (Current Points - Week 1 Points) / Current Power
-            let effScore = 0;
-            if (view !== 'week 1' && w1) {
-                effScore = (parseFloat(current.points) - parseFloat(w1.points)) / pCurr;
-            }
-            totalEff += effScore;
-
-            // 3. Snapshot Metrics (Selected Week Only)
+            let effScore = (view !== 'week 1' && w1) ? ((parseFloat(current.points) - parseFloat(w1.points)) / pCurr) : 0;
+            
             let questScore = (parseFloat(current.quest || 0) * mults.M_QUEST);
             let throneScore = (parseFloat(current.throne || 0) / pCurr) * mults.M_THRONE;
             let huntScore = (parseFloat(current.hunt || 0) * mults.M_HUNT);
 
-            // 4. Accumulated (Sum based on view)
             let actScore = 0, partScore = 0, picks = 0, has100 = false;
             const periodData = (view === 'overall' || view === 'week 3') ? [w1, w2, w3] : (view === 'week 2' ? [w1, w2] : [w1]);
             
@@ -204,20 +190,14 @@
         });
 
         results.sort((a,b) => b.total - a.total);
-        
-        // Stats
         document.getElementById('stat_total').textContent = results.length;
-        document.getElementById('stat_avg_eff').textContent = results.length ? (totalEff / results.length).toFixed(2) : "0.00";
 
-        // Podium Logic
         const meds = ["🥇", "🥈", "🥉"];
         const top3 = results.slice(0,3);
-        // Display in order: 2nd, 1st, 3rd
         const podiumData = [top3[1], top3[0], top3[2]].filter(x => x);
-        document.getElementById('topThreeList').innerHTML = podiumData.map((r, i) => {
+        document.getElementById('topThreeList').innerHTML = podiumData.map((r) => {
             const actualRank = results.indexOf(r);
-            return `
-            <div class="leader-card rank-${actualRank+1}">
+            return `<div class="leader-card rank-${actualRank+1}">
                 <div style="font-size:1.5rem">${meds[actualRank]}</div>
                 <h2>${r.name}</h2>
                 <div class="score">${fmt(r.total)}</div>
