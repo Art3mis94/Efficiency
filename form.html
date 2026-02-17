@@ -30,12 +30,17 @@
     .week-btn{padding:12px; border:2px solid #e2e8f0; background:#fff; color:var(--muted); border-radius:10px; cursor:pointer; flex:1; font-weight: 800;}
     .week-btn.selected{background:var(--accent); color:white; border-color:var(--accent);}
     
-    /* Lane Counter Styles */
-    .lane-box { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border: 2px dashed #cbd5e1; }
-    .lane-controls { display: flex; align-items: center; gap: 15px; }
-    .lane-btn { width: 40px; height: 40px; border-radius: 8px; border: none; background: var(--dark-panel); color: white; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
-    .lane-btn:active { opacity: 0.7; }
-    .lane-count { font-size: 2rem; font-weight: 800; color: var(--accent); min-width: 40px; text-align: center; }
+    /* Counter Styles */
+    .counters-row { display: flex; gap: 15px; margin-bottom: 20px; }
+    .counter-box { background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+    .lane-main { flex: 1.5; background: #eff6ff; border-color: var(--accent); }
+    .mini-counters { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .mini-box { background: white; border: 1px solid #e2e8f0; padding: 5px 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; font-weight: 800; }
+    
+    .ctrl-btn { width: 28px; height: 28px; border-radius: 6px; border: none; background: var(--dark-panel); color: white; cursor: pointer; font-weight: bold; }
+    .lane-ctrl-btn { width: 40px; height: 40px; font-size: 1.2rem; }
+    .count-display { font-size: 1.8rem; font-weight: 800; color: var(--accent); margin: 0 15px; }
+    .mini-display { font-size: 1rem; color: var(--text); min-width: 20px; text-align: center; }
 
     .results-sidebar{background:var(--dark-panel); color:white; padding:2rem; border-radius:20px; position: sticky; top: 1.5rem;}
     .res-item{margin-bottom:1.2rem; padding-bottom:0.8rem; border-bottom:1px solid #334155;}
@@ -70,15 +75,32 @@
     </section>
 
     <section class="section">
-      <div class="lane-box">
-        <div>
-            <label style="margin-top:0;">Lane Tracker (Reference Only)</label>
-            <p style="margin:0; font-size:0.75rem; color:var(--muted);">Does not save or affect score.</p>
+      <div class="counters-row">
+        <div class="counter-box lane-main">
+            <label style="margin-top:0; font-size:0.7rem;">LANE TALLY</label>
+            <div style="display:flex; align-items:center;">
+                <button class="ctrl-btn lane-ctrl-btn" onclick="tweak('lane', -1)">-</button>
+                <div class="count-display" id="val_lane">0</div>
+                <button class="ctrl-btn lane-ctrl-btn" onclick="tweak('lane', 1)">+</button>
+            </div>
         </div>
-        <div class="lane-controls">
-            <button class="lane-btn" onclick="updateLane(-1)">-</button>
-            <div class="lane-count" id="laneVal">0</div>
-            <button class="lane-btn" onclick="updateLane(1)">+</button>
+        <div class="mini-counters">
+            <div class="mini-box">
+                <span>EMBLEM</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="ctrl-btn" onclick="tweak('emblem', -1)">-</button>
+                    <span class="mini-display" id="val_emblem">0</span>
+                    <button class="ctrl-btn" onclick="tweak('emblem', 1)">+</button>
+                </div>
+            </div>
+            <div class="mini-box">
+                <span>CHEST</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="ctrl-btn" onclick="tweak('chest', -1)">-</button>
+                    <span class="mini-display" id="val_chest">0</span>
+                    <button class="ctrl-btn" onclick="tweak('chest', 1)">+</button>
+                </div>
+            </div>
         </div>
       </div>
 
@@ -145,15 +167,16 @@
 
   <script>
     (function(){
-      let currentPlayer = null, currentWeek = 'week 1', laneCount = 0;
+      let currentPlayer = null, currentWeek = 'week 1';
 
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
       const loadMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
 
-      window.updateLane = function(val) {
-          laneCount = Math.max(0, laneCount + val);
-          document.getElementById('laneVal').textContent = laneCount;
+      window.tweak = function(type, delta) {
+          const el = document.getElementById('val_' + type);
+          let val = parseInt(el.textContent) || 0;
+          el.textContent = Math.max(0, val + delta);
       };
 
       window.setWeek = function(w) {
@@ -234,6 +257,11 @@
         document.getElementById('f_quest').value = entry.quest || '';
         document.getElementById('f_hunt').value = entry.hunt || '';
         
+        // Load Counters
+        document.getElementById('val_lane').textContent = entry.lane || 0;
+        document.getElementById('val_emblem').textContent = entry.emblem || 0;
+        document.getElementById('val_chest').textContent = entry.chest || 0;
+        
         ['lava','challenge','donations','dv','esb','mon','wed'].forEach(c => document.getElementById('chk_'+c).checked = (entry[c] == 1));
         ['100','40','20','5'].forEach(p => document.getElementById('pick_'+p).checked = (entry['p'+p] == 1));
         
@@ -250,6 +278,9 @@
           power: document.getElementById('f_power').value, points: document.getElementById('f_points').value,
           throne: document.getElementById('f_throne').value, quest: document.getElementById('f_quest').value,
           hunt: document.getElementById('f_hunt').value,
+          lane: parseInt(document.getElementById('val_lane').textContent) || 0,
+          emblem: parseInt(document.getElementById('val_emblem').textContent) || 0,
+          chest: parseInt(document.getElementById('val_chest').textContent) || 0,
           lava: document.getElementById('chk_lava').checked?1:0, challenge: document.getElementById('chk_challenge').checked?1:0,
           donations: document.getElementById('chk_donations').checked?1:0, dv: document.getElementById('chk_dv').checked?1:0,
           esb: document.getElementById('chk_esb').checked?1:0, mon: document.getElementById('chk_mon').checked?1:0, wed: document.getElementById('chk_wed').checked?1:0,
@@ -285,6 +316,7 @@
         if(!confirm("Reset all scores but keep names?")) return;
         let data = loadData().map(d => ({
           name: d.name, week: d.week, power: "", points: "", throne: "", quest: "", hunt: "",
+          lane: 0, emblem: 0, chest: 0,
           lava: 0, challenge: 0, donations: 0, dv: 0, esb: 0, mon: 0, wed: 0, p100: 0, p40: 0, p20: 0, p5: 0
         }));
         saveData(data); location.reload();
