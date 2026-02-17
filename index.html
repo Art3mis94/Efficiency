@@ -28,20 +28,26 @@
     .config-grid input{width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;}
 
     .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
-    table{width:100%; border-collapse:collapse; min-width:1100px;}
+    table{width:100%; border-collapse:collapse; min-width:1200px;}
     th{background:#f8fafc; padding:12px; text-align:left; font-size:0.65rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
     td{padding:12px; border-bottom:1px solid #f1f5f9; cursor:pointer;}
     .status-green{color:var(--success) !important; font-weight:800;}
     
+    .btn-edit{padding:4px 8px; background:var(--success); color:white; border:none; border-radius:4px; font-weight:700; cursor:pointer; font-size:0.7rem;}
+
     .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); align-items:center; justify-content:center;}
-    .modal-content{background:white; padding:25px; width:95%; max-width:1000px; border-radius:16px; position:relative; max-height:90vh; overflow-y:auto;}
+    .modal-content{background:white; padding:25px; width:95%; max-width:1100px; border-radius:16px; position:relative; max-height:90vh; overflow-y:auto;}
     .ov-table{width:100%; border-collapse:collapse; margin-top:20px; font-size:0.8rem;}
     .ov-table th, .ov-table td{border:1px solid #e2e8f0; padding:8px; text-align:center;}
   </style>
 </head>
 <body>
   <header><h1>Alliance Dashboard</h1></header>
-  <nav><a href="index.html">Dashboard</a><a href="form.html">Manage Data</a></nav>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="trends.html">Trends</a>
+    <a href="form.html">Manage Data</a>
+  </nav>
 
   <div class="container">
     <div class="top-row">
@@ -73,7 +79,7 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Eff</th><th>Act</th><th>Part</th><th>Throne</th><th>Total</th><th>Picks</th></tr>
+          <tr><th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Eff</th><th>Act</th><th>Part</th><th>Throne</th><th>Total</th><th>Picks</th><th>Action</th></tr>
         </thead>
         <tbody id="dashTableBody"></tbody>
       </table>
@@ -111,7 +117,6 @@
       const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
       
-      // Formatting for Power: 8,121,100 -> 8,121.1Bn
       const fmtPower = (n) => {
         if(!n) return "0.0Bn";
         const val = parseFloat(n) / 1000;
@@ -136,7 +141,7 @@
         const m = getMults();
         ['m_throne','m_quest','m_w1','m_hunt'].forEach(id => {
             const key = id === 'm_w1' ? 'M_W1' : id.toUpperCase();
-            document.getElementById(id).value = m[key];
+            if(document.getElementById(id)) document.getElementById(id).value = m[key];
         });
 
         const view = document.getElementById('weekSelect').value;
@@ -165,7 +170,7 @@
             ? eAll.reduce((s, e) => s + (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0), 0)
             : (cur.p100?100:0) + (cur.p40?40:0) + (cur.p20?20:0) + (cur.p5?5:0);
 
-          results.push({name, p, pts, eff, actScore, partScore, tEff, total, picks, has100: eAll.some(x=>x.p100==1)});
+          results.push({name, p, pts, eff, actScore, partScore, tEff, total, picks, has100: eAll.some(x=>x.p100==1), targetWeek: cur.week || 'week 1'});
         });
 
         results.sort((a,b) => b.total - a.total);
@@ -178,11 +183,18 @@
           return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
             <td>#${i+1}</td><td class="${isG}"><strong>${r.name}</strong></td>
             <td>${fmtPower(r.p)}</td><td>${fmtNum(r.pts)}</td>
-            <td>${r.eff.toFixed(4)}</td><td>${r.actScore.toFixed(2)}</td>
+            <td>${r.eff.toFixed(2)}</td><td>${r.actScore.toFixed(2)}</td>
             <td>${r.partScore.toFixed(2)}</td><td>${r.tEff.toFixed(2)}</td>
             <td style="font-weight:800;">${r.total.toFixed(2)}</td><td class="${isG}">${r.picks}</td>
+            <td><button class="btn-edit" onclick="event.stopPropagation(); editMember('${r.name.replace(/'/g,"\\'")}', '${r.targetWeek}')">Edit</button></td>
           </tr>`;
         }).join('');
+      };
+
+      window.editMember = (name, week) => {
+        localStorage.setItem('editTargetName', name);
+        localStorage.setItem('editTargetWeek', week);
+        window.location.href = 'form.html';
       };
 
       window.openOverlay = (name) => {
@@ -195,7 +207,7 @@
               <td>${e.week.toUpperCase()}</td>
               <td>${fmtPower(e.power)}</td>
               <td>${fmtNum(e.points)}</td>
-              <td>${((parseFloat(e.points)||0)/p).toFixed(4)}</td>
+              <td>${((parseFloat(e.points)||0)/p).toFixed(2)}</td>
               <td>${fmtNum(e.throne)}</td>
               <td>${fmtNum(e.quest)}</td>
               <td>${fmtNum(e.hunt)}</td>
