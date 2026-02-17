@@ -8,33 +8,43 @@
   <style>
     :root{--bg:#f8fafc;--text:#1e293b;--accent:#3b82f6;--success:#10b981;--dark:#1e40af;--muted:#64748b;}
     body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
-    header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;}
-    nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
-    nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:700;}
+    header{background:var(--dark);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+    nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#cbd5e1;}
+    nav a{color:#fff;text-decoration:none;padding:.6rem 1.2rem;background:var(--accent);border-radius:8px;font-weight:700;}
     .container{padding:1.5rem;}
     
     /* Green Global Logic */
-    .green-glow{color:var(--success) !important; font-weight:800; text-shadow: 0 0 5px rgba(16,185,129,0.1);}
+    .green-glow{color:var(--success) !important; font-weight:800;}
     
+    /* Table Styling */
     .table-wrap{background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.05);}
     table{width:100%; border-collapse:collapse; min-width:1000px;}
     th{background:#f8fafc; padding:15px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
     td{padding:15px; border-bottom:1px solid #f1f5f9; font-size:0.85rem; cursor:pointer;}
     tr:hover{background:#f1f7ff;}
     
-    /* Overlay Styles */
-    .overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); backdrop-filter:blur(4px); z-index:1000; align-items:center; justify-content:center;}
-    .overlay-content{background:white; width:90%; max-width:600px; border-radius:20px; padding:30px; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);}
-    .overlay-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;}
-    .overlay-stat{background:#f8fafc; padding:15px; border-radius:12px; border-left:4px solid var(--accent);}
-    .overlay-stat label{display:block; font-size:0.65rem; font-weight:800; color:var(--muted); text-transform:uppercase;}
-    .overlay-stat span{font-size:1.2rem; font-weight:800; color:var(--dark);}
-    .close-overlay{position:absolute; top:20px; right:20px; font-size:24px; cursor:pointer; font-weight:800; color:var(--muted);}
+    /* MODAL OVERLAY STYLES */
+    .overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); backdrop-filter:blur(5px); z-index:1000; align-items:center; justify-content:center;}
+    .overlay-content{background:white; width:90%; max-width:700px; border-radius:24px; padding:40px; position:relative; animation: slideUp 0.3s ease-out;}
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    .close-overlay{position:absolute; top:25px; right:25px; font-size:30px; cursor:pointer; color:var(--muted); font-weight:800;}
+    .ov-header{margin-bottom:25px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;}
+    .ov-grid{display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;}
+    .ov-stat-card{background:#f8fafc; padding:15px; border-radius:15px; border:1px solid #e2e8f0;}
+    .ov-stat-card label{display:block; font-size:0.65rem; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:5px;}
+    .ov-stat-card span{font-size:1.2rem; font-weight:800; color:var(--dark);}
+
+    .edit-pill{background:var(--success); color:white; padding:4px 10px; border-radius:6px; font-size:0.7rem; font-weight:800; text-transform:uppercase; border:none; cursor:pointer;}
   </style>
 </head>
 <body>
   <header><h1>Alliance Dashboard</h1></header>
-  <nav><a href="index.html">Dashboard</a><a href="trends.html">Trends</a><a href="form.html">Manage Data</a></nav>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="trends.html">Trends</a>
+    <a href="form.html">Manage Data</a>
+  </nav>
 
   <div class="container">
     <div style="display:flex; gap:15px; margin-bottom:20px;">
@@ -52,7 +62,7 @@
       <table>
         <thead>
           <tr>
-            <th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Picks (Sum)</th><th>Eff</th><th>Score</th><th>Edit</th>
+            <th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Hero Picks</th><th>Efficiency</th><th>Total Score</th><th>Edit</th>
           </tr>
         </thead>
         <tbody id="dashTableBody"></tbody>
@@ -60,19 +70,22 @@
     </div>
   </div>
 
-  <div id="viewOverlay" class="overlay">
+  <div id="playerOverlay" class="overlay">
     <div class="overlay-content">
       <span class="close-overlay" onclick="closeOverlay()">&times;</span>
-      <h2 id="ovName" style="margin:0; color:var(--dark);">Member Detail</h2>
-      <p id="ovWeek" style="color:var(--muted); font-weight:700; text-transform:uppercase; font-size:0.8rem;"></p>
+      <div class="ov-header">
+        <h2 id="ovName" style="margin:0; font-size:2rem;">Member Name</h2>
+        <span id="ovWeekLabel" style="color:var(--accent); font-weight:800; text-transform:uppercase; font-size:0.9rem;">Week 1 Detail</span>
+      </div>
       
-      <div class="overlay-grid">
-        <div class="overlay-stat"><label>Efficiency</label><span id="ovEff">0.00</span></div>
-        <div class="overlay-stat"><label>Total Score</label><span id="ovScore">0.00</span></div>
-        <div class="overlay-stat"><label>Hero Picks</label><span id="ovPicks">0</span></div>
-        <div class="overlay-stat"><label>Throne Kills</label><span id="ovThrone">0</span></div>
-        <div class="overlay-stat"><label>Quest Score</label><span id="ovQuest">0</span></div>
-        <div class="overlay-stat"><label>Hunt Score</label><span id="ovHunt">0</span></div>
+      <div class="ov-grid">
+        <div class="ov-stat-card"><label>Efficiency</label><span id="ovEff">0.0000</span></div>
+        <div class="ov-stat-card"><label>Total Score</label><span id="ovScore">0.00</span></div>
+        <div class="ov-stat-card"><label>Hero Picks</label><span id="ovPicks">0</span></div>
+        <div class="ov-stat-card"><label>Quest Score</label><span id="ovQuest">0</span></div>
+        <div class="ov-stat-card"><label>Throne Kills</label><span id="ovThrone">0</span></div>
+        <div class="ov-stat-card"><label>Hunt Score</label><span id="ovHunt">0</span></div>
+        <div class="ov-stat-card" style="grid-column: span 3;"><label>Power Baseline</label><span id="ovPower">0.0Bn</span></div>
       </div>
     </div>
   </div>
@@ -80,10 +93,12 @@
   <script>
     (function(){
       const load = () => JSON.parse(localStorage.getItem('formData') || '[]');
+      const mults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_QUEST":0.0000025,"M_THRONE":3.0,"M_HUNT":0.00001}');
       const fmt = (n) => n ? (n/1000).toFixed(1)+"Bn" : "--";
 
       function render(){
         const data = load();
+        const m = mults();
         const view = document.getElementById('weekSelect').value;
         const search = document.getElementById('dashSearch').value.toLowerCase();
         const names = [...new Set(data.map(d => d.name))];
@@ -95,11 +110,10 @@
           const w3 = entries.find(d => d.week === 'week 3') || {};
           const cur = view === 'overall' ? w3 : (entries.find(d => d.week === view) || {});
 
-          // Sum Picks Logic (Treating the "Checkbox" as the value if it were checked, 
-          // but we sum based on the assigned tier values: 100, 40, 20, 5)
+          // Hero Picks Summing (100+40+20+5)
           let pickSum = 0;
           let has100 = entries.some(e => e.p100 == 1);
-
+          
           if(view === 'overall') {
             pickSum = entries.reduce((s, e) => s + (e.p100?100:0) + (e.p40?40:0) + (e.p20?20:0) + (e.p5?5:0), 0);
           } else {
@@ -109,27 +123,29 @@
           const power = parseFloat(cur.power) || 1;
           const pts = (view === 'home week') ? 0 : (parseFloat(cur.points) || 0);
           const eff = (view === 'overall') ? ((pts - (parseFloat(w1.points)||0))/power) : (view === 'home week' ? 0 : pts/power);
-          
-          // Basic Total Score for Sorting
-          const totalScore = eff + (pickSum * 0.001) + ((parseFloat(cur.throne)||0)/power);
 
-          results.push({name, p:power, pts, picks:pickSum, eff, totalScore, has100, raw:cur});
+          // Performance Score (Picks excluded)
+          const act = ((cur.lava||0) + (cur.challenge||0) + (cur.donations||0) + (cur.dv||0) + (cur.esb||0)) * 0.833;
+          const throne = ((parseFloat(cur.throne)||0)/power) * m.M_THRONE;
+          const quest = (parseFloat(cur.quest)||0) * m.M_QUEST;
+          const score = (view === 'home week') ? 0 : (eff + act + throne + quest);
+
+          results.push({name, power, pts, picks:pickSum, eff, score, has100, raw:cur});
         });
 
-        const sorted = results.sort((a,b) => b.totalScore - a.totalScore);
-        const tbody = document.getElementById('dashTableBody');
-        tbody.innerHTML = sorted.map((r, i) => {
+        const sorted = results.sort((a,b) => b.score - a.score);
+        document.getElementById('dashTableBody').innerHTML = sorted.map((r, i) => {
           if(search && !r.name.toLowerCase().includes(search)) return '';
-          const isGreen = r.has100 ? 'green-glow' : '';
+          const green = r.has100 ? 'green-glow' : '';
           return `<tr onclick="openOverlay('${r.name.replace(/'/g,"\\'")}')">
-            <td style="font-weight:700; color:var(--muted);">#${i+1}</td>
-            <td class="${isGreen}">${r.name}</td>
-            <td>${fmt(r.p)}</td>
+            <td>#${i+1}</td>
+            <td class="${green}">${r.name}</td>
+            <td>${fmt(r.power)}</td>
             <td>${r.pts.toLocaleString()}</td>
-            <td class="${isGreen}">${r.picks}</td>
+            <td class="${green}">${r.picks}</td>
             <td>${r.eff.toFixed(4)}</td>
-            <td style="font-weight:800;">${r.totalScore.toFixed(2)}</td>
-            <td><button style="padding:5px 10px; cursor:pointer;" onclick="event.stopPropagation(); editMember('${r.name}','${view}')">✎</button></td>
+            <td style="font-weight:800; color:var(--dark);">${r.score.toFixed(2)}</td>
+            <td><button class="edit-pill" onclick="event.stopPropagation(); editMember('${r.name}','${view}')">Edit</button></td>
           </tr>`;
         }).join('');
       }
@@ -141,18 +157,24 @@
         const p = parseFloat(entry.power) || 1;
         
         document.getElementById('ovName').textContent = name;
-        document.getElementById('ovWeek').textContent = view;
-        document.getElementById('ovEff').textContent = ((parseFloat(entry.points)||0)/p).toFixed(4);
-        document.getElementById('ovScore').textContent = "---"; // Placeholder for full calc
+        document.getElementById('ovWeekLabel').textContent = view + " Detail";
+        document.getElementById('ovEff').textContent = (parseFloat(entry.points||0)/p).toFixed(4);
         document.getElementById('ovPicks').textContent = (entry.p100?100:0) + (entry.p40?40:0) + (entry.p20?20:0) + (entry.p5?5:0);
-        document.getElementById('ovThrone').textContent = entry.throne || 0;
         document.getElementById('ovQuest').textContent = entry.quest || 0;
+        document.getElementById('ovThrone').textContent = entry.throne || 0;
         document.getElementById('ovHunt').textContent = entry.hunt || 0;
+        document.getElementById('ovPower').textContent = fmt(p);
         
-        document.getElementById('viewOverlay').style.display = 'flex';
+        // Calculate Score for Overlay
+        const m = mults();
+        const act = ((entry.lava||0) + (entry.challenge||0) + (entry.donations||0) + (entry.dv||0) + (entry.esb||0)) * 0.833;
+        const score = (parseFloat(entry.points||0)/p) + act + ((parseFloat(entry.throne||0)/p)*m.M_THRONE) + (parseFloat(entry.quest||0)*m.M_QUEST);
+        document.getElementById('ovScore').textContent = (view === 'home week' ? "0.00" : score.toFixed(2));
+
+        document.getElementById('playerOverlay').style.display = 'flex';
       };
 
-      window.closeOverlay = () => document.getElementById('viewOverlay').style.display = 'none';
+      window.closeOverlay = () => document.getElementById('playerOverlay').style.display = 'none';
       window.editMember = (n, w) => {
         localStorage.setItem('editTargetName', n);
         localStorage.setItem('editTargetWeek', w === 'overall' ? 'week 3' : w);
