@@ -30,6 +30,13 @@
     .week-btn{padding:12px; border:2px solid #e2e8f0; background:#fff; color:var(--muted); border-radius:10px; cursor:pointer; flex:1; font-weight: 800;}
     .week-btn.selected{background:var(--accent); color:white; border-color:var(--accent);}
     
+    /* Lane Counter Styles */
+    .lane-box { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border: 2px dashed #cbd5e1; }
+    .lane-controls { display: flex; align-items: center; gap: 15px; }
+    .lane-btn { width: 40px; height: 40px; border-radius: 8px; border: none; background: var(--dark-panel); color: white; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
+    .lane-btn:active { opacity: 0.7; }
+    .lane-count { font-size: 2rem; font-weight: 800; color: var(--accent); min-width: 40px; text-align: center; }
+
     .results-sidebar{background:var(--dark-panel); color:white; padding:2rem; border-radius:20px; position: sticky; top: 1.5rem;}
     .res-item{margin-bottom:1.2rem; padding-bottom:0.8rem; border-bottom:1px solid #334155;}
     .res-item label{font-size:0.7rem; color:#94a3b8; text-transform:uppercase;}
@@ -63,6 +70,18 @@
     </section>
 
     <section class="section">
+      <div class="lane-box">
+        <div>
+            <label style="margin-top:0;">Lane Tracker (Reference Only)</label>
+            <p style="margin:0; font-size:0.75rem; color:var(--muted);">Does not save or affect score.</p>
+        </div>
+        <div class="lane-controls">
+            <button class="lane-btn" onclick="updateLane(-1)">-</button>
+            <div class="lane-count" id="laneVal">0</div>
+            <button class="lane-btn" onclick="updateLane(1)">+</button>
+        </div>
+      </div>
+
       <h2 id="editHeader">Select a Player</h2>
       <div id="weekOptions" style="display:flex; gap:10px; margin-bottom:2rem;">
         <button onclick="setWeek('home week')" class="week-btn" id="btn-home">HOME</button>
@@ -126,11 +145,16 @@
 
   <script>
     (function(){
-      let currentPlayer = null, currentWeek = 'week 1';
+      let currentPlayer = null, currentWeek = 'week 1', laneCount = 0;
 
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const saveData = (d) => localStorage.setItem('formData', JSON.stringify(d));
       const loadMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_THRONE":3.0,"M_QUEST":0.0000025,"M_W1":0.1,"M_HUNT":0.00001}');
+
+      window.updateLane = function(val) {
+          laneCount = Math.max(0, laneCount + val);
+          document.getElementById('laneVal').textContent = laneCount;
+      };
 
       window.setWeek = function(w) {
         currentWeek = w;
@@ -172,7 +196,6 @@
         document.getElementById('res_throne').textContent = throneS.toFixed(2);
         document.getElementById('res_total').textContent = totalScore.toFixed(2);
 
-        // SYNCED RANKING
         const names = [...new Set(data.map(d => d.name))];
         const ranking = names.map(n => {
             const eAll = data.filter(d => d.name === n);
@@ -184,14 +207,12 @@
             } : eAll.find(x => x.week === currentWeek);
 
             if (!target) return { name: n, total: -1 };
-
             const tp = parseFloat(target.power) || 1;
             const tpts = parseFloat(target.points) || 0;
             let eScore = (currentWeek !== 'week 1' && playerW1) ? ((tpts - parseFloat(playerW1.points)) / tp) : 0;
             let aScore = (((target.lava?1:0) + (target.challenge?1:0) + (target.donations?1:0)) * 0.833);
             let pScore = Math.min(2.5, ((target.esb?1:0)*(2.5/3)) + ((target.dv?1:0)*(2.5/3)) + ((target.mon?1:0)*(2.5/6)) + ((target.wed?1:0)*(2.5/6)));
             let bScore = playerW1 ? (parseFloat(playerW1.points) * (m.M_W1 || 0.1)) : 0;
-
             const total = bScore + eScore + aScore + pScore + (parseFloat(target.quest||0)*m.M_QUEST) + ((parseFloat(target.throne||0)/tp)*m.M_THRONE) + (parseFloat(target.hunt||0)*m.M_HUNT);
             return { name: n, total: total };
         });
@@ -261,7 +282,7 @@
       }
 
       window.clearAllData = function() {
-        if(!confirm("Reset all scores for everyone but keep names?")) return;
+        if(!confirm("Reset all scores but keep names?")) return;
         let data = loadData().map(d => ({
           name: d.name, week: d.week, power: "", points: "", throne: "", quest: "", hunt: "",
           lava: 0, challenge: 0, donations: 0, dv: 0, esb: 0, mon: 0, wed: 0, p100: 0, p40: 0, p20: 0, p5: 0
@@ -270,7 +291,7 @@
       };
 
       window.deleteAllPlayers = function() {
-        if(!confirm("Wipe entire roster and all data?")) return;
+        if(!confirm("Wipe entire roster?")) return;
         localStorage.removeItem('formData'); location.reload();
       };
 
