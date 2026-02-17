@@ -2,130 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Manage Data - Pro Elite</title>
+    <title>Manage Data</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #f1f5f9; --text: #1e293b; --accent: #3b82f6; --dark: #0f172a; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; }
-        .card { background: white; padding: 2rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
-        h2 { margin-top: 0; font-weight: 900; color: var(--dark); border-bottom: 2px solid var(--bg); padding-bottom: 1rem; }
-        
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 1.5rem; }
-        .field { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748b; }
-        input, select { padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-weight: 600; font-family: inherit; outline: none; }
-        input:focus { border-color: var(--accent); }
-
-        .checkbox-group { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 15px; margin-top: 10px; }
-        .check-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 700; }
-        
-        .btn-row { display: flex; gap: 10px; margin-top: 2rem; }
-        button { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn-save { background: var(--accent); color: white; }
-        .btn-back { background: #64748b; color: white; text-decoration: none; text-align: center; line-height: 1.2; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 15px; max-width: 500px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .field { margin-bottom: 15px; }
+        label { display: block; font-size: 0.8rem; font-weight: 800; margin-bottom: 5px; color: #64748b; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; margin-top: 10px; }
+        .save { background: #3b82f6; color: white; }
+        .back { background: #64748b; color: white; text-decoration: none; display: block; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Update Member Data</h2>
+    <h2 style="margin-top:0">Update Data</h2>
     
+    <div class="field">
+        <label>Week</label>
+        <select id="week" onchange="loadData()">
+            <option value="week 1">Week 1</option>
+            <option value="week 2">Week 2</option>
+            <option value="week 3">Week 3</option>
+        </select>
+    </div>
+
+    <div class="field">
+        <label>Member Name</label>
+        <input type="text" id="name" oninput="loadData()">
+    </div>
+
     <div class="grid">
-        <div class="field">
-            <label>Target Week</label>
-            <select id="week" onchange="loadExistingData()">
-                <option value="week 1">Week 1</option>
-                <option value="week 2">Week 2</option>
-                <option value="week 3">Week 3</option>
-            </select>
-        </div>
-        <div class="field">
-            <label>Member Name</label>
-            <input type="text" id="name" placeholder="Enter name..." oninput="suggestName()">
-        </div>
-        
-        <div class="field">
-            <label>Current Power</label>
-            <input type="number" id="power" placeholder="e.g. 5000000">
-        </div>
-        <div class="field">
-            <label>Weekly Points</label>
-            <input type="number" id="points" placeholder="0">
-        </div>
-        <div class="field">
-            <label>Hunt Score</label>
-            <input type="number" id="hunt" step="0.001" value="0">
-        </div>
-        <div class="field">
-            <label>Quests Completed</label>
-            <input type="number" id="quest" value="0">
-        </div>
-        <div class="field" style="grid-column: span 2;">
-            <label>Throne Points</label>
-            <input type="number" id="throne" value="0">
-        </div>
-
-        <div class="checkbox-group">
-            <div class="check-item"><input type="checkbox" id="lava"> Lava</div>
-            <div class="check-item"><input type="checkbox" id="challenge"> Challenge</div>
-            <div class="check-item"><input type="checkbox" id="donations"> Donations</div>
-            <div class="check-item"><input type="checkbox" id="esb"> ESB</div>
-            <div class="check-item"><input type="checkbox" id="dv"> DV</div>
-            <div class="check-item"><input type="checkbox" id="mon"> Mon</div>
-            <div class="check-item"><input type="checkbox" id="wed"> Wed</div>
-        </div>
-
-        <div class="checkbox-group" style="background: #eff6ff;">
-            <div class="check-item"><input type="checkbox" id="p100"> Pick 100</div>
-            <div class="check-item"><input type="checkbox" id="p40"> Pick 40</div>
-            <div class="check-item"><input type="checkbox" id="p20"> Pick 20</div>
-            <div class="check-item"><input type="checkbox" id="p5"> Pick 5</div>
-        </div>
+        <div class="field"><label>Power</label><input type="number" id="power"></div>
+        <div class="field"><label>Points</label><input type="number" id="points"></div>
+        <div class="field"><label>Hunt</label><input type="number" id="hunt" step="0.001"></div>
+        <div class="field"><label>Quest</label><input type="number" id="quest"></div>
     </div>
 
-    <div class="btn-row">
-        <a href="index.html" class="btn-back">BACK</a>
-        <button class="btn-save" onclick="saveData()">SAVE MEMBER DATA</button>
+    <div class="field">
+        <label>Throne Points</label>
+        <input type="number" id="throne">
     </div>
+
+    <label>Activities</label>
+    <div class="check-grid">
+        <div><input type="checkbox" id="lava"> Lava</div>
+        <div><input type="checkbox" id="challenge"> Challenge</div>
+        <div><input type="checkbox" id="donations"> Donations</div>
+        <div><input type="checkbox" id="esb"> ESB</div>
+        <div><input type="checkbox" id="dv"> DV</div>
+        <div><input type="checkbox" id="mon"> Mon</div>
+        <div><input type="checkbox" id="wed"> Wed</div>
+    </div>
+
+    <label style="margin-top:15px">Picks</label>
+    <div class="check-grid" style="background: #eff6ff;">
+        <div><input type="checkbox" id="p100"> Pick 100</div>
+        <div><input type="checkbox" id="p40"> Pick 40</div>
+        <div><input type="checkbox" id="p20"> Pick 20</div>
+        <div><input type="checkbox" id="p5"> Pick 5</div>
+    </div>
+
+    <button class="btn save" onclick="saveData()">SAVE DATA</button>
+    <a href="index.html" class="btn back">CANCEL</a>
 </div>
 
 <script>
-// Auto-load if coming from EDIT button
-window.onload = () => {
-    const target = localStorage.getItem('editTargetName');
-    if(target) {
-        document.getElementById('name').value = target;
-        loadExistingData();
-        localStorage.removeItem('editTargetName');
-    }
-};
-
-function loadExistingData() {
+function loadData() {
     const name = document.getElementById('name').value.trim();
     const week = document.getElementById('week').value;
     if(!name) return;
 
     const data = JSON.parse(localStorage.getItem('formData') || '[]');
-    const record = data.find(r => r.name.toLowerCase() === name.toLowerCase() && r.week === week);
+    const res = data.find(r => r.name.toLowerCase() === name.toLowerCase() && r.week === week);
 
-    if(record) {
-        document.getElementById('power').value = record.power || 0;
-        document.getElementById('points').value = record.points || 0;
-        document.getElementById('hunt').value = record.hunt || 0;
-        document.getElementById('quest').value = record.quest || 0;
-        document.getElementById('throne').value = record.throne || 0;
-        
-        // Checklist
+    if(res) {
+        document.getElementById('power').value = res.power || '';
+        document.getElementById('points').value = res.points || '';
+        document.getElementById('hunt').value = res.hunt || '';
+        document.getElementById('quest').value = res.quest || '';
+        document.getElementById('throne').value = res.throne || '';
         ['lava','challenge','donations','esb','dv','mon','wed','p100','p40','p20','p5'].forEach(id => {
-            document.getElementById(id).checked = !!record[id];
-        });
-    } else {
-        // Clear form for new week entry (except name/week)
-        ['power','points','hunt','quest','throne'].forEach(id => document.getElementById(id).value = "");
-        ['lava','challenge','donations','esb','dv','mon','wed','p100','p40','p20','p5'].forEach(id => {
-            document.getElementById(id).checked = false;
+            document.getElementById(id).checked = !!res[id];
         });
     }
 }
@@ -133,13 +96,11 @@ function loadExistingData() {
 function saveData() {
     const name = document.getElementById('name').value.trim();
     const week = document.getElementById('week').value;
-    if(!name) return alert("Please enter a member name");
+    if(!name) return alert("Name required");
 
     let data = JSON.parse(localStorage.getItem('formData') || '[]');
-    
-    const newRecord = {
-        name,
-        week,
+    const entry = {
+        name, week,
         power: parseFloat(document.getElementById('power').value) || 0,
         points: parseFloat(document.getElementById('points').value) || 0,
         hunt: parseFloat(document.getElementById('hunt').value) || 0,
@@ -158,18 +119,20 @@ function saveData() {
         p5: document.getElementById('p5').checked
     };
 
-    // Remove old record for THIS week if it exists, then add new
     data = data.filter(r => !(r.name.toLowerCase() === name.toLowerCase() && r.week === week));
-    data.push(newRecord);
-
+    data.push(entry);
     localStorage.setItem('formData', JSON.stringify(data));
-    alert("Data saved for " + name + " (" + week + ")");
+    alert("Saved!");
 }
 
-function suggestName() {
-    // Optional: add a datalist here if you want auto-complete
-}
+window.onload = () => {
+    const editName = localStorage.getItem('editTargetName');
+    if(editName) {
+        document.getElementById('name').value = editName;
+        loadData();
+        localStorage.removeItem('editTargetName');
+    }
+};
 </script>
-
 </body>
 </html>
