@@ -34,10 +34,9 @@
         .toggle-item input:checked + label { background: var(--accent); color: white; }
 
         /* King Pack List Styles */
-        .king-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .king-table th { text-align: left; font-size: 0.65rem; color: var(--muted); padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; }
-        .king-table td { padding: 10px 0; border-bottom: 1px solid #f8fafc; font-size: 0.85rem; font-weight: 600; }
-        .king-table input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .king-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .king-table th { text-align: left; font-size: 0.65rem; color: var(--muted); padding: 5px 0; border-bottom: 1px solid #eee; }
+        .king-table td { padding: 8px 0; border-bottom: 1px solid #f9f9f9; font-size: 0.85rem; font-weight: 600; }
         .center { text-align: center; }
     </style>
 </head>
@@ -102,24 +101,20 @@
     </div>
 
     <div class="card">
-        <h3 id="analysisHeader" onclick="toggleKingMode()" style="cursor:pointer; color:var(--accent); display: flex; justify-content: space-between; align-items: center;">
+        <h3 id="analysisHeader" onclick="toggleKingMode()" style="cursor:pointer; color:var(--accent); display: flex; justify-content: space-between;">
             <span id="headerTitle">📊 LIVE ANALYSIS</span>
-            <span style="font-size: 0.65rem; color: var(--muted); font-weight: 400;">CLICK TO TRACK KING PACK 👑</span>
+            <span style="font-size: 0.65rem; color: var(--muted); font-weight: 400;">CLICK TO TRACK KING PACKS</span>
         </h3>
         
         <div id="analysisContent">
             <div id="scoreView" style="font-size: 0.85rem; color: var(--muted); padding-top:10px;">
-                Enter player metrics to see efficiency breakdown...
+                Breakdown appears here after selecting player...
             </div>
 
             <div id="kingView" style="display:none;">
                 <table class="king-table">
                     <thead>
-                        <tr>
-                            <th>KING PACK TYPE</th>
-                            <th class="center">T1</th>
-                            <th class="center">T2</th>
-                        </tr>
+                        <tr><th>KING PACK</th><th class="center">T1</th><th class="center">T2</th></tr>
                     </thead>
                     <tbody>
                         <tr><td>Legendary</td><td class="center"><input type="checkbox" id="leg_t1"></td><td class="center"><input type="checkbox" id="leg_t2"></td></tr>
@@ -139,9 +134,8 @@
 
 <script>
     const fields = [
-        'power', 'points', 'hunt', 'quest', 'throne', 
-        'lava', 'challenge', 'donations', 'esb', 'dv', 'mon', 'wed', 
-        'p100', 'p40', 'p20', 'p5',
+        'power', 'points', 'hunt', 'quest', 'throne', 'lava', 'challenge', 'donations', 
+        'esb', 'dv', 'mon', 'wed', 'p100', 'p40', 'p20', 'p5',
         'leg_t1', 'leg_t2', 'epi_t1', 'epi_t2', 'exc_t1', 'exc_t2',
         'rdra_t1', 'rdra_t2', 'rher_t1', 'rher_t2', 'runi_t1', 'runi_t2'
     ];
@@ -158,17 +152,12 @@
         const scoreView = document.getElementById('scoreView');
         const kingView = document.getElementById('kingView');
         const title = document.getElementById('headerTitle');
-
         if (kingView.style.display === 'none') {
-            kingView.style.display = 'block';
-            scoreView.style.display = 'none';
-            title.innerText = "👑 KING PACK TRACKER";
-            title.style.color = "var(--gold)";
+            kingView.style.display = 'block'; scoreView.style.display = 'none';
+            title.innerText = "👑 KING PACK TRACKER"; title.style.color = "var(--gold)";
         } else {
-            kingView.style.display = 'none';
-            scoreView.style.display = 'block';
-            title.innerText = "📊 LIVE ANALYSIS";
-            title.style.color = "var(--accent)";
+            kingView.style.display = 'none'; scoreView.style.display = 'block';
+            title.innerText = "📊 LIVE ANALYSIS"; title.style.color = "var(--accent)";
         }
     }
 
@@ -181,7 +170,7 @@
         fields.forEach(f => {
             const el = document.getElementById(f);
             if (!el) return;
-            if (el.type === 'checkbox') el.checked = entry[f] === 1;
+            if (el.type === 'checkbox') el.checked = (entry[f] === 1);
             else el.value = entry[f] || '';
         });
         updateAnalysis();
@@ -190,24 +179,21 @@
     const saveData = () => {
         const name = document.getElementById('memberName').value;
         const week = document.getElementById('weekSelect').value;
-        if (!name) return alert("Please enter a name");
+        if (!name) return alert("Select a member");
 
         let data = loadData();
         const entry = { name, week };
         fields.forEach(f => {
             const el = document.getElementById(f);
-            if (!el) return;
-            entry[f] = el.type === 'checkbox' ? (el.checked ? 1 : 0) : el.value;
+            if (el) entry[f] = el.type === 'checkbox' ? (el.checked ? 1 : 0) : el.value;
         });
 
         const idx = data.findIndex(d => d.name === name && d.week === week);
-        if (idx > -1) data[idx] = entry; 
-        else data.push(entry);
+        if (idx > -1) data[idx] = entry; else data.push(entry);
 
         localStorage.setItem('formData', JSON.stringify(data));
-        alert(`${name} - ${week.toUpperCase()} saved!`);
+        alert("Saved!");
         populateNameList();
-        updateAnalysis();
     };
 
     const updateAnalysis = () => {
@@ -215,21 +201,18 @@
         const pts = parseFloat(document.getElementById('points').value) || 0;
         const analysis = document.getElementById('scoreView');
         if (!p || !pts) { analysis.innerHTML = "Awaiting data..."; return; }
-        const eff = (pts / (p / 1000000)).toFixed(2);
-        analysis.innerHTML = `<strong>Efficiency:</strong> ${eff} pts/m power.`;
+        analysis.innerHTML = `<strong>Efficiency:</strong> ${(pts/(p/1000000)).toFixed(2)} pts/m`;
     };
 
     document.getElementById('memberName').addEventListener('input', syncForm);
     document.getElementById('weekSelect').addEventListener('change', syncForm);
-    ['power', 'points'].forEach(id => document.getElementById(id).addEventListener('input', updateAnalysis));
 
     const editName = localStorage.getItem('editTargetName');
     const editWeek = localStorage.getItem('editTargetWeek');
     if(editName) {
         document.getElementById('memberName').value = editName;
         document.getElementById('weekSelect').value = editWeek;
-        localStorage.removeItem('editTargetName');
-        localStorage.removeItem('editTargetWeek');
+        localStorage.removeItem('editTargetName'); localStorage.removeItem('editTargetWeek');
         syncForm();
     }
     populateNameList();
