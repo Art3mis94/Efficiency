@@ -115,6 +115,12 @@
       <div class="res-item"><label>Throne Score</label><span id="res_throne">0.00</span></div>
       <div class="res-item"><label>Total Score</label><span id="res_total">0.00</span></div>
       <div class="rank-badge"><span class="rank-val" id="res_rank">#--</span></div>
+
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #475569;">
+        <h4 style="color: #ef4444; margin-bottom: 10px; font-size: 0.75rem; text-transform: uppercase;">Danger Zone</h4>
+        <button class="btn" style="background: #64748b; font-size: 0.7rem; padding: 10px; margin-top: 0;" onclick="clearAllData()">Clear All Data (Keep Names)</button>
+        <button class="btn" style="background: #b91c1c; font-size: 0.7rem; padding: 10px;" onclick="deleteAllPlayers()">Delete All Players</button>
+      </div>
     </aside>
   </main>
 
@@ -151,16 +157,11 @@
         const playerEntries = data.filter(d => d.name === currentPlayer);
         const w1 = playerEntries.find(d => d.week === 'week 1');
         
-        // 1. Efficiency: (Current Points - W1 Points) / Current Power
         let effScore = (currentWeek !== 'week 1' && w1) ? ((pts - parseFloat(w1.points)) / p) : 0;
-        
-        // 2. Snapshots & Multipliers
         const huntS = getV('f_hunt') * m.M_HUNT;
         const questS = getV('f_quest') * m.M_QUEST;
         const throneS = (getV('f_throne') / p) * m.M_THRONE;
         const w1BaseS = w1 ? (parseFloat(w1.points) * (m.M_W1 || 0.1)) : 0;
-
-        // 3. Activity (Snapshot) + Participation (Timeline)
         const actS = ((getC('chk_lava') + getC('chk_challenge') + getC('chk_donations')) * 0.833);
         const partS = Math.min(2.5, (getC('chk_esb')*(2.5/3)) + (getC('chk_dv')*(2.5/3)) + (getC('chk_mon')*(2.5/6)) + (getC('chk_wed')*(2.5/6)));
 
@@ -171,13 +172,11 @@
         document.getElementById('res_throne').textContent = throneS.toFixed(2);
         document.getElementById('res_total').textContent = totalScore.toFixed(2);
 
-        // --- ALLIANCE RANKING CALCULATION ---
+        // SYNCED RANKING
         const names = [...new Set(data.map(d => d.name))];
         const ranking = names.map(n => {
             const eAll = data.filter(d => d.name === n);
             const playerW1 = eAll.find(x => x.week === 'week 1');
-            
-            // Use live form data for current player, otherwise stored data
             const target = (n === currentPlayer) ? {
                 power: p, points: pts, quest: getV('f_quest'), throne: getV('f_throne'), hunt: getV('f_hunt'),
                 lava: getC('chk_lava'), challenge: getC('chk_challenge'), donations: getC('chk_donations'),
@@ -188,7 +187,6 @@
 
             const tp = parseFloat(target.power) || 1;
             const tpts = parseFloat(target.points) || 0;
-            
             let eScore = (currentWeek !== 'week 1' && playerW1) ? ((tpts - parseFloat(playerW1.points)) / tp) : 0;
             let aScore = (((target.lava?1:0) + (target.challenge?1:0) + (target.donations?1:0)) * 0.833);
             let pScore = Math.min(2.5, ((target.esb?1:0)*(2.5/3)) + ((target.dv?1:0)*(2.5/3)) + ((target.mon?1:0)*(2.5/6)) + ((target.wed?1:0)*(2.5/6)));
@@ -262,26 +260,34 @@
         saveData(d); currentPlayer = null; renderList(); location.reload();
       }
 
+      window.clearAllData = function() {
+        if(!confirm("Reset all scores for everyone but keep names?")) return;
+        let data = loadData().map(d => ({
+          name: d.name, week: d.week, power: "", points: "", throne: "", quest: "", hunt: "",
+          lava: 0, challenge: 0, donations: 0, dv: 0, esb: 0, mon: 0, wed: 0, p100: 0, p40: 0, p20: 0, p5: 0
+        }));
+        saveData(data); location.reload();
+      };
+
+      window.deleteAllPlayers = function() {
+        if(!confirm("Wipe entire roster and all data?")) return;
+        localStorage.removeItem('formData'); location.reload();
+      };
+
       window.renderList = function(){
         const data = loadData();
         const search = document.getElementById('playerSearch').value.toLowerCase();
         const names = [...new Set(data.map(d => d.name))].sort();
-        
         document.getElementById('rosterCount').textContent = `Players: ${names.length}`;
         document.getElementById('playersList').innerHTML = names.filter(n => n.toLowerCase().includes(search)).map(n => {
-          const entries = data.filter(e => e.name === n);
-          const hasHundred = entries.some(e => e.p100 == 1);
-          return `<li class="${n===currentPlayer?'selected':''}" onclick="selectPlayer('${n.replace(/'/g,"\\'")}')">
-            ${n}
-            <div class="pick-status ${hasHundred?'has-hundred':''}"></div>
-          </li>`;
+          const hasHundred = data.filter(e => e.name === n).some(e => e.p100 == 1);
+          return `<li class="${n===currentPlayer?'selected':''}" onclick="selectPlayer('${n.replace(/'/g,"\\'")}')">${n}<div class="pick-status ${hasHundred?'has-hundred':''}"></div></li>`;
         }).join('');
       }
 
       document.getElementById('playerNameInput').onkeydown = (e) => { if(e.key === 'Enter') addNewPlayer(); };
       document.addEventListener('keydown', (e) => { if(e.key === 'Enter' && currentPlayer && document.activeElement.tagName !== 'INPUT') performSave(); });
       document.getElementById('inputContainer').oninput = calculateLiveMetrics;
-      
       renderList();
       const target = localStorage.getItem('editTargetName');
       const targetW = localStorage.getItem('editTargetWeek');
