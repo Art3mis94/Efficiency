@@ -14,18 +14,32 @@
     nav{display:flex;justify-content:center;gap:10px;padding:0.75rem;background:#e2e8f0;}
     nav a{color:#fff;text-decoration:none;padding:.6rem 1rem;background:var(--accent);border-radius:6px;font-weight:600;}
     .container{padding:1.5rem; width:100%; box-sizing:border-box;}
+    
+    /* Config Panel */
     .config-panel{display:none; background:white; padding:20px; border-radius:12px; margin-bottom:20px; border:2px solid var(--accent); box-shadow:0 4px 12px rgba(0,0,0,0.1);}
     .config-grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin-bottom:15px;}
     .config-grid div label{display:block; font-size:0.7rem; font-weight:700; color:var(--muted); margin-bottom:5px;}
     .config-grid input{width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;}
+
+    /* Top Stats & Leaderboard */
     .top-row{display:grid; grid-template-columns: 1fr 2fr; gap:20px; margin-bottom:20px;}
     .stat-cards{display:grid; grid-template-columns: 1fr 1fr; gap:15px;}
     .card{background:white; padding:15px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-left:4px solid var(--accent);}
     .card label{display:block; font-size:0.7rem; color:var(--muted); text-transform:uppercase; font-weight:700;}
     .card span{font-size:1.4rem; font-weight:800;}
+    
+    .leader-card{flex:1; background:#f8fafc; padding:10px; border-radius:8px; text-align:center; border-top:4px solid #ddd;}
+    .gold{border-color:var(--gold);} .silver{border-color:var(--silver);} .bronze{border-color:var(--bronze);}
+
+    /* Modal & Charts */
     .modal{display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);}
     .modal-content{background:white; margin:2% auto; padding:25px; width:90%; max-width:950px; border-radius:16px; position:relative; max-height: 90vh; overflow-y: auto;}
     .close{position:absolute; right:20px; top:15px; font-size:28px; cursor:pointer;}
+    .chart-controls{display:flex; gap:10px; margin-bottom:10px;}
+    .chart-btn{padding:5px 12px; border:1px solid var(--accent); background:white; color:var(--accent); border-radius:6px; cursor:pointer; font-weight:600; font-size:0.8rem;}
+    .chart-btn.active{background:var(--accent); color:white;}
+
+    /* Table */
     .table-wrap{background:white; border-radius:12px; overflow-x:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);}
     table{width:100%; border-collapse:collapse; min-width:1100px;}
     th{background:#f8fafc; padding:12px; text-align:left; font-size:0.7rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid #e2e8f0;}
@@ -41,7 +55,11 @@
     <button onclick="toggleConfig()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:8px 12px; border-radius:6px; cursor:pointer;">⚙ Config</button>
   </header>
   
-  <nav><a href="index.html">Dashboard</a><a href="form.html">Manage Data</a></nav>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="trends.html">Trends</a>
+    <a href="form.html">Manage Data</a>
+  </nav>
 
   <div class="container">
     <div id="configPanel" class="config-panel">
@@ -61,27 +79,27 @@
         <div class="card"><label>Avg Efficiency</label><span id="stat_avg">0.00</span></div>
       </div>
       <div class="card" style="border-left:4px solid var(--gold)">
-        <label>🏆 Seasonal Leaders</label>
-        <div id="topThreeList" style="display:flex; gap:10px; margin-top:5px;"></div>
+        <label>🏆 Seasonal Leaderboard (Top 3)</label>
+        <div id="topThreeList" style="display:flex; gap:10px; margin-top:10px;"></div>
       </div>
     </div>
 
     <div style="display:flex; gap:15px; margin-bottom:15px; align-items:center;">
       <select id="weekSelect" style="font-weight:700; border:2px solid var(--accent); padding:8px; border-radius:8px;">
-        <option value="overall">OVERALL</option>
+        <option value="overall">OVERALL SEASON</option>
         <option value="home week">HOME WEEK</option>
         <option value="week 1">WEEK 1</option>
         <option value="week 2">WEEK 2</option>
         <option value="week 3">WEEK 3</option>
       </select>
-      <input type="text" id="dashSearch" placeholder="Filter members..." style="flex:1; padding:8px; border-radius:8px; border:1px solid #cbd5e1;">
+      <input type="text" id="dashSearch" placeholder="Search members..." style="flex:1; padding:8px; border-radius:8px; border:1px solid #cbd5e1;">
     </div>
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Eff</th><th>Act</th><th>Part</th><th>Throne Eff</th><th style="background:#f8fafc">Score</th><th>Actions</th>
+            <th>Rank</th><th>Name</th><th>Power</th><th>Points</th><th>Eff</th><th>Act</th><th>Part</th><th>Throne Eff</th><th style="background:#f8fafc">Total Score</th><th>Actions</th>
           </tr>
         </thead>
         <tbody id="dashTableBody"></tbody>
@@ -99,6 +117,11 @@
           <div id="modalStatsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"></div>
         </div>
         <div style="flex:1.5; background:#f8fafc; padding:20px; border-radius:12px;">
+           <div class="chart-controls">
+             <button id="btn-eff" class="chart-btn active" onclick="changeChartType('eff')">Efficiency</button>
+             <button id="btn-power" class="chart-btn" onclick="changeChartType('power')">Power</button>
+             <button id="btn-points" class="chart-btn" onclick="changeChartType('points')">Points</button>
+           </div>
            <canvas id="playerChart" width="400" height="250"></canvas>
         </div>
       </div>
@@ -108,7 +131,7 @@
   <script>
     (function(){
       let myChart = null;
-      const WEEKS_ORDER = ['home week', 'week 1', 'week 2', 'week 3'];
+      let currentChartMetric = 'eff';
       const loadData = () => JSON.parse(localStorage.getItem('formData') || '[]');
       const getMults = () => JSON.parse(localStorage.getItem('scoringMultipliers') || '{"M_WEEK1":0.000001,"M_THRONE":3.0,"M_HUNT":0.00001,"M_QUEST":0.0000025}');
       const formatPower = (n) => n ? (n/1000).toFixed(1)+"Bn" : "--";
@@ -117,7 +140,7 @@
         const p = document.getElementById('configPanel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
         const m = getMults();
-        document.getElementById('m_week1').value = m.M_WEEK1 || 0.000001;
+        document.getElementById('m_week1').value = m.M_WEEK1;
         document.getElementById('m_throne').value = m.M_THRONE;
         document.getElementById('m_hunt').value = m.M_HUNT;
         document.getElementById('m_quest').value = m.M_QUEST;
@@ -146,24 +169,33 @@
 
         if(week === 'overall') {
             const p = parseFloat(w3.power)||1;
-            const eff = ((parseFloat(w3.points)||0)-(parseFloat(w1.points)||0))/p;
-            html = `<div class="card"><label>Points (W3-W1)</label><span>${((parseFloat(w3.points)||0)-(parseFloat(w1.points)||0)).toLocaleString()}</span></div>
-                    <div class="card"><label>Current Power</label><span>${formatPower(p)}</span></div>
-                    <div class="card"><label>Efficiency</label><span>${eff.toFixed(2)}</span></div>
-                    <div class="card"><label>Current Quest</label><span>${(parseFloat(w3.quest)||0).toLocaleString()}</span></div>
+            const pts = parseFloat(w3.points)||0;
+            const diff = pts - (parseFloat(w1.points)||0);
+            html = `<div class="card"><label>Points (W3)</label><span>${pts.toLocaleString()}</span></div>
+                    <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
+                    <div class="card"><label>Seasonal Eff</label><span>${(diff/p).toFixed(2)}</span></div>
+                    <div class="card"><label>Quests</label><span>${(parseFloat(w3.quest)||0).toLocaleString()}</span></div>
                     <div class="card"><label>Throne Score</label><span>${(parseFloat(w3.throne)||0).toLocaleString()}</span></div>
                     <div class="card"><label>Throne Eff</label><span>${(p > 0 ? (parseFloat(w3.throne)||0)/p * m.M_THRONE : 0).toFixed(2)}</span></div>`;
-        } else {
-            const e = pEntries.find(d => d.week === week) || {};
-            const p = parseFloat(e.power)||1;
-            html = `<div class="card"><label>Points</label><span>${(parseFloat(e.points)||0).toLocaleString()}</span></div>
-                    <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>`;
-            if(week !== 'week 1') html += `<div class="card"><label>Efficiency</label><span>${((parseFloat(e.points)||0)/p).toFixed(2)}</span></div>`;
-            html += `<div class="card"><label>Quests</label><span>${(parseFloat(e.quest)||0).toLocaleString()}</span></div>`;
-            if(week === 'week 3') {
-                html += `<div class="card"><label>Throne Score</label><span>${(parseFloat(e.throne)||0).toLocaleString()}</span></div>
-                        <div class="card"><label>Throne Eff</label><span>${(p > 0 ? (parseFloat(e.throne)||0)/p * m.M_THRONE : 0).toFixed(2)}</span></div>`;
-            }
+        } else if(week === 'week 3') {
+            const p = parseFloat(w3.power)||1;
+            html = `<div class="card"><label>Points</label><span>${(parseFloat(w3.points)||0).toLocaleString()}</span></div>
+                    <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
+                    <div class="card"><label>Efficiency</label><span>${((parseFloat(w3.points)||0)/p).toFixed(2)}</span></div>
+                    <div class="card"><label>Quests</label><span>${(parseFloat(w3.quest)||0).toLocaleString()}</span></div>
+                    <div class="card"><label>Throne Score</label><span>${(parseFloat(w3.throne)||0).toLocaleString()}</span></div>
+                    <div class="card"><label>Throne Eff</label><span>${(p > 0 ? (parseFloat(w3.throne)||0)/p * m.M_THRONE : 0).toFixed(2)}</span></div>`;
+        } else if(week === 'week 2') {
+            const p = parseFloat(w2.power)||1;
+            html = `<div class="card"><label>Points</label><span>${(parseFloat(w2.points)||0).toLocaleString()}</span></div>
+                    <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
+                    <div class="card"><label>Efficiency</label><span>${((parseFloat(w2.points)||0)/p).toFixed(2)}</span></div>
+                    <div class="card"><label>Quests</label><span>${(parseFloat(w2.quest)||0).toLocaleString()}</span></div>`;
+        } else if(week === 'week 1') {
+            const p = parseFloat(w1.power)||1;
+            html = `<div class="card"><label>Points</label><span>${(parseFloat(w1.points)||0).toLocaleString()}</span></div>
+                    <div class="card"><label>Power</label><span>${formatPower(p)}</span></div>
+                    <div class="card"><label>Quests</label><span>${(parseFloat(w1.quest)||0).toLocaleString()}</span></div>`;
         }
         document.getElementById('modalStatsGrid').innerHTML = html;
       };
@@ -175,6 +207,13 @@
         document.getElementById('profileModal').style.display = "block";
         updateModalStats();
         drawTrendChart(name);
+      };
+
+      window.changeChartType = (type) => {
+        currentChartMetric = type;
+        document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + type).classList.add('active');
+        drawTrendChart(window.activePlayer);
       };
 
       function render() {
@@ -195,13 +234,12 @@
           const p = parseFloat(cur.power)||0;
           const eff = (view === 'overall') ? (p > 0 ? ((parseFloat(w3.points)||0)-(parseFloat(w1.points)||0))/p : 0) : (p > 0 ? (parseFloat(cur.points)||0)/p : 0);
           
-          // Activity & Part sum across ALL entries for "Overall", otherwise current week
           const acts = view === 'overall' ? entries : [cur];
           const actVal = acts.reduce((s,e) => s + (((e.lava?1:0)+(e.challenge?1:0)+(e.donations?1:0))*(2.5/3)), 0);
           const partVal = acts.reduce((s,e) => s + (((e.dv?1:0)+(e.esb?1:0))*(2.5/3) + ((e.esi_mon?1:0)+(e.esi_thu?1:0))*(2.5/6)), 0);
           
           const tEff = p > 0 ? ((parseFloat(w3.throne)||0)/p * m.M_THRONE) : 0;
-          const w1Bonus = (parseFloat(w1.points)||0) * (m.M_WEEK1 || 0.000001);
+          const w1Bonus = (parseFloat(w1.points)||0) * m.M_WEEK1;
           const qScore = (parseFloat(cur.quest)||0) * m.M_QUEST;
           const hScore = entries.reduce((s,d)=>s+(parseFloat(d.hunt)||0),0) * m.M_HUNT;
 
@@ -214,6 +252,17 @@
         const sorted = results.sort((a,b)=>b.total - a.total);
         document.getElementById('stat_total').textContent = names.length;
         document.getElementById('stat_avg').textContent = count > 0 ? (totalEffSum/count).toFixed(2) : "0.00";
+
+        // Render Leaderboard Cards
+        const top3 = sorted.slice(0,3);
+        const lBody = document.getElementById('topThreeList');
+        lBody.innerHTML = top3.map((p,i) => `
+          <div class="leader-card ${i===0?'gold':i===1?'silver':'bronze'}">
+            <div style="font-size:0.6rem; font-weight:800; color:var(--muted)">RANK ${i+1}</div>
+            <div style="font-weight:800; margin:4px 0;">${p.name}</div>
+            <div style="color:var(--accent); font-weight:800; font-size:1.1rem;">${p.total.toFixed(2)}</div>
+          </div>
+        `).join('');
 
         const tbody = document.getElementById('dashTableBody');
         tbody.innerHTML = '';
@@ -234,18 +283,33 @@
       }
 
       window.editPlayer = (n, w) => { localStorage.setItem('editTargetName', n); localStorage.setItem('editTargetWeek', w); window.location.href = 'form.html'; };
+
       function drawTrendChart(name) {
         const entries = loadData().filter(d => d.name === name);
         const labels = ['Week 1', 'Week 2', 'Week 3'];
         const values = labels.map(l => {
           const e = entries.find(d => d.week.toLowerCase() === l.toLowerCase()) || {};
-          return e.power > 0 ? (parseFloat(e.points) / parseFloat(e.power)) : 0;
+          if (currentChartMetric === 'eff') return e.power > 0 ? (parseFloat(e.points) / parseFloat(e.power)) : 0;
+          if (currentChartMetric === 'power') return parseFloat(e.power) || 0;
+          if (currentChartMetric === 'points') return parseFloat(e.points) || 0;
+          return 0;
         });
+
         if(myChart) myChart.destroy();
         myChart = new Chart(document.getElementById('playerChart'), {
-          type: 'line', data: { labels, datasets: [{ label:'Eff', data: values, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.1)', fill:true, tension:0.3 }] }
+          type: 'line', 
+          data: { 
+            labels, 
+            datasets: [{ label: currentChartMetric.toUpperCase(), data: values, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3 }] 
+          },
+          options: { scales: { y: { beginAtZero: true, ticks: { callback: function(v) { 
+            if (currentChartMetric === 'power') return (v/1000).toFixed(1) + 'Bn';
+            if (currentChartMetric === 'points') return v.toLocaleString();
+            return v;
+          } } } } }
         });
       }
+
       window.closeModal = () => document.getElementById('profileModal').style.display="none";
       document.getElementById('weekSelect').onchange = render;
       document.getElementById('dashSearch').oninput = render;
