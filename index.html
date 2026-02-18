@@ -257,6 +257,26 @@ window.render = () => {
         return { name, p, pts, eff, act, part, tEff, picks, total, has100 };
     });
 
+    // Sort results by total descending for correct podium ranking
+    const sortedByTotal = [...results].sort((a,b) => b.total - a.total);
+    const top3 = sortedByTotal.slice(0,3);
+
+    document.getElementById('podium').innerHTML = '';
+    if (top3.length > 0) {
+        const order = [top3[0], top3[1], top3[2]]; // 1st, 2nd, 3rd
+        const medals = ['🥇','🥈','🥉'];
+        order.forEach((r, i) => {
+            if (!r) return;
+            document.getElementById('podium').innerHTML += `
+                <div class="podium-card p${i+1}">
+                    <div class="podium-medal">${medals[i]}</div>
+                    <b style="font-size:1.1rem">${r.name}</b><br>
+                    <small style="color:var(--accent);font-weight:900;">${fmt(r.total)}</small>
+                </div>`;
+        });
+    }
+
+    // Table sorting remains user-controlled
     results.sort((a,b) => {
         let vA = a[sortCol], vB = b[sortCol];
         if (sortCol === 'name') return sortAsc ? vA.localeCompare(vB) : vB.localeCompare(vA);
@@ -279,22 +299,6 @@ window.render = () => {
     ]);
 
     document.getElementById('tableHead').innerHTML = `<tr>${cols.map(c => `<th class="${sortCol===c.k?'active':''}" onclick="setSort('${c.k}')">${c.l} ${sortCol===c.k ? (sortAsc?'▲':'▼') : ''}</th>`).join('')}<th>Edit</th></tr>`;
-
-    const pZone = document.getElementById('podium'); pZone.innerHTML = '';
-    const top3 = [...results].sort((a,b) => b.total - a.total).slice(0,3);
-    if(top3.length > 0) {
-        const order = [top3[1], top3[0], top3[2]];
-        const medals = ['🥇','🥈','🥉'];
-        order.forEach((r, i) => {
-            if(!r) return;
-            pZone.innerHTML += `
-                <div class="podium-card p${i+1}">
-                    <div class="podium-medal">${medals[i]}</div>
-                    <b style="font-size:1.1rem">${r.name}</b><br>
-                    <small style="color:var(--accent);font-weight:900;">${fmt(r.total)}</small>
-                </div>`;
-        });
-    }
 
     document.getElementById('dashBody').innerHTML = results.map((r, i) => {
         let row = `
