@@ -62,6 +62,7 @@
             <button class="btn" style="background:#f59e0b" onclick="document.getElementById('importCSV').click()">Import CSV</button>
             <button class="btn" style="background:var(--danger)" onclick="clearAllPlayerData()">Clear All Data</button>
             <button class="btn" style="background:#991b1b" onclick="deleteAllPlayers()">Delete All Players</button>
+            <button class="btn" style="background:#dc2626" onclick="deleteCurrentPlayer()">Delete This Player</button>
         </div>
     </section>
 
@@ -350,6 +351,19 @@ function deleteAllPlayers() {
     setWeek('week 1');
     renderList();
     alert("All players deleted.");
+}
+
+function deleteCurrentPlayer() {
+    if (!curP || !confirm(`Delete player "${curP}" and all their data?`)) return;
+    let db = loadDB();
+    db = db.filter(x => x.name !== curP);
+    saveDB(db);
+    curP = null;
+    document.getElementById('editHeader').innerText = "Select Player";
+    fKeys.forEach(f => document.getElementById(f).value = "");
+    tKeys.forEach(t => document.getElementById(t).checked = false);
+    renderList();
+    alert("Player deleted.");
 }
 
 const tName = localStorage.getItem('editTargetName');
