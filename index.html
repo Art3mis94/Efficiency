@@ -69,7 +69,7 @@
         <select id="weekSelect" onchange="render()" style="padding:0.9rem 1.2rem; border-radius:9999px; font-weight:800; border:1px solid var(--border); background:white; font-size:1rem;">
             <option value="week 1">Week 1</option>
             <option value="week 2">Week 2</option>
-            <option value="week 3" selected>Week 3</option>
+            <option value="week 3">Week 3</option>
             <option value="overall">Overall</option>
         </select>
     </div>
@@ -205,7 +205,12 @@ window.updateGrowthChart = (metric) => {
 
 window.render = () => {
     const data = JSON.parse(localStorage.getItem('formData') || '[]');
-    const view = document.getElementById('weekSelect').value;
+    const weekSelector = document.getElementById('weekSelect');
+    const view = weekSelector.value;
+    
+    // Save last viewed week for persistent return from form
+    localStorage.setItem('lastViewedWeek', view);
+
     const config = loadConfig();
     const names = [...new Set(data.map(d => d.name))];
     
@@ -223,10 +228,11 @@ window.render = () => {
 
         const getStats = (entry) => {
             if(!entry) return { a:0, p:0, picks:0, has100: false };
-            let a = ((entry.lava?8.33:0)+(entry.challenge?8.33:0)+(entry.donations?8.33:0))/10;
-            let pr = ((entry.esb?8.33:0)+(entry.dv?8.33:0)+(entry.mon?4.16:0)+(entry.wed?4.16:0))/10;
+            // Formula updated: Lava/Dono 1.25 each (2.5 total). ESB/DV 1.25 each (2.5 total).
+            let actScore = (entry.lava ? 1.25 : 0) + (entry.donations ? 1.25 : 0);
+            let partScore = (entry.esb ? 1.25 : 0) + (entry.dv ? 1.25 : 0);
             let pk = (entry.p100?100:0)+(entry.p40?40:0)+(entry.p20?20:0)+(entry.p5?5:0);
-            return { a: Math.min(2.5, Math.round(a * 100) / 100), p: Math.min(2.5, Math.round(pr * 100) / 100), picks: pk, has100: !!entry.p100 };
+            return { a: actScore, p: partScore, picks: pk, has100: !!entry.p100 };
         };
 
         let act = 0, part = 0, picks = 0, has100 = false;
@@ -257,13 +263,12 @@ window.render = () => {
         return { name, p, pts, eff, act, part, tEff, picks, total, has100 };
     });
 
-    // Sort results by total descending for correct podium ranking
     const sortedByTotal = [...results].sort((a,b) => b.total - a.total);
     const top3 = sortedByTotal.slice(0,3);
 
     document.getElementById('podium').innerHTML = '';
     if (top3.length > 0) {
-        const order = [top3[0], top3[1], top3[2]]; // 1st, 2nd, 3rd
+        const order = [top3[0], top3[1], top3[2]];
         const medals = ['🥇','🥈','🥉'];
         order.forEach((r, i) => {
             if (!r) return;
@@ -276,7 +281,6 @@ window.render = () => {
         });
     }
 
-    // Table sorting remains user-controlled
     results.sort((a,b) => {
         let vA = a[sortCol], vB = b[sortCol];
         if (sortCol === 'name') return sortAsc ? vA.localeCompare(vB) : vB.localeCompare(vA);
@@ -314,7 +318,7 @@ window.render = () => {
                 <td>${fmt(r.tEff)}</td>
                 <td style="${sortCol==='picks'?'color:var(--accent)':''}">${r.picks}</td>
                 <td style="${sortCol==='total'?'color:var(--accent); font-weight:900':''}">${fmt(r.total)}</td>
-                <td><button class="c-btn" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); location.href='form.html'">EDIT</button></td>
+                <td><button class="c-btn" onclick="event.stopPropagation(); localStorage.setItem('editTargetName','${r.name}'); localStorage.setItem('editTargetWeek', document.getElementById('weekSelect').value); location.href='form.html'">EDIT</button></td>
             </tr>`;
         return row;
     }).join('');
@@ -326,6 +330,13 @@ window.onload = () => {
     document.getElementById('M_HUNT').value = c.HUNT;
     document.getElementById('M_QUEST').value = c.QUEST;
     document.getElementById('M_THRONE').value = c.THRONE;
+
+    // Return to the last viewed week if it exists in storage
+    const lastWeek = localStorage.getItem('lastViewedWeek');
+    if(lastWeek) {
+        document.getElementById('weekSelect').value = lastWeek;
+    }
+    
     render();
 };
 </script>
